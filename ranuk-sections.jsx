@@ -1,0 +1,927 @@
+// Ranuk Orbit — All remaining sections, aligned with existing ranuk-i18n.jsx + ranuk-data.js schemas
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// Lang hook in this codebase exposes { lang, change, t }
+function useChangeLang() {
+  const ctx = useLang();
+  return { lang: ctx.lang, t: ctx.t, setLang: ctx.change };
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────
+function Nav() {
+  const { t, lang, setLang } = useChangeLang();
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => { document.body.style.overflow = open ? 'hidden' : ''; }, [open]);
+
+  const links = [
+    { href: '#atlas', label: t.nav.explore },
+    { href: '#archive', label: t.nav.archive },
+    { href: '#story', label: t.nav.story },
+    { href: '#services', label: t.nav.services },
+    { href: '#contact', label: t.nav.contact },
+  ];
+
+  return (
+    <>
+      <nav className={`nav${scrolled ? ' is-scrolled' : ''}`}>
+        <a href="#home" className="nav-brand" aria-label="Ranuk Orbit">
+          <span className="nav-mark">⊕</span>
+          <span className="nav-wordmark">Ranuk Orbit</span>
+        </a>
+        <div className="nav-links">
+          {links.map(l => <a key={l.href} href={l.href} className="nav-link">{l.label}</a>)}
+        </div>
+        <div className="nav-actions">
+          <button
+            className="nav-lang"
+            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+            aria-label="Toggle language"
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
+          <button className="nav-burger" onClick={() => setOpen(true)} aria-label="Menu">
+            <span /><span /><span />
+          </button>
+        </div>
+      </nav>
+
+      {open && (
+        <div className="nav-overlay" role="dialog" aria-modal="true">
+          <button className="nav-overlay-close" onClick={() => setOpen(false)}>×</button>
+          <div className="nav-overlay-links">
+            {links.map((l, i) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
+          <div className="nav-overlay-foot">
+            <button onClick={() => setLang(lang === 'en' ? 'es' : 'en')}>
+              {lang === 'en' ? 'Español' : 'English'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── ARCHIVE / GALLERY V2 ─────────────────────────────────────────────────
+function ArchiveSection() {
+  const { t, lang } = useChangeLang();
+  const lb = useLightbox();
+  const [filter, setFilter] = useState('all'); // all | drone | pov | photo
+  const [year, setYear] = useState('all');
+  const containerRef = useRef(null);
+
+  const allItems = useMemo(() => {
+    const items = [];
+    (window.LOCATIONS_V2 || []).forEach(loc => {
+      (loc.media || []).forEach(m => {
+        items.push({
+          ...m,
+          locationId: loc.id,
+          location: { name: loc.name, country: loc.country, flag: loc.flag, accentColor: loc.accentColor },
+          year: m.year || loc.year,
+          _displayTitle: pick(m.title, lang),
+        });
+      });
+    });
+    return items;
+  }, [lang]);
+
+  const filtered = useMemo(() => {
+    return allItems.filter(it => {
+      if (year !== 'all' && String(it.year) !== String(year)) return false;
+      if (filter === 'all') return true;
+      if (filter === 'drone') return it.type === 'video' || (it.type === 'photo' && it.src && it.src.includes('fotos-drone'));
+      if (filter === 'pov') return it.type === 'pov';
+      if (filter === 'photo') return it.type === 'photo';
+      return true;
+    });
+  }, [allItems, filter, year]);
+
+  // FLIP animation on filter change
+  const prevRectsRef = useRef(new Map());
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const els = containerRef.current.querySelectorAll('.gallery-item');
+    const newRects = new Map();
+    els.forEach(el => newRects.set(el.dataset.id, el.getBoundingClientRect()));
+    prevRectsRef.current.forEach((prev, id) => {
+      const next = newRects.get(id);
+      if (!next) return;
+      const dx = prev.left - next.left;
+      const dy = prev.top - next.top;
+      if (dx === 0 && dy === 0) return;
+      const el = containerRef.current.querySelector(`[data-id="${id}"]`);
+      if (!el) return;
+      el.animate(
+        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0,0)' }],
+        { duration: 460, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+      );
+    });
+    prevRectsRef.current = newRects;
+  }, [filtered]);
+
+  const years = useMemo(() => {
+    const s = new Set();
+    allItems.forEach(it => it.year && s.add(it.year));
+    return Array.from(s).sort((a, b) => b - a);
+  }, [allItems]);
+
+  const openItem = useCallback((idx) => { lb.open(filtered, idx); }, [filtered, lb]);
+
+  return (
+    <section className="archive" id="archive">
+      <div className="archive-head">
+        <span className="section-overline">{t.archive.overline}</span>
+        <h2 className="section-title">{t.archive.title}</h2>
+        <p className="section-sub">{t.archive.sub}</p>
+      </div>
+
+      <div className="archive-controls">
+        <div className="archive-filters">
+          {[
+            { id: 'all', label: t.archive.filters.all },
+            { id: 'drone', label: t.archive.filters.drone },
+            { id: 'pov', label: t.archive.filters.pov },
+            { id: 'photo', label: t.archive.filters.photo },
+          ].map(f => (
+            <button
+              key={f.id}
+              className={`chip${filter === f.id ? ' is-active' : ''}`}
+              onClick={() => setFilter(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="archive-years">
+          <button className={`chip chip-year${year === 'all' ? ' is-active' : ''}`} onClick={() => setYear('all')}>
+            {t.atlas.year_all}
+          </button>
+          {years.map(y => (
+            <button key={y} className={`chip chip-year${year === y ? ' is-active' : ''}`} onClick={() => setYear(y)}>
+              {y}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="gallery-masonry" ref={containerRef}>
+        {filtered.map((it, i) => {
+          const spotlight = (i + 1) % 5 === 0;
+          const cls = `gallery-item${spotlight ? ' is-spotlight' : ''} gallery-item--${it.type}`;
+          const thumb = it.type === 'photo' ? it.src : (it.poster || it.src);
+          return (
+            <button
+              key={it.id}
+              data-id={it.id}
+              className={cls}
+              onClick={() => openItem(i)}
+              style={{ ['--accent']: it.location.accentColor }}
+            >
+              {it.type === 'photo' ? (
+                <img src={thumb} alt={it._displayTitle} loading="lazy" />
+              ) : (
+                <video
+                  src={it.src}
+                  muted loop playsInline preload="metadata"
+                  poster={it.poster}
+                  onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
+                  onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                />
+              )}
+              <div className="gallery-overlay">
+                <div className="gallery-meta">
+                  <span className="gallery-flag">{it.location.flag}</span>
+                  <div className="gallery-meta-text">
+                    <h4>{it._displayTitle}</h4>
+                    <p>{pick(it.location.name, lang)} · {it.year}</p>
+                  </div>
+                </div>
+                {it.type !== 'photo' && <span className="gallery-play">▶</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="archive-empty">{t.archive.empty}</div>
+      )}
+    </section>
+  );
+}
+
+// ─── STORY V2 ─────────────────────────────────────────────────────────────
+function CountUp({ to, duration = 1800, suffix = '' }) {
+  const [val, setVal] = useState(0);
+  const ref = useRef(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || startedRef.current) return;
+      startedRef.current = true;
+      const start = performance.now();
+      const tick = (now) => {
+        const tt = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - tt, 3);
+        setVal(Math.round(eased * to));
+        if (tt < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, { threshold: 0.4 });
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [to, duration]);
+
+  return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
+}
+
+function StorySection() {
+  const { t, lang } = useChangeLang();
+  // story.stats lives in COPY[lang].story.stats
+  const stats = (t.story && t.story.stats) || [];
+  return (
+    <section className="story" id="story">
+      <div className="story-grain" aria-hidden="true" />
+      <div className="story-grid">
+        <div className="story-portrait">
+          <div className="story-portrait-frame">
+            <img src="media/fotos-rayban/Cerdeña-Golfo_Aranci-Isla.jpg" alt="Emilio Ranucoli" />
+          </div>
+          <span className="story-portrait-caption">{t.story.sub}</span>
+        </div>
+        <div className="story-text">
+          <span className="section-overline">{t.story.overline}</span>
+          <h2 className="section-title story-title">{t.story.title}</h2>
+          <div className="story-paragraphs">
+            {(t.story.paragraphs || []).map((p, i) => (
+              <p key={i} className="story-p">{p}</p>
+            ))}
+          </div>
+          <blockquote className="story-quote">
+            <span className="story-quote-mark">"</span>
+            {t.story.pull}
+          </blockquote>
+        </div>
+      </div>
+      <div className="story-stats">
+        {stats.map((s, i) => (
+          <div key={i} className="story-stat">
+            <div className="story-stat-num"><CountUp to={s.value} /></div>
+            <div className="story-stat-label">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── SERVICES V2 ──────────────────────────────────────────────────────────
+function ServicesSection() {
+  const { t, lang } = useChangeLang();
+  const [openFaq, setOpenFaq] = useState(null);
+  const packages = t.services.packages || [];
+
+  return (
+    <section className="services" id="services">
+      <div className="services-head">
+        <span className="section-overline">{t.services.overline}</span>
+        <h2 className="section-title">{t.services.title}</h2>
+        <p className="section-sub">{t.services.sub}</p>
+      </div>
+
+      <div className="services-grid">
+        {packages.map((pkg, i) => (
+          <div key={i} className={`service-card${pkg.popular ? ' is-popular' : ''}${pkg.tag === 'Bespoke' || pkg.tag === 'A medida' ? ' is-custom' : ''}`}>
+            {pkg.popular && <span className="service-ribbon">★</span>}
+            <span className="service-tagline">{pkg.tag}</span>
+            <h3 className="service-name">{pkg.title}</h3>
+            <div className="service-price">{pkg.price} <span className="service-unit">{pkg.unit}</span></div>
+            <p className="service-desc">{pkg.desc}</p>
+            <ul className="service-features">
+              {(pkg.features || []).map((f, j) => <li key={j}>{f}</li>)}
+            </ul>
+            <a href="#contact" className="service-cta">
+              {t.services.cta} <span>→</span>
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <div className="services-faq">
+        <span className="section-overline" style={{ display: 'block', textAlign: 'center', marginBottom: 8 }}>{t.services.faq_overline}</span>
+        <h3 className="faq-title">{t.services.faq_title}</h3>
+        <div className="faq-list">
+          {(window.FAQ_V2 || []).map((q, i) => {
+            const isOpen = openFaq === i;
+            return (
+              <div key={i} className={`faq-item${isOpen ? ' is-open' : ''}`}>
+                <button className="faq-q" onClick={() => setOpenFaq(isOpen ? null : i)}>
+                  <span>{pick(q.q, lang)}</span>
+                  <span className="faq-toggle">{isOpen ? '−' : '+'}</span>
+                </button>
+                <div className="faq-a">
+                  <p>{pick(q.a, lang)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── RAY-BAN META POV V2 ──────────────────────────────────────────────────
+function RayBanSection() {
+  const { t, lang } = useChangeLang();
+  const lb = useLightbox();
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const povItems = useMemo(() => {
+    const items = [];
+    (window.LOCATIONS_V2 || []).forEach(loc => {
+      (loc.media || []).forEach(m => {
+        if (m.type === 'pov') items.push({
+          ...m,
+          locationId: loc.id,
+          location: { name: loc.name, country: loc.country, flag: loc.flag, accentColor: loc.accentColor },
+          _displayTitle: pick(m.title, lang),
+        });
+      });
+    });
+    return items.slice(0, 6);
+  }, [lang]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email.includes('@')) return;
+    setSubmitted(true);
+    setEmail('');
+  };
+
+  return (
+    <section className="rayban" id="pov">
+      <div className="rayban-head">
+        <span className="section-overline">{t.pov.overline}</span>
+        <h2 className="section-title">{t.pov.title}</h2>
+        <p className="section-sub">{t.pov.sub}</p>
+      </div>
+
+      <div className="rayban-glasses" aria-hidden="true">
+        <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <clipPath id="lensL"><ellipse cx="170" cy="100" rx="100" ry="70" /></clipPath>
+            <clipPath id="lensR"><ellipse cx="430" cy="100" rx="100" ry="70" /></clipPath>
+          </defs>
+          <foreignObject x="70" y="30" width="200" height="140" clipPath="url(#lensL)">
+            {povItems[0] && (
+              <video xmlns="http://www.w3.org/1999/xhtml" src={povItems[0].src} autoPlay muted loop playsInline poster={povItems[0].poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            )}
+          </foreignObject>
+          <foreignObject x="330" y="30" width="200" height="140" clipPath="url(#lensR)">
+            {povItems[1] && (
+              <video xmlns="http://www.w3.org/1999/xhtml" src={povItems[1].src} autoPlay muted loop playsInline poster={povItems[1].poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            )}
+          </foreignObject>
+          <ellipse cx="170" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />
+          <ellipse cx="430" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />
+          <path d="M 270 100 Q 300 80 330 100" fill="none" stroke="#0A0A0A" strokeWidth="6" />
+          <path d="M 70 80 Q 40 70 20 90" fill="none" stroke="#0A0A0A" strokeWidth="6" strokeLinecap="round" />
+          <path d="M 530 80 Q 560 70 580 90" fill="none" stroke="#0A0A0A" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+      </div>
+
+      <div className="rayban-grid">
+        {povItems.map((it, i) => (
+          <button key={it.id} className="rayban-item" onClick={() => lb.open(povItems, i)}>
+            <video
+              src={it.src}
+              muted loop playsInline preload="metadata"
+              poster={it.poster}
+              onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
+              onMouseLeave={(e) => { e.currentTarget.pause(); }}
+            />
+            <div className="rayban-item-meta">
+              <span>{it.location.flag}</span>
+              <span>{it._displayTitle}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="rayban-cta">
+        <h3>{t.pov.cta}</h3>
+        <p>{t.pov.quote}</p>
+        {submitted ? (
+          <div className="rayban-thanks">{lang === 'es' ? 'Listo. Te avisamos.' : 'Done. We\'ll keep you posted.'}</div>
+        ) : (
+          <form onSubmit={handleSubmit} className="rayban-form">
+            <input
+              type="email"
+              required
+              placeholder={t.pov.cta_placeholder}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button type="submit">{t.pov.cta_button} <span>→</span></button>
+          </form>
+        )}
+        <span className="rayban-coming">{t.pov.coming_soon}</span>
+      </div>
+    </section>
+  );
+}
+
+// ─── PROCESS ──────────────────────────────────────────────────────────────
+// ─── PROCESS / HOW I WORK (4 pasos editorial, hardcoded copy bilingüe) ────
+function ProcessSection() {
+  const { lang } = useChangeLang();
+  const COPY = {
+    es: {
+      kicker: 'Proceso',
+      title: 'Cuatro pasos. Sin sorpresas.',
+      subtitle: 'Cada proyecto sigue la misma órbita: claridad al inicio, oficio en el medio, entrega en tiempo.',
+      steps: [
+        { n: '01', title: 'Briefing', time: '15-30 min · llamada o email',
+          body: 'Empezamos por la historia. Qué querés contar, a quién, dónde. Si el proyecto pide drone, POV o foto, lo definimos acá. Te mando una cotización clara en 24 horas — sin letra chica.' },
+        { n: '02', title: 'Scouting', time: '2-5 días antes del rodaje',
+          body: 'Reviso locaciones, luz, clima y permisos. Si hace falta autorización ANAC o local, la gestiono yo. Llegás al día del rodaje sabiendo exactamente qué vamos a capturar y cuándo.' },
+        { n: '03', title: 'Captura', time: '1-3 jornadas según proyecto',
+          body: 'Vuelo con DJI Mini 4 Pro (4K, ProRes cuando hace falta), Ray-Ban Meta para POV inmersivo y cámara para foto fija. Todo respaldado en doble disco antes de bajar de la locación.' },
+        { n: '04', title: 'Edición', time: '7 días · 2 rondas de revisión incluidas',
+          body: 'Color grade cinematográfico, corte limpio, audio cuidado. Te entrego en 4K master + versiones para Instagram, web y broadcast. Los archivos quedan tuyos — derechos completos, sin marca de agua.' },
+      ],
+      footer: '¿Tenés un brief en mente? Empecemos por una llamada de 15 minutos.',
+      cta: 'Reservar llamada',
+    },
+    en: {
+      kicker: 'Process',
+      title: 'Four steps. No surprises.',
+      subtitle: 'Every project follows the same orbit: clarity up front, craft in the middle, delivery on time.',
+      steps: [
+        { n: '01', title: 'Briefing', time: '15-30 min · call or email',
+          body: "We start with the story. What you want to tell, to whom, where. If the project calls for drone, POV or photo, we define it here. I send you a clear quote within 24 hours — no fine print." },
+        { n: '02', title: 'Scouting', time: '2-5 days before the shoot',
+          body: "I review locations, light, weather and permits. If we need ANAC or local authorization, I handle it. You arrive on shoot day knowing exactly what we'll capture and when." },
+        { n: '03', title: 'Capture', time: '1-3 days depending on the project',
+          body: 'Flying DJI Mini 4 Pro (4K, ProRes when needed), Ray-Ban Meta for immersive POV and a stills camera. Everything backed up to dual drives before leaving the location.' },
+        { n: '04', title: 'Edit', time: '7 days · 2 rounds of revisions included',
+          body: 'Cinematic color grade, clean cut, careful audio. I deliver in 4K master plus Instagram, web and broadcast cuts. The files are yours — full rights, no watermark.' },
+      ],
+      footer: "Got a brief in mind? Let's start with a 15-minute call.",
+      cta: 'Book a call',
+    },
+  };
+  const L = COPY[lang] || COPY.es;
+
+  return (
+    <section className="section how-i-work" id="process" aria-labelledby="how-title">
+      <div className="container">
+        <header className="how-head" data-reveal>
+          <span className="kicker">{L.kicker}</span>
+          <h2 className="section-title" id="how-title">{L.title}</h2>
+          <p className="section-subtitle">{L.subtitle}</p>
+        </header>
+        <ol className="how-steps">
+          {L.steps.map((s, i) => (
+            <li className="how-step" key={i} data-reveal style={{ transitionDelay: `${i * 0.1}s` }}>
+              <div className="how-step-num">{s.n}</div>
+              <div className="how-step-body">
+                <h3 className="how-step-title">{s.title}</h3>
+                <p className="how-step-time">{s.time}</p>
+                <p className="how-step-text">{s.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="how-footer" data-reveal>
+          <p className="how-footer-text">{L.footer}</p>
+          <a href="#contact" className="btn-primary">
+            {L.cta}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M1 7h12m0 0L8 2m5 5L8 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── STATS BAND (entre Atlas y Archive) ──────────────────────────────────
+function StatsBand() {
+  const { lang } = useChangeLang();
+  const labels = {
+    es: { kicker: 'Tres años, una órbita', countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
+    en: { kicker: 'Three years, one orbit', countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
+  };
+  const L = labels[lang] || labels.es;
+  const STATS = [
+    { value: '13',  label: L.countries },
+    { value: '142', label: L.flights },
+    { value: '380', label: L.hours },
+    { value: '6',   label: L.brands },
+  ];
+  return (
+    <section className="stats-band" aria-labelledby="stats-kicker">
+      <div className="container">
+        <p className="stats-kicker" id="stats-kicker" data-reveal>{L.kicker}</p>
+        <div className="stats-grid">
+          {STATS.map((s, i) => (
+            <div className="stat-cell" key={i} data-reveal style={{ transitionDelay: `${i * 0.08}s` }}>
+              <span className="stat-value">{s.value}</span>
+              <span className="stat-label">{s.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="stats-footer" data-reveal>{L.footer}</p>
+      </div>
+    </section>
+  );
+}
+
+// ─── SOCIAL LINKS (con tracking GA4) ─────────────────────────────────────
+const SOCIALS = [
+  { label: 'Instagram', handle: '@emi_ranucoli',  href: 'https://www.instagram.com/emi_ranucoli/',     platform: 'instagram' },
+  { label: 'LinkedIn',  handle: 'emilio-ranucoli', href: 'https://www.linkedin.com/in/emilio-ranucoli/', platform: 'linkedin' },
+  { label: 'X',         handle: '@EmilioRanucoli', href: 'https://x.com/EmilioRanucoli',                platform: 'x' },
+  { label: 'VSCO',      handle: 'emiliorturletto', href: 'https://vsco.co/emiliorturletto/gallery',    platform: 'vsco' },
+];
+
+function SocialLinks({ variant = 'list' }) {
+  const handleClick = (platform) => {
+    if (window.gtag) {
+      window.gtag('event', 'social_click', { event_category: 'social', event_label: platform, outbound: true });
+    }
+  };
+  if (variant === 'inline') {
+    return (
+      <div className="social-inline">
+        {SOCIALS.map(s => (
+          <a key={s.platform} href={s.href} target="_blank" rel="noopener noreferrer me"
+             className="social-pill" aria-label={s.label} onClick={() => handleClick(s.platform)}>
+            {s.label}
+          </a>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <ul className="social-list">
+      {SOCIALS.map(s => (
+        <li key={s.platform}>
+          <a href={s.href} target="_blank" rel="noopener noreferrer me" onClick={() => handleClick(s.platform)}>
+            <span className="social-label">{s.label}</span>
+            <span className="social-handle">{s.handle}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ─── WHATSAPP FLOAT (mobile, aparece tras 25% de scroll) ─────────────────
+const WHATSAPP_NUMBER = '393445721753'; // +39 344 572 1753 (sin '+')
+const WHATSAPP_DEFAULT_MSG = {
+  es: 'Hola Emilio, vi Ranuk Orbit y me gustaría contarte un proyecto.',
+  en: "Hi Emilio, I saw Ranuk Orbit and I'd like to tell you about a project.",
+};
+
+function WhatsAppFloat() {
+  const { lang } = useChangeLang();
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const scrolled = max > 0 ? window.scrollY / max : 0;
+      setVisible(scrolled > 0.25);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  const msg = encodeURIComponent(WHATSAPP_DEFAULT_MSG[lang] || WHATSAPP_DEFAULT_MSG.es);
+  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+       className={`whatsapp-float ${visible ? 'is-visible' : ''}`} aria-label="WhatsApp"
+       onClick={() => { if (window.gtag) window.gtag('event', 'click_whatsapp', { event_category: 'engagement', event_label: 'float' }); }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.002-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+      </svg>
+    </a>
+  );
+}
+
+// ─── PRESS ────────────────────────────────────────────────────────────────
+function PressSection() {
+  const { t } = useChangeLang();
+  const press = window.PRESS_V2 || [];
+  return (
+    <section className="press">
+      <span className="press-label">{t.press.overline}</span>
+      <div className="press-strip">
+        {press.map((p, i) => (
+          <div key={i} className="press-item">{p.name}</div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── TESTIMONIALS ─────────────────────────────────────────────────────────
+function TestimonialsSection() {
+  const { t, lang } = useChangeLang();
+  const items = window.TESTIMONIALS_V2 || [];
+  const [active, setActive] = useState(0);
+  return (
+    <section className="testimonials">
+      <div className="testimonials-head">
+        <span className="section-overline">{t.testimonials.overline}</span>
+        <h2 className="section-title">{t.testimonials.title}</h2>
+      </div>
+      <div className="testimonials-stage">
+        {items.map((it, i) => (
+          <blockquote key={i} className={`testimonial${i === active ? ' is-active' : ''}`}>
+            <p>"{pick(it.quote, lang)}"</p>
+            <footer>
+              <strong>{it.name}</strong>
+              <span>{pick(it.role, lang)}</span>
+            </footer>
+          </blockquote>
+        ))}
+      </div>
+      <div className="testimonials-dots">
+        {items.map((_, i) => (
+          <button
+            key={i}
+            className={`tdot${i === active ? ' is-active' : ''}`}
+            onClick={() => setActive(i)}
+            aria-label={`Testimonial ${i+1}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── CONTACT ──────────────────────────────────────────────────────────────
+function ContactSection() {
+  const { t } = useChangeLang();
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [status, setStatus] = useState('idle');
+
+  const update = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.email.includes('@') || !form.message.trim()) return;
+    setStatus('sending');
+    try {
+      const endpoint = window.RANUK_FORMSPREE || '';
+      if (endpoint) {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error('send failed');
+      } else {
+        const body = `Name: ${form.name}%0A%0A${form.message}`;
+        window.location.href = `mailto:emilio@ranuk.dev?subject=Project%20brief&body=${body}`;
+      }
+      setStatus('sent');
+      setForm({ name: '', email: '', message: '' });
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  return (
+    <section className="contact" id="contact">
+      <div className="contact-head">
+        <span className="section-overline">{t.contact.overline}</span>
+        <h2 className="section-title">{t.contact.title_1} <em>{t.contact.title_2}</em></h2>
+        <p className="section-sub">{t.contact.sub}</p>
+      </div>
+      <form className="contact-form" onSubmit={onSubmit}>
+        <div className="contact-row">
+          <label>
+            <span>{t.contact.form.name}</span>
+            <input type="text" required value={form.name} onChange={update('name')} />
+          </label>
+          <label>
+            <span>{t.contact.form.email}</span>
+            <input type="email" required value={form.email} onChange={update('email')} />
+          </label>
+        </div>
+        <label>
+          <span>{t.contact.form.message}</span>
+          <textarea rows={5} required value={form.message} onChange={update('message')} />
+        </label>
+        <button type="submit" className="contact-submit" disabled={status === 'sending'}>
+          {status === 'sent' ? t.contact.form.sent : t.contact.form.send} <span>→</span>
+        </button>
+        {status === 'error' && <div className="contact-error">{t.contact.form.error}</div>}
+      </form>
+      <div className="contact-direct">
+        <a href={`mailto:${t.contact.cta_primary}`}>{t.contact.cta_primary}</a>
+        <span>·</span>
+        <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+        <span>·</span>
+        <a href="https://youtube.com/" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </section>
+  );
+}
+
+// ─── FOOTER ───────────────────────────────────────────────────────────────
+function Footer() {
+  const { t } = useChangeLang();
+  return (
+    <footer className="footer">
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <span className="footer-mark">⊕</span>
+          <span className="footer-wordmark">Ranuk Orbit</span>
+          <span className="footer-tagline">{t.footer.tagline}</span>
+        </div>
+        <div className="footer-cols">
+          <div className="footer-col">
+            <h5>{t.nav.explore}</h5>
+            <a href="#atlas">{t.nav.explore}</a>
+            <a href="#archive">{t.nav.archive}</a>
+            <a href="#pov">POV</a>
+            <a href="#story">{t.nav.story}</a>
+          </div>
+          <div className="footer-col">
+            <h5>{t.nav.services}</h5>
+            <a href="#services">{t.nav.services}</a>
+            <a href="#process">{t.nav.process}</a>
+            <a href="#contact">{t.nav.contact}</a>
+          </div>
+          <div className="footer-col">
+            <h5>—</h5>
+            <a href="/privacy">{t.footer.privacy}</a>
+            <a href="/terms">{t.footer.terms}</a>
+          </div>
+        </div>
+      </div>
+      <div className="footer-base">
+        <span>© {new Date().getFullYear()} Emilio Ranucoli · {t.footer.copyright}</span>
+        <span>Mar del Plata · Worldwide</span>
+      </div>
+    </footer>
+  );
+}
+
+// ─── LOADING SCREEN ───────────────────────────────────────────────────────
+function LoadingScreen({ done }) {
+  return (
+    <div className={`loading${done ? ' is-done' : ''}`}>
+      <div className="loading-mark">⊕</div>
+      <div className="loading-bar"><span /></div>
+      <div className="loading-label">Ranuk Orbit</div>
+    </div>
+  );
+}
+
+// ─── MICROINTERACTIONS ────────────────────────────────────────────────────
+function CustomCursor() {
+  const cursorRef = useRef(null);
+  const trailRef = useRef(null);
+  useEffect(() => {
+    if (window.matchMedia('(hover: none)').matches) return;
+    let x = 0, y = 0, tx = 0, ty = 0;
+    const onMove = (e) => { x = e.clientX; y = e.clientY; };
+    document.addEventListener('mousemove', onMove);
+    let raf;
+    const tick = () => {
+      tx += (x - tx) * 0.22;
+      ty += (y - ty) * 0.22;
+      if (cursorRef.current) cursorRef.current.style.transform = `translate(${x}px, ${y}px)`;
+      if (trailRef.current) trailRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    const overInteractive = (e) => {
+      const isLink = e.target.closest && e.target.closest('a, button, [role=button], input, textarea, select');
+      if (cursorRef.current) cursorRef.current.classList.toggle('is-link', !!isLink);
+      if (trailRef.current) trailRef.current.classList.toggle('is-link', !!isLink);
+    };
+    document.addEventListener('mouseover', overInteractive);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseover', overInteractive);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <>
+      <div className="cursor" ref={cursorRef} aria-hidden="true" />
+      <div className="cursor-trail" ref={trailRef} aria-hidden="true" />
+    </>
+  );
+}
+
+function useKonami() {
+  useEffect(() => {
+    const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    let idx = 0;
+    const onKey = (e) => {
+      const k = e.key;
+      if (k === seq[idx]) {
+        idx++;
+        if (idx === seq.length) {
+          document.body.classList.add('konami');
+          setTimeout(() => document.body.classList.remove('konami'), 6000);
+          idx = 0;
+        }
+      } else { idx = 0; }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+}
+
+function useScrollReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('[data-reveal]');
+    if (!els.length) return;
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-revealed');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────────────────
+function App() {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const tt = setTimeout(() => setLoaded(true), 1200);
+    return () => clearTimeout(tt);
+  }, []);
+  useKonami();
+  useScrollReveal();
+
+  return (
+    <LangProvider>
+      <LightboxProvider>
+        <LoadingScreen done={loaded} />
+        <CustomCursor />
+        <Nav />
+        <main>
+          <HeroSection />
+          <AtlasSection />
+          <StatsBand />
+          <ArchiveSection />
+          <StorySection />
+          <RayBanSection />
+          <ServicesSection />
+          <ProcessSection />
+          <TestimonialsSection />
+          <PressSection />
+          <ContactSection />
+        </main>
+        <Footer />
+        <Lightbox />
+        <WhatsAppFloat />
+      </LightboxProvider>
+    </LangProvider>
+  );
+}
+
+Object.assign(window, {
+  Nav, ArchiveSection, StorySection, ServicesSection, RayBanSection,
+  ProcessSection, PressSection, TestimonialsSection, ContactSection,
+  StatsBand, SocialLinks, WhatsAppFloat,
+  Footer, LoadingScreen, CustomCursor, App,
+});

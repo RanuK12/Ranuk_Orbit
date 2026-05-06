@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Privacidad — Ranuk Orbit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --ink: #0A0A0A;
+  --celestial: #F7F7F5;
+  --desert: #C9A227;
+  --line: rgba(247, 247, 245, 0.12);
+  --gut: clamp(20px, 4vw, 80px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--ink); color: var(--celestial);
+  font-family: 'DM Sans', sans-serif; font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+  padding: 80px var(--gut);
+}
+.wrap { max-width: 720px; margin: 0 auto; }
+.back {
+  display: inline-block;
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247,247,245,0.6); text-decoration: none;
+  margin-bottom: 60px;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--celestial); }
+.overline {
+  display: inline-block;
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--desert); margin-bottom: 16px;
+}
+h1 {
+  font-family: 'Italiana', serif;
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 1.0; letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.lead {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 20px; color: rgba(247,247,245,0.7);
+  margin-bottom: 40px;
+}
+h2 {
+  font-family: 'Marcellus', serif;
+  font-size: 18px; letter-spacing: 0.05em;
+  margin: 40px 0 12px;
+  color: var(--celestial);
+}
+p { color: rgba(247,247,245,0.85); margin-bottom: 14px; font-size: 15px; }
+a.email { color: var(--desert); text-decoration: none; border-bottom: 1px solid rgba(201,162,39,0.4); }
+a.email:hover { border-bottom-color: var(--desert); }
+.lang-switch {
+  position: absolute; top: 32px; right: var(--gut);
+  display: flex; gap: 12px;
+}
+.lang-switch a {
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247,247,245,0.5); text-decoration: none;
+}
+.lang-switch a.is-active { color: var(--celestial); }
+section[lang] { display: none; }
+section[lang].is-active { display: block; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 60px 0 30px; }
+footer {
+  font-family: 'Marcellus', serif;
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247,247,245,0.4);
+  margin-top: 60px; padding-top: 30px;
+  border-top: 1px solid var(--line);
+}
+</style>
+</head>
+<body>
+<nav class="lang-switch">
+  <a href="#es" data-lang="es" class="is-active">ES</a>
+  <a href="#en" data-lang="en">EN</a>
+</nav>
+
+<div class="wrap">
+  <a class="back" href="/Ranuk%20Orbit.html">← Ranuk Orbit</a>
+
+  <section lang="es" class="is-active">
+    <span class="overline">Política</span>
+    <h1>Privacidad.</h1>
+    <p class="lead">Esto es un sitio personal. La privacidad acá importa.</p>
+
+    <h2>Qué se recolecta</h2>
+    <p>Cuando enviás el formulario de contacto, tu nombre, email y mensaje van a <a class="email" href="mailto:emilio@ranuk.dev">emilio@ranuk.dev</a> vía Formspree. No se guarda nada más. No hay analytics de terceros que registre datos personales.</p>
+
+    <h2>Cookies</h2>
+    <p>Este sitio no usa cookies de tracking. Solo usa <em>localStorage</em> del navegador para recordar tu preferencia de idioma. Esa data nunca sale de tu dispositivo.</p>
+
+    <h2>Hosting y logs</h2>
+    <p>El sitio se sirve a través del hosting estándar (Vercel/Cloudflare). Los logs del servidor pueden contener tu IP y user-agent durante hasta 30 días para fines de seguridad y debugging. No se cruzan con ninguna otra base de datos.</p>
+
+    <h2>Tus derechos</h2>
+    <p>Si me mandaste un mensaje y querés que borre tu información, escribí a <a class="email" href="mailto:emilio@ranuk.dev">emilio@ranuk.dev</a>. Lo hago en menos de 48 horas.</p>
+
+    <h2>Imágenes y video</h2>
+    <p>Todo el contenido visual es propiedad de Emilio Ranucoli. Las imágenes que aparecen en redes sociales o medios pertenecen a sus respectivos titulares y se citan en cada caso.</p>
+
+    <hr>
+    <p><strong>Última actualización:</strong> mayo 2026</p>
+  </section>
+
+  <section lang="en">
+    <span class="overline">Policy</span>
+    <h1>Privacy.</h1>
+    <p class="lead">This is a personal site. Privacy matters here.</p>
+
+    <h2>What gets collected</h2>
+    <p>When you submit the contact form, your name, email, and message go to <a class="email" href="mailto:emilio@ranuk.dev">emilio@ranuk.dev</a> via Formspree. Nothing else is stored. No third-party analytics record personal data.</p>
+
+    <h2>Cookies</h2>
+    <p>This site uses no tracking cookies. It only uses browser <em>localStorage</em> to remember your language preference. That data never leaves your device.</p>
+
+    <h2>Hosting & logs</h2>
+    <p>The site is served via standard hosting (Vercel/Cloudflare). Server logs may contain your IP and user-agent for up to 30 days for security and debugging. They are not cross-referenced with any other database.</p>
+
+    <h2>Your rights</h2>
+    <p>If you sent me a message and want me to delete your info, email <a class="email" href="mailto:emilio@ranuk.dev">emilio@ranuk.dev</a>. I do it within 48 hours.</p>
+
+    <h2>Images & video</h2>
+    <p>All visual content is the property of Emilio Ranucoli. Images appearing on social networks or media belong to their respective owners and are credited where applicable.</p>
+
+    <hr>
+    <p><strong>Last updated:</strong> May 2026</p>
+  </section>
+
+  <footer>© 2026 Emilio Ranucoli · Mar del Plata · Worldwide</footer>
+</div>
+
+<script>
+(function(){
+  const links = document.querySelectorAll('.lang-switch a');
+  const sections = document.querySelectorAll('section[lang]');
+  function setLang(lang){
+    links.forEach(a => a.classList.toggle('is-active', a.dataset.lang === lang));
+    sections.forEach(s => s.classList.toggle('is-active', s.lang === lang));
+    document.documentElement.lang = lang;
+  }
+  links.forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    setLang(a.dataset.lang);
+  }));
+  // Initial: detect from hash or browser
+  const hashLang = location.hash.replace('#','');
+  if (hashLang === 'en' || hashLang === 'es') setLang(hashLang);
+  else if (navigator.language.startsWith('en')) setLang('en');
+})();
+</script>
+</body>
+</html>

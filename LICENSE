@@ -1,0 +1,61 @@
+PROPRIETARY LICENSE — RANUK ORBIT
+=================================
+
+Copyright © 2026 Emilio Ranucoli — All rights reserved.
+
+This repository contains the source code, design, photographs, videos, and
+written content of "Ranuk Orbit" (https://ranukorbit.com), the personal
+portfolio and brand of Emilio Ranucoli (Mar del Plata, Argentina).
+
+ALL RIGHTS RESERVED.
+
+1. AUTHORSHIP
+   All content in this repository — including but not limited to source code,
+   markup, stylesheets, images, photographs, videos, drone footage, Ray-Ban
+   Meta POV captures, written copy, design tokens, typography choices, color
+   palettes, icons, illustrations, and arrangement — is the original work of
+   Emilio Ranucoli, except where third-party libraries (React, Three.js, etc.)
+   are explicitly attributed.
+
+2. NO LICENSE GRANTED
+   No permission is granted to copy, reproduce, redistribute, modify, sublicense,
+   sell, or use any portion of this repository or the content it produces, in
+   whole or in part, for any purpose — commercial, editorial, educational, or
+   otherwise — without prior written permission from Emilio Ranucoli.
+
+3. EDITORIAL USE
+   Limited non-profit editorial use of photographs and videos (essays, personal
+   blogs, social media with credit) may be granted on request. Contact
+   emilio@ranuk.dev. Credit must read:
+   "Photo / Video: Emilio Ranucoli — ranukorbit.com"
+
+4. AI / MACHINE LEARNING
+   The content of this repository and the website ranukorbit.com may NOT be used
+   to train, fine-tune, evaluate, or otherwise inform any artificial intelligence
+   model, large language model, image generation model, video generation model,
+   or any automated system, without prior written permission from Emilio
+   Ranucoli. This restriction is reflected in robots.txt and meta tags but
+   applies regardless of crawler compliance.
+
+5. THIRD-PARTY DEPENDENCIES
+   This project uses third-party libraries (React, ReactDOM, Babel Standalone,
+   Three.js, Google Fonts) under their respective open-source licenses. Their
+   licenses apply only to those specific libraries, not to the work in this
+   repository.
+
+6. TRADEMARKS
+   "Ranuk Orbit" and the associated logo, wordmark, and visual identity are
+   trademarks of Emilio Ranucoli.
+
+7. CONTACT
+   For licensing inquiries, commissions, or questions:
+   emilio@ranuk.dev
+   https://ranukorbit.com
+
+8. JURISDICTION
+   This license is governed by the laws of Argentina. Any dispute shall be
+   subject to the courts of Mar del Plata, Buenos Aires, Argentina.
+
+──────────────────────────────────────────────────────────────────────────────
+NO WARRANTY. THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+──────────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>404 — Ranuk Orbit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<meta name="description" content="Esta órbita no existe. Volvé al planeta principal." />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --ink: #0A0A0A;
+  --celestial: #F7F7F5;
+  --desert: #C9A227;
+  --line: rgba(247, 247, 245, 0.12);
+  --gut: clamp(20px, 4vw, 80px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--ink); color: var(--celestial);
+  font-family: 'DM Sans', sans-serif; font-weight: 300;
+  display: grid; place-items: center; min-height: 100vh;
+  padding: 80px var(--gut); overflow: hidden; position: relative;
+}
+body::before {
+  content: ""; position: fixed; inset: -50%;
+  background: radial-gradient(circle at 50% 50%, rgba(201, 162, 39, 0.06), transparent 50%);
+  pointer-events: none;
+}
+.wrap { text-align: center; max-width: 560px; position: relative; z-index: 1; }
+.orbit {
+  width: 200px; height: 200px; margin: 0 auto 40px;
+  position: relative;
+  animation: spin 40s linear infinite;
+}
+.orbit svg { width: 100%; height: 100%; }
+.orbit .planet { fill: var(--ink); stroke: var(--celestial); stroke-width: 1; }
+.orbit .moon {
+  fill: var(--desert);
+  animation: pulse 3s ease-in-out infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.code {
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--desert); margin-bottom: 16px;
+}
+h1 {
+  font-family: 'Italiana', serif;
+  font-size: clamp(56px, 10vw, 120px);
+  line-height: 0.9; letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.lead {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: clamp(18px, 2vw, 24px);
+  color: rgba(247, 247, 245, 0.7);
+  margin-bottom: 48px;
+}
+.cta {
+  display: inline-block;
+  font-family: 'Marcellus', serif;
+  font-size: 12px; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--celestial); text-decoration: none;
+  padding: 16px 40px;
+  border: 1px solid var(--celestial);
+  transition: all 0.3s ease;
+}
+.cta:hover {
+  background: var(--celestial); color: var(--ink);
+  letter-spacing: 0.5em;
+}
+.lang { display: flex; gap: 16px; justify-content: center; margin-top: 60px; }
+.lang a {
+  font-family: 'Marcellus', serif;
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247, 247, 245, 0.4); text-decoration: none;
+  cursor: pointer;
+}
+.lang a.is-active { color: var(--celestial); }
+section[lang] { display: none; }
+section[lang].is-active { display: block; }
+footer {
+  position: fixed; bottom: 24px; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Marcellus', serif;
+  font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247, 247, 245, 0.3);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="orbit" aria-hidden="true">
+    <svg viewBox="0 0 200 200">
+      <circle class="planet" cx="100" cy="100" r="38" />
+      <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(247,247,245,0.15)" stroke-width="0.5" stroke-dasharray="2 4" />
+      <circle class="moon" cx="180" cy="100" r="5" />
+    </svg>
+  </div>
+
+  <section lang="es" class="is-active">
+    <div class="code">Error 404</div>
+    <h1>Fuera de órbita.</h1>
+    <p class="lead">Esta página no existe en este sistema solar. Tal vez estés buscando otra cosa.</p>
+    <a class="cta" href="/">Volver al planeta principal</a>
+  </section>
+
+  <section lang="en">
+    <div class="code">Error 404</div>
+    <h1>Out of orbit.</h1>
+    <p class="lead">This page doesn't exist in this solar system. Maybe you're looking for something else.</p>
+    <a class="cta" href="/">Return to home planet</a>
+  </section>
+
+  <nav class="lang">
+    <a data-lang="es" class="is-active">ES</a>
+    <a data-lang="en">EN</a>
+  </nav>
+</div>
+
+<footer>© <span id="y"></span> Emilio Ranucoli · Ranuk Orbit · Mar del Plata · Worldwide</footer>
+
+<script>
+document.getElementById('y').textContent = new Date().getFullYear();
+(function() {
+  const links = document.querySelectorAll('.lang a');
+  const sections = document.querySelectorAll('section[lang]');
+  function setLang(lang) {
+    links.forEach(a => a.classList.toggle('is-active', a.dataset.lang === lang));
+    sections.forEach(s => s.classList.toggle('is-active', s.lang === lang));
+    document.documentElement.lang = lang;
+  }
+  links.forEach(a => a.addEventListener('click', () => setLang(a.dataset.lang)));
+  if (navigator.language && navigator.language.startsWith('en')) setLang('en');
+})();
+</script>
+</body>
+</html>
