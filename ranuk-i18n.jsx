@@ -384,19 +384,46 @@ const COPY = {
 
 const LangContext = createContext(null);
 
+function resolveInitialLang() {
+  try {
+    if (typeof window !== 'undefined' && window.RANUK_LANG) {
+      const w = String(window.RANUK_LANG).toLowerCase();
+      if (w === 'en' || w === 'es' || w === 'it') return w;
+    }
+    const path = (location.pathname || '').toLowerCase();
+    const m = path.match(/^\/(es|en|it)(\/|$)/);
+    if (m) return m[1];
+    const saved = localStorage.getItem('ranuk_lang');
+    if (saved === 'en' || saved === 'es' || saved === 'it') return saved;
+    const nav = (navigator.language || 'en').toLowerCase();
+    if (nav.startsWith('es')) return 'es';
+    if (nav.startsWith('it')) return 'it';
+    return 'en';
+  } catch (e) { return 'en'; }
+}
+
+function navigateToLocale(lang) {
+  try {
+    const path = location.pathname || '/';
+    const hash = location.hash || '';
+    const search = location.search || '';
+    const m = path.match(/^\/(es|en|it)(\/.*)?$/);
+    const rest = m ? (m[2] || '/') : path;
+    const target = `/${lang}${rest === '/' ? '/' : rest}${search}${hash}`;
+    if (target !== path + search + hash) location.assign(target);
+  } catch (e) { /* noop */ }
+}
+
 function LangProvider({ children }) {
-  const [lang, setLang] = useState(() => {
-    try {
-      const saved = localStorage.getItem('ranuk_lang');
-      if (saved === 'en' || saved === 'es' || saved === 'it') return saved;
-      const nav = (navigator.language || 'en').toLowerCase();
-      if (nav.startsWith('es')) return 'es';
-      if (nav.startsWith('it')) return 'it';
-      return 'en';
-    } catch (e) { return 'en'; }
-  });
+  const [lang, setLang] = useState(resolveInitialLang);
   useEffect(() => { try { localStorage.setItem('ranuk_lang', lang); } catch(e){} document.documentElement.lang = lang; }, [lang]);
-  const change = (l) => setLang(l);
+  const change = (l) => {
+    if (l !== 'en' && l !== 'es' && l !== 'it') return;
+    try { localStorage.setItem('ranuk_lang', l); } catch(e){}
+    // Switch URL so deep links keep the locale; falls back to in-place state if navigation fails.
+    setLang(l);
+    navigateToLocale(l);
+  };
   return (
     <LangContext.Provider value={{ lang, change, t: COPY[lang] || COPY.en }}>
       {children}
