@@ -603,11 +603,13 @@ function StatsBand() {
     en: { kicker: 'Three years, one orbit', countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
   };
   const L = labels[lang] || labels.es;
+  const s = window.STATS_V2 || {};
+  const numCountries = (window.LOCATIONS_V2?.length || 0) + (window.VISITED_DOTS_V2?.length || 0);
   const STATS = [
-    { value: '13',  label: L.countries },
-    { value: '142', label: L.flights },
-    { value: '380', label: L.hours },
-    { value: '6',   label: L.brands },
+    { value: String(numCountries || 13), label: L.countries },
+    { value: String(s.flights || 1280) + '+', label: L.flights },
+    { value: String(s.hours_flown || 640) + '+', label: L.hours },
+    { value: String(s.projects || 24),   label: L.brands },
   ];
   return (
     <section className="stats-band" aria-labelledby="stats-kicker">

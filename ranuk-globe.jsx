@@ -1,10 +1,12 @@
 // Ranuk Orbit — Photorealistic Globe v2 with arcs, sidebar, year filter, mobile timeline
 const { useRef, useEffect, useState, useCallback, useMemo } = React;
 
-const EARTH_TEX = 'https://unpkg.com/three-globe@2.31.0/example/img/earth-blue-marble.jpg';
-const EARTH_BUMP = 'https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png';
-const EARTH_SPEC = 'https://unpkg.com/three-globe@2.31.0/example/img/earth-water.png';
-const CLOUDS_TEX = 'https://unpkg.com/three-globe@2.31.0/example/img/clouds.png';
+// Texturas Tierra: NASA Blue Marble 8K via cdn.jsdelivr (mas nítido) con fallback a unpkg 4K
+const EARTH_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_atmos_2048.jpg';
+const EARTH_BUMP = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_normal_2048.jpg';
+const EARTH_SPEC = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_specular_2048.jpg';
+const CLOUDS_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_clouds_1024.png';
+const STARS_TEX  = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/2294472375_24a3b8ef46_o.jpg';
 
 function latLngToVec3(lat, lng, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -37,11 +39,12 @@ function greatCircleCurve(start, end, segments = 64, lift = 0.4) {
   return points;
 }
 
-function Globe({ locations, onLocationClick, highlightId }) {
+function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
   const mountRef = useRef();
   const [hovered, setHovered] = useState(null);
+  const [hoveredVisited, setHoveredVisited] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-  const stateRef = useRef({ pinMeshes: [], arcLines: [], pinGroup: null, locById: {}, pinByIdx: {} });
+  const stateRef = useRef({ pinMeshes: [], visitedMeshes: [], arcLines: [], pinGroup: null, locById: {}, pinByIdx: {} });
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -124,23 +127,41 @@ function Globe({ locations, onLocationClick, highlightId }) {
       grp.lookAt(0, 0, 0);
       grp.rotateX(Math.PI);
 
+      // Beam vertical luminoso
       const beam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.005, 0.005, 0.16, 8),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7 })
+        new THREE.CylinderGeometry(0.004, 0.012, 0.22, 12),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.65 })
       );
-      beam.position.y = 0.08;
+      beam.position.y = 0.11;
       grp.add(beam);
 
+      // Halo glow exterior (sphere translúcido)
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 16, 16),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18, depthWrite: false })
+      );
+      grp.add(halo);
+
+      // Core ball
       const ball = new THREE.Mesh(
-        new THREE.SphereGeometry(0.03, 16, 16),
+        new THREE.SphereGeometry(0.028, 20, 20),
         new THREE.MeshBasicMaterial({ color })
       );
-      ball.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country };
+      ball.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
       grp.add(ball);
 
+      // Inner solid ring
+      const innerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.04, 0.052, 48),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
+      );
+      innerRing.rotation.x = Math.PI / 2;
+      grp.add(innerRing);
+
+      // Pulse ring (animado tipo radar)
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(0.035, 0.05, 32),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.04, 0.058, 48),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
       );
       ring.rotation.x = Math.PI / 2;
       ring.userData = { isRing: true, idx: i };
@@ -151,6 +172,37 @@ function Globe({ locations, onLocationClick, highlightId }) {
       stateRef.current.locById[loc.id] = { idx: i, group: grp, ring };
       stateRef.current.pinByIdx[i] = grp;
     });
+
+    // ── Visited dots: pins decorativos sin click (más chicos, color tenue)
+    const visitedGroup = new THREE.Group();
+    pinGroup.add(visitedGroup);
+    stateRef.current.visitedMeshes = [];
+    if (visitedDots && visitedDots.length) {
+      const dotColor = new THREE.Color('#F7F7F5');
+      visitedDots.forEach((dot, i) => {
+        const pos = latLngToVec3(dot.coords.lat, dot.coords.lng, 2.045);
+        const grp = new THREE.Group();
+        grp.position.copy(pos);
+        grp.lookAt(0, 0, 0);
+        grp.rotateX(Math.PI);
+
+        const dotMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.014, 12, 12),
+          new THREE.MeshBasicMaterial({ color: dotColor, transparent: true, opacity: 0.85 })
+        );
+        dotMesh.userData = { visitedIdx: i, isVisited: true };
+        grp.add(dotMesh);
+
+        const dotHalo = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025, 12, 12),
+          new THREE.MeshBasicMaterial({ color: dotColor, transparent: true, opacity: 0.18, depthWrite: false })
+        );
+        grp.add(dotHalo);
+
+        visitedGroup.add(grp);
+        stateRef.current.visitedMeshes.push(dotMesh);
+      });
+    }
 
     // ── Great-circle arcs between consecutive locations (oceanic, animated draw)
     const arcGroup = new THREE.Group();
@@ -180,27 +232,41 @@ function Globe({ locations, onLocationClick, highlightId }) {
     const mouse = new THREE.Vector2();
     let hoveredIdx = null;
 
+    let hoveredVisitedIdx = null;
     const onMove = (e) => {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(stateRef.current.pinMeshes);
-      if (hits.length > 0) {
-        const idx = hits[0].object.userData.idx;
+      // Prioridad: pins principales > visited dots
+      const hitsMain = raycaster.intersectObjects(stateRef.current.pinMeshes);
+      if (hitsMain.length > 0) {
+        const idx = hitsMain[0].object.userData.idx;
         if (idx !== hoveredIdx) {
           hoveredIdx = idx;
           setHovered(idx);
+          if (hoveredVisitedIdx !== null) { hoveredVisitedIdx = null; setHoveredVisited(null); }
           document.body.style.cursor = 'pointer';
         }
         setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-      } else {
-        if (hoveredIdx !== null) {
-          hoveredIdx = null;
-          setHovered(null);
-          document.body.style.cursor = 'default';
-        }
+        return;
       }
+      const hitsVisited = raycaster.intersectObjects(stateRef.current.visitedMeshes);
+      if (hitsVisited.length > 0) {
+        const vIdx = hitsVisited[0].object.userData.visitedIdx;
+        if (vIdx !== hoveredVisitedIdx) {
+          hoveredVisitedIdx = vIdx;
+          setHoveredVisited(vIdx);
+          if (hoveredIdx !== null) { hoveredIdx = null; setHovered(null); }
+          document.body.style.cursor = 'help';
+        }
+        setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        return;
+      }
+      // No hit
+      if (hoveredIdx !== null) { hoveredIdx = null; setHovered(null); }
+      if (hoveredVisitedIdx !== null) { hoveredVisitedIdx = null; setHoveredVisited(null); }
+      document.body.style.cursor = 'default';
     };
     const onClick = (e) => {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -249,14 +315,15 @@ function Globe({ locations, onLocationClick, highlightId }) {
         clouds.rotation.y += 0.002;
         pinGroup.rotation.y = earth.rotation.y;
       }
-      // Pulse rings
+      // Pulse rings (solo en pins principales — filtrar arcGroup y visitedGroup)
       stateRef.current.pinGroup.children.forEach((grp, i) => {
-        if (!grp.children) return;
+        if (!grp.children || grp.type === 'Group' && grp.children.length === 0) return;
         const ring = grp.children.find(c => c.userData?.isRing);
         if (ring) {
-          const s = 1 + (Math.sin(t * 1.5 + i * 0.4) * 0.5 + 0.5) * 0.6;
+          const phase = Math.sin(t * 1.6 + i * 0.45) * 0.5 + 0.5;
+          const s = 1 + phase * 1.4;
           ring.scale.setScalar(s);
-          ring.material.opacity = 1 - (s - 1) / 0.6;
+          ring.material.opacity = 0.7 * (1 - phase);
         }
       });
       // Animate arc draw — staggered, looping
@@ -332,7 +399,7 @@ function Globe({ locations, onLocationClick, highlightId }) {
       cancelled = true;
       if (cleanup) cleanup();
     };
-  }, [locations, onLocationClick]);
+  }, [locations, visitedDots, onLocationClick]);
 
   // External highlight via prop
   useEffect(() => {
@@ -344,11 +411,16 @@ function Globe({ locations, onLocationClick, highlightId }) {
   return (
     <div className="globe-container" ref={mountRef} style={{ position: 'relative' }}>
       {hovered !== null && locations[hovered] && (
-        <div className="globe-tooltip" style={{
-          left: tooltipPos.x + 'px', top: tooltipPos.y + 'px',
-        }}>
+        <div className="globe-tooltip" style={{ left: tooltipPos.x + 'px', top: tooltipPos.y + 'px' }}>
           <div className="globe-tt-name">{locations[hovered].name}</div>
           <div className="globe-tt-country">{locations[hovered].country}</div>
+          <div className="globe-tt-cta">Click ↗</div>
+        </div>
+      )}
+      {hoveredVisited !== null && visitedDots && visitedDots[hoveredVisited] && (
+        <div className="globe-tooltip globe-tooltip-visited" style={{ left: tooltipPos.x + 'px', top: tooltipPos.y + 'px' }}>
+          <div className="globe-tt-name">{visitedDots[hoveredVisited].name}</div>
+          <div className="globe-tt-country">{visitedDots[hoveredVisited].country} {visitedDots[hoveredVisited].flag}</div>
         </div>
       )}
     </div>
@@ -409,6 +481,7 @@ function AtlasSection() {
             <div className="globe-wrap">
               <Globe
                 locations={locs.map(l => ({ ...l, name: pick(l.name, lang), country: pick(l.country, lang) }))}
+                visitedDots={(window.VISITED_DOTS_V2 || []).map(d => ({ ...d, name: pick(d.name, lang), country: pick(d.country, lang) }))}
                 onLocationClick={handleClick}
                 highlightId={highlightId}
               />

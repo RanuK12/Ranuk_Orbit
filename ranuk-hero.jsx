@@ -175,12 +175,10 @@ function HeroSection() {
         </div>
       )}
 
-      {/* Mute toggle */}
-      {!isMobile && (
-        <button className="hero-mute" onClick={toggleMute} aria-label={muted ? t.hero.unmuted : t.hero.muted}>
-          <MuteIcon muted={muted} />
-        </button>
-      )}
+      {/* Mute toggle (top-right, mobile + desktop) */}
+      <button className="hero-mute" onClick={toggleMute} aria-label={muted ? t.hero.unmuted : t.hero.muted}>
+        <MuteIcon muted={muted} />
+      </button>
 
       <a href="#explore" className="hero-scroll-hint">
         <span className="hero-scroll-line" />

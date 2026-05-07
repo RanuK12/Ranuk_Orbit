@@ -54,11 +54,20 @@ function Lightbox() {
   const exif = item.exif || {};
   const locName = item.location ? pick(item.location.name, lang) : '';
 
+  // Click handler robusto: cierra solo si el click fue en el backdrop directo (no en stage ni botones)
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) lb.close();
+  };
+  // Handler para botones, dispara onPointerDown para responder antes que video controls capturen el evento
+  const closeHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.close(); };
+  const prevHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.prev(); };
+  const nextHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.next(); };
+
   return (
-    <div className="lightbox" onClick={lb.close} role="dialog" aria-modal="true">
-      <button className="lb-close" onClick={(e) => { e.stopPropagation(); lb.close(); }} aria-label="Close">×</button>
-      <button className="lb-nav lb-nav-prev" onClick={(e) => { e.stopPropagation(); lb.prev(); }} aria-label="Prev">‹</button>
-      <button className="lb-nav lb-nav-next" onClick={(e) => { e.stopPropagation(); lb.next(); }} aria-label="Next">›</button>
+    <div className="lightbox" onClick={handleBackdropClick} role="dialog" aria-modal="true">
+      <button type="button" className="lb-close" onPointerDown={closeHandler} onClick={closeHandler} aria-label="Close">×</button>
+      <button type="button" className="lb-nav lb-nav-prev" onPointerDown={prevHandler} onClick={prevHandler} aria-label="Prev">‹</button>
+      <button type="button" className="lb-nav lb-nav-next" onPointerDown={nextHandler} onClick={nextHandler} aria-label="Next">›</button>
 
       <div className="lb-stage" onClick={(e) => e.stopPropagation()}>
         {isVideo ? (

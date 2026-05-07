@@ -211,12 +211,28 @@ const LOCATIONS_V2 = [
     media: [
       M('cor-1', 'photo', FOTO_DRONE('Carlos-Paz_Cba.JPG'), {en:'Carlos Paz',es:'Carlos Paz'}, 'warm', 'aerial', 2024),
       M('cor-2', 'photo', FOTO_RB('James_Craik-Cordoba.jpeg'), {en:'James Craik, Córdoba',es:'James Craik, Córdoba'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('cor-3', 'photo', FOTO_RB('Los_Andes-Avion.jpeg'), {en:'Andes from Above — Mendoza',es:'Andes desde el aire — Mendoza'}, 'cold', 'aerial', 2024, {camera:'Ray-Ban Meta'}),
       M('cor-v1', 'video', VIDEO_DRONE('Carlos_Paz-Cordoba.MP4'), {en:'Carlos Paz',es:'Carlos Paz'}, 'warm', 'aerial', 2024),
       M('cor-v2', 'video', VIDEO_DRONE('Laguna_"La-Chanchera"_Cordoba.mov'), {en:'La Chanchera Lagoon',es:'Laguna La Chanchera'}, 'cold', 'aerial', 2024),
       M('cor-v3', 'video', VIDEO_DRONE('James-Craik_Tren-9:16.mov'), {en:'Train, James Craik',es:'Tren, James Craik'}, 'warm', 'aerial', 2024),
       M('cor-v4', 'pov', VIDEO_RB('Campo_James-Craik_Cordoba.mov'), {en:'James Craik Fields',es:'Campo James Craik'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
       M('cor-v5', 'pov', VIDEO_RB('Sierras-Cba_Los-Gigantes.mov'), {en:'Los Gigantes',es:'Los Gigantes'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
+    ]
+  },
+  {
+    id: 'mendoza',
+    name: { en: 'Mendoza · Andes', es: 'Mendoza · Andes', it: 'Mendoza · Ande' },
+    country: { en: 'Argentina', es: 'Argentina', it: 'Argentina' },
+    flag: '🇦🇷',
+    coords: { lat: -32.889, lng: -68.845 },
+    cover: FOTO_RB('Los_Andes-Avion.jpeg'),
+    accentColor: '#9CA8B8',
+    year: 2024,
+    description: {
+      en: 'The Andes from above — vertical drop, blue shadows on white, the spine of South America.',
+      es: 'Los Andes desde arriba — caída vertical, sombras azules sobre el blanco, la columna de Sudamérica.',
+    },
+    media: [
+      M('men-1', 'photo', FOTO_RB('Los_Andes-Avion.jpeg'), {en:'Andes from Above',es:'Andes desde el aire'}, 'cold', 'aerial', 2024, {camera:'Ray-Ban Meta', loc:'Cordillera de los Andes'}),
     ]
   },
   {
@@ -269,7 +285,6 @@ const LOCATIONS_V2 = [
     },
     media: [
       M('mar-1', 'photo', FOTO_DRONE('Aghroud_Marruecos.JPG'), {en:'Aghroud Coast',es:'Costa de Aghroud'}, 'warm', 'aerial', 2023),
-      M('mar-2', 'photo', FOTO_DRONE('Agrhoud-Marruecos.JPG'), {en:'Aghroud Sands',es:'Arenas de Aghroud'}, 'warm', 'aerial', 2023),
       M('mar-3', 'photo', FOTO_RB('Marruecos-Tintes_Marrakech.jpg'), {en:'Dyers, Marrakech',es:'Tintoreros, Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
       M('mar-4', 'photo', FOTO_RB('Taghazout-Marruecos.jpg'), {en:'Taghazout',es:'Taghazout'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
       M('mar-v1', 'video', VIDEO_DRONE('Aghroud_Marruecos.MP4'), {en:'Aghroud',es:'Aghroud'}, 'warm', 'aerial', 2023),
@@ -392,17 +407,64 @@ if (window.RANUK_ASSETS && window.RANUK_ASSETS.size > 0) {
   if (dropped > 0) console.info('[ranuk] manifest: dropped', dropped, 'items pending optimization');
 }
 
+// Cada media hereda el year correcto de su location (sobrescribe years viejos en M(...))
 LOCATIONS_V2.forEach(loc => {
-  loc.media.forEach(m => { m.location = { id: loc.id, name: loc.name, flag: loc.flag, year: loc.year }; });
+  loc.media.forEach(m => {
+    m.year = loc.year;
+    m.location = { id: loc.id, name: loc.name, flag: loc.flag, year: loc.year };
+  });
 });
+
+// VISITED_DOTS_V2 — pins decorativos en el globo (paises visitados sin material)
+// Click no abre lightbox, solo tooltip con nombre
+const VISITED_DOTS_V2 = [
+  // Europa
+  { name: { en: 'Paris',          es: 'París',          it: 'Parigi' },        country: { en: 'France',       es: 'Francia',     it: 'Francia' },        flag: '🇫🇷', coords: { lat: 48.857, lng: 2.353 }   },
+  { name: { en: 'Barcelona',      es: 'Barcelona',      it: 'Barcellona' },    country: { en: 'Spain',        es: 'España',      it: 'Spagna' },         flag: '🇪🇸', coords: { lat: 41.385, lng: 2.173 }   },
+  { name: { en: 'Madrid',         es: 'Madrid',         it: 'Madrid' },        country: { en: 'Spain',        es: 'España',      it: 'Spagna' },         flag: '🇪🇸', coords: { lat: 40.417, lng: -3.703 }  },
+  { name: { en: 'Lisbon',         es: 'Lisboa',         it: 'Lisbona' },       country: { en: 'Portugal',     es: 'Portugal',    it: 'Portogallo' },     flag: '🇵🇹', coords: { lat: 38.722, lng: -9.140 }  },
+  { name: { en: 'London',         es: 'Londres',        it: 'Londra' },        country: { en: 'United Kingdom', es: 'Reino Unido', it: 'Regno Unito' }, flag: '🇬🇧', coords: { lat: 51.507, lng: -0.128 }  },
+  { name: { en: 'Berlin',         es: 'Berlín',         it: 'Berlino' },       country: { en: 'Germany',      es: 'Alemania',    it: 'Germania' },       flag: '🇩🇪', coords: { lat: 52.520, lng: 13.405 }  },
+  { name: { en: 'Vienna',         es: 'Viena',          it: 'Vienna' },        country: { en: 'Austria',      es: 'Austria',     it: 'Austria' },        flag: '🇦🇹', coords: { lat: 48.208, lng: 16.373 }  },
+  { name: { en: 'Prague',         es: 'Praga',          it: 'Praga' },         country: { en: 'Czech Rep.',   es: 'Rep. Checa',  it: 'Rep. Ceca' },      flag: '🇨🇿', coords: { lat: 50.075, lng: 14.437 }  },
+  { name: { en: 'Budapest',       es: 'Budapest',       it: 'Budapest' },      country: { en: 'Hungary',      es: 'Hungría',     it: 'Ungheria' },       flag: '🇭🇺', coords: { lat: 47.498, lng: 19.040 }  },
+  { name: { en: 'Athens',         es: 'Atenas',         it: 'Atene' },         country: { en: 'Greece',       es: 'Grecia',      it: 'Grecia' },         flag: '🇬🇷', coords: { lat: 37.984, lng: 23.728 }  },
+  { name: { en: 'Florence',       es: 'Florencia',      it: 'Firenze' },       country: { en: 'Italy',        es: 'Italia',      it: 'Italia' },         flag: '🇮🇹', coords: { lat: 43.770, lng: 11.255 }  },
+  { name: { en: 'Venice',         es: 'Venecia',        it: 'Venezia' },       country: { en: 'Italy',        es: 'Italia',      it: 'Italia' },         flag: '🇮🇹', coords: { lat: 45.440, lng: 12.316 }  },
+  { name: { en: 'Milan',          es: 'Milán',          it: 'Milano' },        country: { en: 'Italy',        es: 'Italia',      it: 'Italia' },         flag: '🇮🇹', coords: { lat: 45.464, lng: 9.190 }   },
+  { name: { en: 'Brussels',       es: 'Bruselas',       it: 'Bruxelles' },     country: { en: 'Belgium',      es: 'Bélgica',     it: 'Belgio' },         flag: '🇧🇪', coords: { lat: 50.851, lng: 4.351 }   },
+  { name: { en: 'Zurich',         es: 'Zúrich',         it: 'Zurigo' },        country: { en: 'Switzerland',  es: 'Suiza',       it: 'Svizzera' },       flag: '🇨🇭', coords: { lat: 47.376, lng: 8.541 }   },
+  // Sudamérica
+  { name: { en: 'Buenos Aires',   es: 'Buenos Aires',   it: 'Buenos Aires' },  country: { en: 'Argentina',    es: 'Argentina',   it: 'Argentina' },      flag: '🇦🇷', coords: { lat: -34.603, lng: -58.381 }},
+  { name: { en: 'Rio de Janeiro', es: 'Río de Janeiro', it: 'Rio de Janeiro' },country: { en: 'Brazil',       es: 'Brasil',      it: 'Brasile' },        flag: '🇧🇷', coords: { lat: -22.907, lng: -43.173 }},
+  { name: { en: 'Santiago',       es: 'Santiago',       it: 'Santiago' },      country: { en: 'Chile',        es: 'Chile',       it: 'Cile' },           flag: '🇨🇱', coords: { lat: -33.448, lng: -70.669 }},
+  { name: { en: 'Montevideo',     es: 'Montevideo',     it: 'Montevideo' },    country: { en: 'Uruguay',      es: 'Uruguay',     it: 'Uruguay' },        flag: '🇺🇾', coords: { lat: -34.901, lng: -56.165 }},
+  { name: { en: 'Lima',           es: 'Lima',           it: 'Lima' },          country: { en: 'Peru',         es: 'Perú',        it: 'Perù' },           flag: '🇵🇪', coords: { lat: -12.046, lng: -77.043 }},
+  // Norteamérica
+  { name: { en: 'New York',       es: 'Nueva York',     it: 'New York' },      country: { en: 'USA',          es: 'EE.UU.',      it: 'USA' },            flag: '🇺🇸', coords: { lat: 40.713, lng: -74.006 } },
+  { name: { en: 'Miami',          es: 'Miami',          it: 'Miami' },         country: { en: 'USA',          es: 'EE.UU.',      it: 'USA' },            flag: '🇺🇸', coords: { lat: 25.762, lng: -80.192 } },
+  { name: { en: 'Mexico City',    es: 'Ciudad de México',it:'Città del Messico'},country:{ en: 'Mexico',       es: 'México',      it: 'Messico' },        flag: '🇲🇽', coords: { lat: 19.433, lng: -99.133 } },
+  // Asia / Medio Oriente
+  { name: { en: 'Dubai',          es: 'Dubái',          it: 'Dubai' },         country: { en: 'UAE',          es: 'EAU',         it: 'EAU' },            flag: '🇦🇪', coords: { lat: 25.276, lng: 55.296 }  },
+  { name: { en: 'Istanbul',       es: 'Estambul',       it: 'Istanbul' },      country: { en: 'Turkey',       es: 'Turquía',     it: 'Turchia' },        flag: '🇹🇷', coords: { lat: 41.008, lng: 28.978 }  },
+  { name: { en: 'Tokyo',          es: 'Tokio',          it: 'Tokyo' },         country: { en: 'Japan',        es: 'Japón',       it: 'Giappone' },       flag: '🇯🇵', coords: { lat: 35.689, lng: 139.692 } },
+  { name: { en: 'Singapore',      es: 'Singapur',       it: 'Singapore' },     country: { en: 'Singapore',    es: 'Singapur',    it: 'Singapore' },      flag: '🇸🇬', coords: { lat: 1.352,  lng: 103.819 } },
+  // África
+  { name: { en: 'Cairo',          es: 'El Cairo',       it: 'Il Cairo' },      country: { en: 'Egypt',        es: 'Egipto',      it: 'Egitto' },         flag: '🇪🇬', coords: { lat: 30.044, lng: 31.236 }  },
+  { name: { en: 'Cape Town',      es: 'Ciudad del Cabo',it: 'Città del Capo' },country: { en: 'South Africa', es: 'Sudáfrica',   it: 'Sudafrica' },      flag: '🇿🇦', coords: { lat: -33.925, lng: 18.424 } },
+  // Oceanía
+  { name: { en: 'Sydney',         es: 'Sídney',         it: 'Sydney' },        country: { en: 'Australia',    es: 'Australia',   it: 'Australia' },      flag: '🇦🇺', coords: { lat: -33.868, lng: 151.209 }},
+];
 
 const ALL_MEDIA_V2 = LOCATIONS_V2.flatMap(l => l.media);
 const YEARS_V2 = [...new Set(LOCATIONS_V2.map(l => l.year))].sort((a,b)=>b-a);
 
 // Stats for Story counters
+// Cálculo: ~640 horas de vuelo / 30 min promedio por batería = ~1280 vuelos
 const STATS_V2 = {
   countries: 6,
-  hours_flown: 740,
+  hours_flown: 640,
+  flights: 1280,
   projects: 24,
 };
 
@@ -507,6 +569,7 @@ const PRESS_V2 = [
 
 Object.assign(window, {
   LOCATIONS_V2,
+  VISITED_DOTS_V2,
   ALL_MEDIA_V2,
   YEARS_V2,
   STATS_V2,
