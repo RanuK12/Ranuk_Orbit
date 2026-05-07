@@ -19,7 +19,7 @@ const FOTO_DRONE  = (n) => `media/optimized/fotos-drone/${_slug(n)}.jpg`;
 const VIDEO_DRONE = (n) => `media/optimized/videos-drone/${_slug(n)}.mp4`;
 const FOTO_RB     = (n) => `media/optimized/fotos-rayban/${_slug(n)}.jpg`;
 const VIDEO_RB    = (n) => `media/optimized/videos-rayban/${_slug(n)}.mp4`;
-const POSTER      = (n) => `media/posters/${n}`;
+const POSTER      = (n) => `media/optimized/posters/${n}`;
 
 const M = (id, type, src, title, mood, altitude, year, exif) => ({
   id, type, src, title, mood, altitude, year, exif: exif || null
@@ -29,17 +29,17 @@ const M = (id, type, src, title, mood, altitude, year, exif) => ({
 const HERO_SEQUENCE = [
   {
     src: VIDEO_DRONE('Cerdeña_Isla-Magdalena_HERO.MP4'),
-    poster: POSTER('hero-cerdena.jpg'),
+    poster: POSTER('cerde-na-isla-magdalena-hero.jpg'),
     label: { en: 'Maddalena, Sardinia', es: 'Maddalena, Cerdeña' },
   },
   {
     src: VIDEO_DRONE('Rio_Limay_Patagonia.MP4'),
-    poster: POSTER('hero-patagonia.jpg'),
+    poster: POSTER('rio-limay-patagonia.jpg'),
     label: { en: 'Río Limay, Patagonia', es: 'Río Limay, Patagonia' },
   },
   {
     src: VIDEO_DRONE('Atardecer-Nieve-HERO.mov'),
-    poster: POSTER('hero-alpes.jpg'),
+    poster: POSTER('atardecer-nieve-hero.jpg'),
     label: { en: 'Trentino, Italian Alps', es: 'Trentino, Alpes Italianos' },
   },
 ];

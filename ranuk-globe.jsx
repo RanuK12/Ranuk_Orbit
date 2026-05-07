@@ -46,6 +46,17 @@ function Globe({ locations, onLocationClick, highlightId }) {
   useEffect(() => {
     if (!mountRef.current) return;
     const mount = mountRef.current;
+    let cleanup = null;
+    let cancelled = false;
+
+    // Carga Three.js de forma diferida; solo arma el globo cuando el lib esté listo
+    const loadAndInit = async () => {
+      if (window.__loadThree) await window.__loadThree();
+      if (cancelled || !mountRef.current) return;
+      cleanup = initGlobe();
+    };
+
+    const initGlobe = () => {
     const width = mount.clientWidth;
     const height = mount.clientHeight;
 
@@ -312,6 +323,14 @@ function Globe({ locations, onLocationClick, highlightId }) {
       window.removeEventListener('resize', onResize);
       try { mount.removeChild(renderer.domElement); } catch (e) {}
       renderer.dispose();
+    };
+    }; // end initGlobe
+
+    loadAndInit();
+
+    return () => {
+      cancelled = true;
+      if (cleanup) cleanup();
     };
   }, [locations, onLocationClick]);
 

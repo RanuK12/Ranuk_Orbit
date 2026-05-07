@@ -25,10 +25,13 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/><line x1='4' y1='32' x2='60' y2='32' stroke='%23F7F7F5' stroke-width='1.5'/><line x1='32' y1='4' x2='32' y2='60' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
 
-<!-- Fonts -->
+<!-- Preload del primer poster del hero (LCP) -->
+<link rel="preload" as="image" href="media/optimized/posters/cerde-na-isla-magdalena-hero.jpg" fetchpriority="high" />
+
+<!-- Fonts (DM Sans reducido a 400/500 — los otros pesos no se usaban) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Marcellus&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
 
 <style>
 :root {
@@ -1287,10 +1290,25 @@ body.konami { animation: rainbow 6s linear; }
 
 <div id="app"></div>
 
-<!-- React + Three (no Babel; JSX is pre-compiled) -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+<!-- React (jsDelivr es más rápido y consistente que unpkg) -->
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+
+<!-- Three.js: carga diferida solo cuando el globo entre en viewport -->
+<script>
+  window.__loadThree = function() {
+    if (window.THREE) return Promise.resolve();
+    if (window.__threePromise) return window.__threePromise;
+    window.__threePromise = new Promise(function(resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    return window.__threePromise;
+  };
+</script>
 
 <!-- Asset manifest (qué archivos existen realmente en /optimized/) -->
 <script src="ranuk-manifest.js"></script>
