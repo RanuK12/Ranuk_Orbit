@@ -559,12 +559,21 @@ const TESTIMONIALS_V2 = [
   },
 ];
 
-const PRESS_V2 = [
-  { name: 'DJI Pilot Showcase', year: 2024 },
-  { name: 'Italian Tourism Board', year: 2024 },
-  { name: 'Patagonia Travel Co.', year: 2023 },
-  { name: 'Marrakech Films', year: 2023 },
-  { name: 'Ray-Ban Meta Creators', year: 2025 },
+const PROFILE_PHOTOS = [
+  'media/optimized/Fotos_Emilio_Perfil/7c9ab927-bed6-451d-9052-2435effcf914.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-0232.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-0565.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-2072.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-2868.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3224.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3831.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3983.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-4080.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-5441.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-7204.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-8589.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-8895.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-9396.webp',
 ];
 
 Object.assign(window, {
@@ -578,4 +587,5 @@ Object.assign(window, {
   TESTIMONIALS_V2,
   PRESS_V2,
   HERO_SEQUENCE,
+  PROFILE_PHOTOS,
 });
