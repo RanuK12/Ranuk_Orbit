@@ -1,0 +1,420 @@
+/*
+  MARKETING_CSS.css — Ranuk Orbit
+  CSS para los componentes de marketing nuevos.
+  Pegar TODO este contenido dentro del <style> de Ranuk Orbit.html,
+  al final del bloque (antes de </style>).
+
+  Asume las custom properties existentes:
+    --ink #0A0A0A · --celestial #F7F7F5 · --desert #C9A227
+    --line · --line-strong · --gut · --max
+*/
+
+/* ──────────────────────────────────────────────────────────────────────
+   1. KICKER + SECTION TITLE (compartido)
+   ────────────────────────────────────────────────────────────────────── */
+.kicker {
+  display: inline-block;
+  font-family: 'Marcellus', serif;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--desert);
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Italiana', serif;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   2. BOTONES (CTA primary + secondary)
+   ────────────────────────────────────────────────────────────────────── */
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Marcellus', serif;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 18px 32px;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--desert);
+  color: var(--ink);
+  border: 1px solid var(--desert);
+}
+.btn-primary:hover {
+  background: transparent;
+  color: var(--desert);
+  letter-spacing: 0.4em;
+}
+.btn-primary svg { transition: transform 0.3s ease; }
+.btn-primary:hover svg { transform: translateX(4px); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--celestial);
+  border: 1px solid var(--celestial);
+}
+.btn-secondary:hover {
+  background: var(--celestial);
+  color: var(--ink);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   3. HERO CTAS
+   ────────────────────────────────────────────────────────────────────── */
+.hero-ctas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-top: 48px;
+}
+.hero-ctas > *:first-of-type,
+.hero-ctas > *:nth-child(2) {
+  margin: 0;
+}
+@media (min-width: 720px) {
+  .hero-ctas {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+  }
+}
+.hero-availability {
+  font-family: 'Marcellus', serif;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(247, 247, 245, 0.6);
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+.dot-live {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  animation: livePulse 2s infinite;
+}
+@keyframes livePulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   4. STATS BAND
+   ────────────────────────────────────────────────────────────────────── */
+.stats-band {
+  padding: clamp(80px, 12vh, 160px) var(--gut);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--ink);
+  text-align: center;
+}
+.stats-kicker {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(18px, 2vw, 24px);
+  color: rgba(247, 247, 245, 0.7);
+  margin-bottom: 56px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 48px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+@media (min-width: 720px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.stat-value {
+  font-family: 'Italiana', serif;
+  font-size: clamp(56px, 8vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--celestial);
+}
+.stat-label {
+  font-family: 'Marcellus', serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(247, 247, 245, 0.6);
+}
+.stats-footer {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(247, 247, 245, 0.4);
+  margin-top: 56px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   5. HOW I WORK
+   ────────────────────────────────────────────────────────────────────── */
+.how-i-work .how-head {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 80px;
+}
+.how-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 32px;
+  max-width: 880px;
+  margin-inline: auto;
+}
+@media (min-width: 720px) {
+  .how-steps { gap: 48px; }
+}
+.how-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.how-step:last-child {
+  border-bottom: none;
+}
+@media (min-width: 720px) {
+  .how-step {
+    grid-template-columns: 120px 1fr;
+    gap: 48px;
+    padding-bottom: 48px;
+  }
+}
+.how-step-num {
+  font-family: 'Italiana', serif;
+  font-size: clamp(36px, 4vw, 56px);
+  line-height: 1;
+  color: var(--desert);
+  letter-spacing: -0.02em;
+}
+.how-step-title {
+  font-family: 'Italiana', serif;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.1;
+  margin: 0 0 8px;
+  color: var(--celestial);
+}
+.how-step-time {
+  font-family: 'Marcellus', serif;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--desert);
+  margin: 0 0 16px;
+}
+.how-step-text {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(247, 247, 245, 0.8);
+  max-width: 560px;
+}
+.how-footer {
+  text-align: center;
+  margin-top: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.how-footer-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(20px, 2.5vw, 28px);
+  color: rgba(247, 247, 245, 0.85);
+  max-width: 560px;
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   6. FAQ
+   ────────────────────────────────────────────────────────────────────── */
+.faq-section .faq-head {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 64px;
+}
+.faq-list {
+  max-width: 880px;
+  margin: 0 auto;
+  border-top: 1px solid var(--line);
+}
+.faq-item {
+  border-bottom: 1px solid var(--line);
+}
+.faq-question {
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 0;
+  font-family: 'Italiana', serif;
+  font-size: clamp(20px, 2.2vw, 28px);
+  line-height: 1.3;
+  color: var(--celestial);
+  transition: color 0.2s ease;
+}
+.faq-question:hover {
+  color: var(--desert);
+}
+.faq-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-strong, rgba(247,247,245,0.2));
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--celestial);
+}
+.faq-item.is-open .faq-icon {
+  transform: rotate(180deg);
+  background: var(--desert);
+  border-color: var(--desert);
+  color: var(--ink);
+}
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.faq-item.is-open .faq-answer {
+  max-height: 600px;
+  padding-bottom: 28px;
+}
+.faq-answer p {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(247, 247, 245, 0.75);
+  margin: 0;
+  max-width: 720px;
+}
+.faq-footer {
+  text-align: center;
+  margin-top: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.faq-footer-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(18px, 2vw, 24px);
+  color: rgba(247, 247, 245, 0.7);
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   7. WHATSAPP FLOAT
+   ────────────────────────────────────────────────────────────────────── */
+.whatsapp-float {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateY(80px) scale(0.8);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.whatsapp-float.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.whatsapp-float:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.4);
+}
+@media (max-width: 720px) {
+  .whatsapp-float {
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   8. RESPONSIVE FINE-TUNING
+   ────────────────────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .btn-primary, .btn-secondary {
+    padding: 16px 24px;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-ctas {
+    width: 100%;
+    padding: 0 var(--gut);
+  }
+  .stat-cell {
+    gap: 8px;
+  }
+  .how-step-num {
+    font-size: 32px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .dot-live { animation: none; }
+  .whatsapp-float { transition: opacity 0.2s ease; transform: none; }
+  .btn-primary svg { transition: none; }
+}
