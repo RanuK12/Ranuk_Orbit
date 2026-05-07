@@ -1,0 +1,50 @@
+# Cloudflare Pages / Netlify headers
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Robots-Tag: index, follow
+
+# Imágenes — cache largo (los nombres incluyen hash o slug único)
+/media/optimized/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.avif
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+# Videos — cache largo + range requests
+/*.mp4
+  Cache-Control: public, max-age=31536000, immutable
+  Accept-Ranges: bytes
+/*.webm
+  Cache-Control: public, max-age=31536000, immutable
+  Accept-Ranges: bytes
+
+# Fuentes
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# JS/CSS — cache corto, hay que cache-bustear con ?v=
+/*.js
+  Cache-Control: public, max-age=3600, must-revalidate
+/*.jsx
+  Cache-Control: public, max-age=3600, must-revalidate
+/*.css
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# HTML — sin cache largo (es lo que cambia)
+/*.html
+  Cache-Control: public, max-age=300, must-revalidate
