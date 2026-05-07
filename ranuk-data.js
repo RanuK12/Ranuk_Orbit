@@ -1,11 +1,25 @@
 // Ranuk Orbit v2 — Real coords, real titles, EXIF where known
 // 13 fotos drone · 10 fotos rayban · 43 videos drone · 39 videos rayban
 
-const FOTO_DRONE = (n) => `media/fotos-drone/${n}`;
-const VIDEO_DRONE = (n) => `media/videos-drone/${n}`;
-const FOTO_RB = (n) => `media/fotos-rayban/${n}`;
-const VIDEO_RB = (n) => `media/videos-rayban/${n}`;
-const POSTER = (n) => `media/posters/${n}`;
+// Slug helper: convierte nombres con ñ/espacios/símbolos a paths web-safe
+// Permite que ranuk-data.js mantenga los nombres originales pero apunte a /optimized/
+const _slug = (n) => {
+  // separar nombre y extensión
+  const dot = n.lastIndexOf('.');
+  const name = dot >= 0 ? n.slice(0, dot) : n;
+  return name
+    .toLowerCase()
+    .replace(/ñ/g, 'n')
+    .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+const FOTO_DRONE  = (n) => `media/optimized/fotos-drone/${_slug(n)}.jpg`;
+const VIDEO_DRONE = (n) => `media/optimized/videos-drone/${_slug(n)}.mp4`;
+const FOTO_RB     = (n) => `media/optimized/fotos-rayban/${_slug(n)}.jpg`;
+const VIDEO_RB    = (n) => `media/optimized/videos-rayban/${_slug(n)}.mp4`;
+const POSTER      = (n) => `media/posters/${n}`;
 
 const M = (id, type, src, title, mood, altitude, year, exif) => ({
   id, type, src, title, mood, altitude, year, exif: exif || null

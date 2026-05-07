@@ -8,6 +8,59 @@ function useChangeLang() {
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────
+const LANG_OPTIONS = [
+  { code: 'en', label: 'EN', full: 'English' },
+  { code: 'es', label: 'ES', full: 'Español' },
+  { code: 'it', label: 'IT', full: 'Italiano' },
+];
+
+function LangDropdown({ lang, setLang, variant }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [open]);
+  const current = LANG_OPTIONS.find(o => o.code === lang) || LANG_OPTIONS[0];
+  return (
+    <div className={`lang-dd${variant ? ' is-' + variant : ''}`} ref={ref}>
+      <button
+        type="button"
+        className="lang-dd-toggle"
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Idioma: ${current.full}`}
+      >
+        <span>{variant === 'overlay' ? current.full : current.label}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <ul className="lang-dd-menu" role="listbox">
+          {LANG_OPTIONS.map(o => (
+            <li key={o.code}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={o.code === lang}
+                className={o.code === lang ? 'is-active' : ''}
+                onClick={() => { setLang(o.code); setOpen(false); }}
+              >
+                <span className="lang-dd-code">{o.label}</span>
+                <span className="lang-dd-full">{o.full}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Nav() {
   const { t, lang, setLang } = useChangeLang();
   const [scrolled, setScrolled] = useState(false);
@@ -40,13 +93,7 @@ function Nav() {
           {links.map(l => <a key={l.href} href={l.href} className="nav-link">{l.label}</a>)}
         </div>
         <div className="nav-actions">
-          <button
-            className="nav-lang"
-            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
-            aria-label="Toggle language"
-          >
-            {lang === 'en' ? 'ES' : 'EN'}
-          </button>
+          <LangDropdown lang={lang} setLang={setLang} />
           <button className="nav-burger" onClick={() => setOpen(true)} aria-label="Menu">
             <span /><span /><span />
           </button>
@@ -69,9 +116,7 @@ function Nav() {
             ))}
           </div>
           <div className="nav-overlay-foot">
-            <button onClick={() => setLang(lang === 'en' ? 'es' : 'en')}>
-              {lang === 'en' ? 'Español' : 'English'}
-            </button>
+            <LangDropdown lang={lang} setLang={setLang} variant="overlay" />
           </div>
         </div>
       )}
