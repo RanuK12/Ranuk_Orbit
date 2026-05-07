@@ -118,18 +118,31 @@ function HeroSection() {
   return (
     <section className="hero" id="home" ref={containerRef}>
       <div className="hero-bg">
-        {!isMobile && sequence.map((clip, i) => (
-          <video
-            key={i}
-            ref={el => videoRefs.current[i] = el}
-            className={`hero-video${i === active ? ' is-active' : ''}`}
-            autoPlay muted={muted} loop playsInline
-            poster={clip.poster}
-            preload={i === 0 ? 'auto' : 'metadata'}
-          >
-            <source src={clip.src} type="video/mp4" />
-          </video>
-        ))}
+        {!isMobile && sequence.map((clip, i) => {
+          // Lazy: solo cargar video activo + siguiente (para crossfade). El resto = poster JPG.
+          const nextIdx = (active + 1) % sequence.length;
+          const shouldLoad = i === active || i === nextIdx;
+          return shouldLoad ? (
+            <video
+              key={i}
+              ref={el => videoRefs.current[i] = el}
+              className={`hero-video${i === active ? ' is-active' : ''}`}
+              autoPlay muted={muted} loop playsInline
+              poster={clip.poster}
+              preload={i === active ? 'auto' : 'metadata'}
+            >
+              <source src={clip.src} type="video/mp4" />
+            </video>
+          ) : (
+            <img
+              key={i}
+              className={`hero-video${i === active ? ' is-active' : ''}`}
+              src={clip.poster}
+              alt=""
+              loading="lazy"
+            />
+          );
+        })}
         {isMobile && sequence[0] && (
           <img className="hero-video is-active" src={sequence[0].poster} alt="" />
         )}

@@ -199,10 +199,13 @@ function ArchiveSection() {
                 <img src={thumb} alt={it._displayTitle} loading="lazy" />
               ) : (
                 <video
-                  src={it.src}
-                  muted loop playsInline preload="metadata"
+                  muted loop playsInline preload="none"
                   poster={it.poster}
-                  onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
+                  onMouseEnter={(e) => {
+                    // Carga el src bajo demanda al hover (lazy)
+                    if (!e.currentTarget.src) e.currentTarget.src = it.src;
+                    e.currentTarget.play().catch(() => {});
+                  }}
                   onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                 />
               )}
@@ -357,6 +360,18 @@ function RayBanSection() {
   const lb = useLightbox();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [glassesVisible, setGlassesVisible] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setGlassesVisible(true); obs.disconnect(); } },
+      { rootMargin: '100px' }
+    );
+    obs.observe(sectionRef.current);
+    return () => obs.disconnect();
+  }, []);
 
   const povItems = useMemo(() => {
     const items = [];
@@ -381,7 +396,7 @@ function RayBanSection() {
   };
 
   return (
-    <section className="rayban" id="pov">
+    <section className="rayban" id="pov" ref={sectionRef}>
       <div className="rayban-head">
         <span className="section-overline">{t.pov.overline}</span>
         <h2 className="section-title">{t.pov.title}</h2>
@@ -395,14 +410,18 @@ function RayBanSection() {
             <clipPath id="lensR"><ellipse cx="430" cy="100" rx="100" ry="70" /></clipPath>
           </defs>
           <foreignObject x="70" y="30" width="200" height="140" clipPath="url(#lensL)">
-            {povItems[0] && (
+            {glassesVisible && povItems[0] ? (
               <video xmlns="http://www.w3.org/1999/xhtml" src={povItems[0].src} autoPlay muted loop playsInline poster={povItems[0].poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            )}
+            ) : povItems[0] ? (
+              <img xmlns="http://www.w3.org/1999/xhtml" src={povItems[0].poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : null}
           </foreignObject>
           <foreignObject x="330" y="30" width="200" height="140" clipPath="url(#lensR)">
-            {povItems[1] && (
+            {glassesVisible && povItems[1] ? (
               <video xmlns="http://www.w3.org/1999/xhtml" src={povItems[1].src} autoPlay muted loop playsInline poster={povItems[1].poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            )}
+            ) : povItems[1] ? (
+              <img xmlns="http://www.w3.org/1999/xhtml" src={povItems[1].poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : null}
           </foreignObject>
           <ellipse cx="170" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />
           <ellipse cx="430" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />
@@ -416,10 +435,12 @@ function RayBanSection() {
         {povItems.map((it, i) => (
           <button key={it.id} className="rayban-item" onClick={() => lb.open(povItems, i)}>
             <video
-              src={it.src}
-              muted loop playsInline preload="metadata"
+              muted loop playsInline preload="none"
               poster={it.poster}
-              onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.src) e.currentTarget.src = it.src;
+                e.currentTarget.play().catch(() => {});
+              }}
               onMouseLeave={(e) => { e.currentTarget.pause(); }}
             />
             <div className="rayban-item-meta">

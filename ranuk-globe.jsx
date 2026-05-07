@@ -217,8 +217,9 @@ function Globe({ locations, onLocationClick, highlightId }) {
     const onUp = () => { isDown = false; };
     const onDrag = (e) => {
       if (!isDown) return;
-      rotY += (e.clientX - lastX) * 0.005;
-      rotX = Math.max(-1.2, Math.min(1.2, rotX + (e.clientY - lastY) * 0.005));
+      // Drag horizontal: arrastrar a la izquierda → globo gira a la derecha (estilo Google Earth)
+      rotY -= (e.clientX - lastX) * 0.005;
+      rotX = Math.max(-1.2, Math.min(1.2, rotX - (e.clientY - lastY) * 0.005));
       lastX = e.clientX; lastY = e.clientY;
       updateCam();
     };
