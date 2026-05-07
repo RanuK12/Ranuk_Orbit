@@ -364,6 +364,34 @@ const LOCATIONS_V2 = [
   },
 ];
 
+// CIRCUIT BREAKER: filtrar items cuyo asset NO existe en /optimized/
+// Evita que el browser cargue cientos de 404s y crashee.
+// Si window.RANUK_ASSETS no está definido, no filtra (modo dev).
+if (window.RANUK_ASSETS && window.RANUK_ASSETS.size > 0) {
+  let dropped = 0;
+  LOCATIONS_V2.forEach(loc => {
+    loc.media = loc.media.filter(m => {
+      const ok = window.RANUK_ASSETS.has(m.src);
+      if (!ok) dropped++;
+      return ok;
+    });
+    // si el cover de la location no existe, usar el primer media disponible
+    if (loc.cover && !window.RANUK_ASSETS.has(loc.cover)) {
+      const firstPhoto = loc.media.find(m => m.type === 'photo');
+      loc.cover = firstPhoto ? firstPhoto.src : (loc.media[0] ? loc.media[0].src : loc.cover);
+    }
+  });
+  // remover locations que quedaron sin media
+  for (let i = LOCATIONS_V2.length - 1; i >= 0; i--) {
+    if (LOCATIONS_V2[i].media.length === 0) LOCATIONS_V2.splice(i, 1);
+  }
+  // filtrar HERO_SEQUENCE también
+  for (let i = HERO_SEQUENCE.length - 1; i >= 0; i--) {
+    if (!window.RANUK_ASSETS.has(HERO_SEQUENCE[i].src)) HERO_SEQUENCE.splice(i, 1);
+  }
+  if (dropped > 0) console.info('[ranuk] manifest: dropped', dropped, 'items pending optimization');
+}
+
 LOCATIONS_V2.forEach(loc => {
   loc.media.forEach(m => { m.location = { id: loc.id, name: loc.name, flag: loc.flag, year: loc.year }; });
 });
