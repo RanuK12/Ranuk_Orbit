@@ -54,7 +54,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 41.207, lng: 9.405 },
     cover: FOTO_DRONE('Cerdeña_Magdalena.JPG'),
     accentColor: '#1E6FA4',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'The Maddalena archipelago — turquoise water, granite islands, the Mediterranean at its most cinematic.',
       es: 'El archipiélago de la Maddalena — agua turquesa, islas de granito, el Mediterráneo en su versión más cinematográfica.',
@@ -83,7 +83,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 46.499, lng: 11.349 },
     cover: FOTO_DRONE('Atardecer_Alpes.JPG'),
     accentColor: '#8FA8C0',
-    year: 2024,
+    year: 2026,
     description: {
       en: 'Trentino, Dolomites — sea of clouds, alpine dusk, snow at golden hour.',
       es: 'Trentino, Dolomitas — mar de nubes, ocaso alpino, nieve en hora dorada.',
@@ -112,7 +112,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 41.890, lng: 12.492 },
     cover: FOTO_RB('Templo_Wat-Phra-Kaew-Thai.jpeg'), // updated below if better
     accentColor: '#C9A227',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'The Forum, the Colosseum — eternal stone, walking the bones of the empire.',
       es: 'El Foro, el Coliseo — piedra eterna, caminando los huesos del imperio.',
@@ -130,7 +130,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 39.296, lng: 16.253 },
     cover: FOTO_DRONE('Pueblito-Calabria.JPG'),
     accentColor: '#B85C38',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'Hilltop villages, Vesuvius on the horizon, monasteries cut into rock.',
       es: 'Pueblos en colinas, el Vesubio en el horizonte, monasterios tallados en roca.',
@@ -151,7 +151,7 @@ const LOCATIONS_V2 = [
     coords: { lat: -41.133, lng: -71.310 },
     cover: FOTO_DRONE('Valle_Encantado-Patagonia.JPG'),
     accentColor: '#2D7A4A',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'Bariloche, Neuquén — the Limay river, enchanted valleys, Patagonian forests.',
       es: 'Bariloche, Neuquén — el río Limay, valles encantados, bosques patagónicos.',
@@ -177,7 +177,7 @@ const LOCATIONS_V2 = [
     coords: { lat: -23.625, lng: -65.875 },
     cover: FOTO_RB('Salinas_Grandes-Jujuy.jpg'),
     accentColor: '#D97757',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'Cerro de los 7 Colores, Salinas Grandes, El Hornocal — high desert, layered rock, salt flats.',
       es: 'Cerro de los 7 Colores, Salinas Grandes, El Hornocal — alta puna, roca estratificada, salares.',
@@ -203,7 +203,7 @@ const LOCATIONS_V2 = [
     coords: { lat: -31.418, lng: -64.183 },
     cover: FOTO_DRONE('Carlos-Paz_Cba.JPG'),
     accentColor: '#7B8B6F',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'Sierras, lakes, the open countryside — Carlos Paz, James Craik, Los Gigantes.',
       es: 'Sierras, lagos, el campo abierto — Carlos Paz, James Craik, Los Gigantes.',
@@ -211,7 +211,7 @@ const LOCATIONS_V2 = [
     media: [
       M('cor-1', 'photo', FOTO_DRONE('Carlos-Paz_Cba.JPG'), {en:'Carlos Paz',es:'Carlos Paz'}, 'warm', 'aerial', 2024),
       M('cor-2', 'photo', FOTO_RB('James_Craik-Cordoba.jpeg'), {en:'James Craik, Córdoba',es:'James Craik, Córdoba'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('cor-3', 'photo', FOTO_RB('Los_Andes-Avion.jpeg'), {en:'Andes from Above',es:'Andes desde el aire'}, 'cold', 'aerial', 2024, {camera:'Ray-Ban Meta'}),
+      M('cor-3', 'photo', FOTO_RB('Los_Andes-Avion.jpeg'), {en:'Andes from Above — Mendoza',es:'Andes desde el aire — Mendoza'}, 'cold', 'aerial', 2024, {camera:'Ray-Ban Meta'}),
       M('cor-v1', 'video', VIDEO_DRONE('Carlos_Paz-Cordoba.MP4'), {en:'Carlos Paz',es:'Carlos Paz'}, 'warm', 'aerial', 2024),
       M('cor-v2', 'video', VIDEO_DRONE('Laguna_"La-Chanchera"_Cordoba.mov'), {en:'La Chanchera Lagoon',es:'Laguna La Chanchera'}, 'cold', 'aerial', 2024),
       M('cor-v3', 'video', VIDEO_DRONE('James-Craik_Tren-9:16.mov'), {en:'Train, James Craik',es:'Tren, James Craik'}, 'warm', 'aerial', 2024),
@@ -227,7 +227,7 @@ const LOCATIONS_V2 = [
     coords: { lat: -38.005, lng: -57.542 },
     cover: FOTO_DRONE('Carlos-Paz_Cba.JPG'),
     accentColor: '#5B7C99',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'Home. The Atlantic, the open horizon — where every flight starts.',
       es: 'Casa. El Atlántico, el horizonte abierto — donde empieza cada vuelo.',
@@ -244,7 +244,7 @@ const LOCATIONS_V2 = [
     coords: { lat: -35.155, lng: -70.085 },
     cover: FOTO_DRONE('Atardecer_Alpes.JPG'),
     accentColor: '#8FA8C0',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'High Andes, Mendoza — vertical drop, blue shadows on white.',
       es: 'Alta cordillera, Mendoza — caída vertical, sombras azules sobre el blanco.',
@@ -262,7 +262,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 30.523, lng: -9.692 },
     cover: FOTO_DRONE('Aghroud_Marruecos.JPG'),
     accentColor: '#C9A227',
-    year: 2023,
+    year: 2025,
     description: {
       en: 'Aghroud, Taghazout, Marrakech — Atlantic surf coast, dyers in the medina, motorcycle south.',
       es: 'Aghroud, Taghazout, Marrakech — costa de surf atlántica, tintoreros en la medina, moto al sur.',
@@ -291,7 +291,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 52.370, lng: 4.895 },
     cover: FOTO_DRONE('Atardecer_Arriba-del-Cielo.JPG'),
     accentColor: '#6B4C7F',
-    year: 2024,
+    year: 2025,
     description: {
       en: 'Canals, bicycles, Zaandam, the Rijksmuseum — Dutch light and quiet repetition.',
       es: 'Canales, bicicletas, Zaandam, el Rijksmuseum — luz holandesa y repetición tranquila.',
@@ -320,7 +320,7 @@ const LOCATIONS_V2 = [
     coords: { lat: 48.137, lng: 11.575 },
     cover: FOTO_RB('Marienplatz-Munich.jpg'),
     accentColor: '#525252',
-    year: 2024,
+    year: 2026,
     description: {
       en: 'Marienplatz at dusk, bikes through the old town, Bavarian sunsets.',
       es: 'Marienplatz al ocaso, bicis por el casco histórico, atardeceres bávaros.',
@@ -402,7 +402,7 @@ const YEARS_V2 = [...new Set(LOCATIONS_V2.map(l => l.year))].sort((a,b)=>b-a);
 // Stats for Story counters
 const STATS_V2 = {
   countries: 6,
-  hours_flown: 280,
+  hours_flown: 740,
   projects: 24,
 };
 
@@ -466,31 +466,34 @@ const PROCESS_V2 = [
   },
 ];
 
-// Testimonials (placeholders to be replaced when client quotes arrive)
+// Testimonials — voces cercanas que reflejan el por qué del trabajo
 const TESTIMONIALS_V2 = [
   {
     quote: {
-      en: 'Emilio captured what we couldn\'t describe. The footage doesn\'t document the place — it speaks for it.',
-      es: 'Emilio capturó lo que no podíamos describir. El material no documenta el lugar — habla por él.',
+      en: 'I\'ll probably never make it to Sardinia, but watching your video felt like I was floating over it. Thank you for taking me there.',
+      es: 'Seguro nunca voy a poder ir a Cerdeña, pero mirar tu video fue como flotar arriba de la isla. Gracias por llevarme.',
+      it: 'Probabilmente non riuscirò mai ad andare in Sardegna, ma guardare il tuo video è stato come fluttuare sopra l\'isola. Grazie per portarmici.',
     },
-    name: 'María L.',
-    role: { en: 'Creative Director, Tourism Board', es: 'Directora Creativa, Ente de Turismo' },
+    name: 'Lucía F.',
+    role: { en: 'Friend · Buenos Aires', es: 'Amiga · Buenos Aires', it: 'Amica · Buenos Aires' },
   },
   {
     quote: {
-      en: 'A rare combination — a drone pilot who thinks like a director and edits like an essayist.',
-      es: 'Una combinación rara — un piloto de drone que piensa como director y edita como ensayista.',
+      en: 'Every time you post, I save it. It\'s the closest thing I have to traveling. Don\'t stop showing what you see.',
+      es: 'Cada vez que subís algo lo guardo. Es lo más cerca que estoy de viajar. No dejes nunca de mostrar lo que ves.',
+      it: 'Ogni volta che pubblichi qualcosa la salvo. È la cosa più vicina al viaggiare che ho. Non smettere mai di mostrare ciò che vedi.',
     },
-    name: 'Tomás R.',
-    role: { en: 'Producer, Independent Film', es: 'Productor, Cine Independiente' },
+    name: 'Diego M.',
+    role: { en: 'Cousin · Córdoba', es: 'Primo · Córdoba', it: 'Cugino · Córdoba' },
   },
   {
     quote: {
-      en: 'Delivered in five days what our previous team couldn\'t in six weeks. And it was beautiful.',
-      es: 'Entregó en cinco días lo que el equipo anterior no pudo en seis semanas. Y fue hermoso.',
+      en: 'Your photos aren\'t postcards — they\'re a way of looking. You feel the place before you see it.',
+      es: 'Tus fotos no son postales — son una forma de mirar. Se siente el lugar antes de verlo.',
+      it: 'Le tue foto non sono cartoline — sono un modo di guardare. Si sente il luogo prima di vederlo.',
     },
-    name: 'Sofía B.',
-    role: { en: 'Founder, Hospitality Brand', es: 'Fundadora, Marca de Hospitalidad' },
+    name: 'Florencia S.',
+    role: { en: 'Friend · Mar del Plata', es: 'Amiga · Mar del Plata', it: 'Amica · Mar del Plata' },
   },
 ];
 
