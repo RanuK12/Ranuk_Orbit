@@ -672,6 +672,46 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 40px;
   animation: fadeIn 0.3s ease;
 }
+.lb-topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100001;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 16px 24px;
+  background: linear-gradient(to bottom, rgba(10,10,10,0.92), rgba(10,10,10,0));
+  pointer-events: none;
+}
+.lb-topbar > * { pointer-events: auto; }
+.lb-counter {
+  font-family: 'Marcellus', serif;
+  font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247,247,245,0.7);
+}
+.lb-esc-hint {
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: rgba(247,247,245,0.45);
+}
+.lb-close {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 18px;
+  background: rgba(10,10,10,0.85);
+  border: 1px solid rgba(247,247,245,0.4);
+  color: #fff;
+  font-family: 'Marcellus', serif; font-size: 12px;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.lb-close > span[aria-hidden] { font-size: 20px; line-height: 1; }
+.lb-close:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
+.lb-close:active { transform: scale(0.96); }
+.lb-close-label { display: none; }
+
 .lb-stage {
   position: relative;
   max-width: 1200px; width: 100%;
@@ -683,7 +723,7 @@ input, textarea, select { font: inherit; color: inherit; }
   object-fit: contain;
   border-radius: 4px;
 }
-.lb-close, .lb-nav {
+.lb-nav {
   position: fixed;
   width: 48px; height: 48px; border-radius: 50%;
   background: rgba(10,10,10,0.85);
@@ -702,9 +742,8 @@ input, textarea, select { font: inherit; color: inherit; }
   -webkit-backdrop-filter: blur(8px);
   transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
-.lb-close:active, .lb-nav:active { transform: scale(0.92); }
-.lb-close:hover, .lb-nav:hover { background: var(--celestial); color: var(--ink); }
-.lb-close { top: 24px; right: 24px; }
+.lb-nav:active { transform: scale(0.92); }
+.lb-nav:hover { background: var(--celestial); color: var(--ink); }
 .lb-nav-prev { left: 24px; top: 50%; transform: translateY(-50%); }
 .lb-nav-next { right: 24px; top: 50%; transform: translateY(-50%); }
 .lb-meta {
@@ -789,6 +828,15 @@ input, textarea, select { font: inherit; color: inherit; }
   box-shadow: 0 30px 60px rgba(0,0,0,0.18);
 }
 .story-portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
+.profile-rotator { position: relative; }
+.profile-rotator .profile-photo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.6s ease-in-out;
+  will-change: opacity;
+}
+.profile-rotator .profile-photo.is-active { opacity: 1; }
 .story-portrait-caption {
   display: block; margin-top: 12px;
   font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -1361,6 +1409,9 @@ body.konami { animation: rainbow 6s linear; }
     return window.__threePromise;
   };
 </script>
+
+<!-- Lang override -->
+<script>window.RANUK_LANG='en';</script>
 
 <!-- Asset manifest (qué archivos existen realmente en /optimized/) -->
 <script src="ranuk-manifest.js"></script>

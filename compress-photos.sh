@@ -44,7 +44,7 @@ process_one() {
 
   # Convertir HEIC a JPEG temporal si hace falta
   local working_file="$input"
-  case "${ext,,}" in
+  case "$(echo "${ext}" | tr '[:upper:]' '[:lower:]')" in
     heic|heif)
       working_file="$TMP_DIR/$slug.jpg"
       sips -s format jpeg "$input" --out "$working_file" >/dev/null

@@ -303,6 +303,31 @@ function CountUp({ to, duration = 1800, suffix = '' }) {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
+function ProfileRotator() {
+  const photos = window.PROFILE_PHOTOS || [];
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (photos.length < 2) return;
+    const id = setInterval(() => setIdx(i => (i + 1) % photos.length), 10000);
+    return () => clearInterval(id);
+  }, [photos.length]);
+  if (photos.length === 0) return null;
+  return (
+    <div className="story-portrait-frame profile-rotator">
+      {photos.map((src, i) => (
+        <img
+          key={src}
+          src={src}
+          alt="Emilio Ranucoli"
+          className={`profile-photo${i === idx ? ' is-active' : ''}`}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      ))}
+    </div>
+  );
+}
+
 function StorySection() {
   const { t, lang } = useChangeLang();
   // story.stats lives in COPY[lang].story.stats
@@ -312,9 +337,7 @@ function StorySection() {
       <div className="story-grain" aria-hidden="true" />
       <div className="story-grid">
         <div className="story-portrait">
-          <div className="story-portrait-frame">
-            <img src="media/fotos-rayban/Cerdeña-Golfo_Aranci-Isla.jpg" alt="Emilio Ranucoli" />
-          </div>
+          <ProfileRotator />
           <span className="story-portrait-caption">{t.story.sub}</span>
         </div>
         <div className="story-text">
@@ -406,6 +429,7 @@ function RayBanSection() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [glassesVisible, setGlassesVisible] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -433,6 +457,15 @@ function RayBanSection() {
     return items.slice(0, 6);
   }, [lang]);
 
+  const leftItem = povItems[currentIdx];
+  const rightItem = povItems[(currentIdx + 1) % povItems.length];
+
+  useEffect(() => {
+    if (povItems.length < 2) return;
+    const id = setInterval(() => setCurrentIdx(i => (i + 2) % povItems.length), 15000);
+    return () => clearInterval(id);
+  }, [povItems.length]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email.includes('@')) return;
@@ -455,17 +488,17 @@ function RayBanSection() {
             <clipPath id="lensR"><ellipse cx="430" cy="100" rx="100" ry="70" /></clipPath>
           </defs>
           <foreignObject x="70" y="30" width="200" height="140" clipPath="url(#lensL)">
-            {glassesVisible && povItems[0] ? (
-              <video xmlns="http://www.w3.org/1999/xhtml" src={povItems[0].src} autoPlay muted loop playsInline poster={povItems[0].poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : povItems[0] ? (
-              <img xmlns="http://www.w3.org/1999/xhtml" src={povItems[0].poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {glassesVisible && leftItem ? (
+              <video xmlns="http://www.w3.org/1999/xhtml" src={leftItem.src} autoPlay muted loop playsInline poster={leftItem.poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : leftItem ? (
+              <img xmlns="http://www.w3.org/1999/xhtml" src={leftItem.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : null}
           </foreignObject>
           <foreignObject x="330" y="30" width="200" height="140" clipPath="url(#lensR)">
-            {glassesVisible && povItems[1] ? (
-              <video xmlns="http://www.w3.org/1999/xhtml" src={povItems[1].src} autoPlay muted loop playsInline poster={povItems[1].poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : povItems[1] ? (
-              <img xmlns="http://www.w3.org/1999/xhtml" src={povItems[1].poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {glassesVisible && rightItem ? (
+              <video xmlns="http://www.w3.org/1999/xhtml" src={rightItem.src} autoPlay muted loop playsInline poster={rightItem.poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : rightItem ? (
+              <img xmlns="http://www.w3.org/1999/xhtml" src={rightItem.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : null}
           </foreignObject>
           <ellipse cx="170" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />

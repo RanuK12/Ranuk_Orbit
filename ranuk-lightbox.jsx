@@ -24,6 +24,16 @@ function LightboxProvider({ children }) {
 }
 function useLightbox() { return useContext(LightboxContext); }
 
+// Convert a video src to its 8s preview path. Mirrors gen-previews.sh layout.
+// videos-drone/foo.mp4 → previews/foo.mp4
+// videos-rayban/bar.mp4 → previews/bar.mp4
+function previewPathFor(src) {
+  if (!src) return src;
+  const m = src.match(/media\/optimized\/(?:videos-drone|videos-rayban)\/(.+\.(?:mp4|mov))$/i);
+  if (!m) return src;
+  return `media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
+}
+
 function Lightbox() {
   const lb = useLightbox();
   const { lang } = useLang();
@@ -54,6 +64,13 @@ function Lightbox() {
   const exif = item.exif || {};
   const locName = item.location ? pick(item.location.name, lang) : '';
 
+  const dlLabel = lang === 'es' ? 'Descargar preview (8s)' : lang === 'it' ? 'Scarica preview (8s)' : 'Download preview (8s)';
+  const dlPhotoLabel = lang === 'es' ? 'Descargar foto' : lang === 'it' ? 'Scarica foto' : 'Download photo';
+  const closeLabel = lang === 'es' ? 'Cerrar' : lang === 'it' ? 'Chiudi' : 'Close';
+  const escHint = lang === 'es' ? 'ESC para cerrar' : lang === 'it' ? 'ESC per chiudere' : 'ESC to close';
+
+  const downloadHref = isVideo ? previewPathFor(item.src) : item.src;
+
   // Click handler robusto: cierra solo si el click fue en el backdrop directo (no en stage ni botones)
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) lb.close();
@@ -64,10 +81,43 @@ function Lightbox() {
   const nextHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.next(); };
 
   return (
-    <div className="lightbox" onClick={handleBackdropClick} role="dialog" aria-modal="true">
-      <button type="button" className="lb-close" onPointerDown={closeHandler} onClick={closeHandler} aria-label="Close">×</button>
-      <button type="button" className="lb-nav lb-nav-prev" onPointerDown={prevHandler} onClick={prevHandler} aria-label="Prev">‹</button>
-      <button type="button" className="lb-nav lb-nav-next" onPointerDown={nextHandler} onClick={nextHandler} aria-label="Next">›</button>
+    <div
+      className="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={handleBackdropClick}
+    >
+      <div className="lb-topbar" onClick={(e) => e.stopPropagation()}>
+        <span className="lb-counter">{lb.index + 1} / {lb.items.length}</span>
+        <span className="lb-esc-hint">{escHint}</span>
+        <button
+          type="button"
+          className="lb-close"
+          onClick={(e) => { e.stopPropagation(); lb.close(); }}
+          aria-label={closeLabel}
+        >
+          <span aria-hidden="true">×</span>
+          <span className="lb-close-label">{closeLabel}</span>
+        </button>
+      </div>
+
+      {lb.items.length > 1 && (
+        <>
+          <button
+            type="button"
+            className="lb-nav lb-nav-prev"
+            onClick={(e) => { e.stopPropagation(); lb.prev(); }}
+            aria-label="Previous"
+          >‹</button>
+          <button
+            type="button"
+            className="lb-nav lb-nav-next"
+            onClick={(e) => { e.stopPropagation(); lb.next(); }}
+            aria-label="Next"
+          >›</button>
+        </>
+      )}
 
       <div className="lb-stage" onClick={(e) => e.stopPropagation()}>
         {isVideo ? (
@@ -99,7 +149,7 @@ function Lightbox() {
             {item.mood && <div className="lb-exif-item"><span className="lb-exif-label">Mood</span><span>{item.mood}</span></div>}
           </div>
           <div className="lb-actions">
-            <a href={item.src} download className="lb-download">↓ Download original</a>
+            <a href={downloadHref} download className="lb-download">{isVideo ? dlLabel : dlPhotoLabel}</a>
             <span className="lb-counter">{lb.index + 1} / {lb.items.length}</span>
           </div>
         </div>
