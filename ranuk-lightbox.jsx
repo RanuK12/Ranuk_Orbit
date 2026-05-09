@@ -48,6 +48,7 @@ function Lightbox() {
   const { lang } = useLang();
   const stripRef = useRef(null);
   const rootRef = useRef(null);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     if (!lb.open) return;
@@ -95,11 +96,25 @@ function Lightbox() {
 
   const downloadHref = isVideo ? previewPathFor(item.src) : item.src;
 
-  // Fire-and-forget close. Fires on both click and touchend so iOS Safari
-  // doesn't drop the event when native video controls were the previous
-  // touch target.
-  const closeAndStop = (e) => {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
+  // Fire-and-forget close. Stops the native video FIRST so its controls
+  // don't keep capturing pointer events (the root cause of the iOS Safari
+  // "close button does nothing" bug — the controls intercept the synthetic
+  // click). Handles both pointer-up and click to cover all input modes.
+  const hardClose = (e) => {
+    if (e) {
+      try { e.preventDefault(); } catch (_) {}
+      try { e.stopPropagation(); } catch (_) {}
+    }
+    try {
+      const v = videoRef.current;
+      if (v) {
+        v.pause();
+        v.removeAttribute('controls');
+        v.currentTime = 0;
+      }
+    } catch (_) {}
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
+    try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
     lb.close();
   };
 
@@ -118,14 +133,27 @@ function Lightbox() {
         <button
           type="button"
           className="lb-close"
-          onClick={closeAndStop}
-          onTouchEnd={closeAndStop}
+          onPointerUp={hardClose}
+          onClick={hardClose}
           aria-label={closeLabel}
         >
           <span aria-hidden="true">×</span>
           <span className="lb-close-label">{closeLabel}</span>
         </button>
       </div>
+
+      {/* Invisible top-right safety zone. Covers the corner of the viewport
+          so a tap there always closes the lightbox, even if the video
+          element has captured pointer events further down. Sits ABOVE the
+          video (huge z-index) but BELOW the actual close button so the
+          button still works when the user hits it precisely. */}
+      <button
+        type="button"
+        className="lb-close-zone"
+        aria-label={closeLabel}
+        onPointerUp={hardClose}
+        onClick={hardClose}
+      />
 
       {lb.items.length > 1 && (
         <>
@@ -148,11 +176,12 @@ function Lightbox() {
         {isVideo ? (
           <video
             key={item.id}
+            ref={videoRef}
             className="lb-media"
             src={item.src}
             poster={item.poster || undefined}
             controls
-            controlsList="nodownload noplaybackrate"
+            controlsList="nodownload noplaybackrate nofullscreen"
             disablePictureInPicture
             autoPlay
             playsInline

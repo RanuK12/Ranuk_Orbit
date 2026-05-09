@@ -420,22 +420,74 @@ LOCATIONS_V2.forEach(loc => {
 // renderiza en negro hasta el hover. Resultado: el usuario ve "70% del
 // contenido no carga" cuando en realidad sí está ahí.
 //
-// Estrategia:
-//   1. Para cada video/POV sin poster, usar la primera foto de la MISMA
-//      location (ya son .jpg optimizados, 400-900KB).
-//   2. Si la location no tiene fotos (p. ej. Roma, Ámsterdam, Las Leñas,
-//      Mar del Plata solo tienen videos), usar el cover de la location.
-//   3. El cover siempre existe (se auto-corrige arriba si el declarado no
-//      estaba en el manifest).
+// Estrategia v2 (evita que TODOS los videos de la misma location usen la
+// MISMA foto como poster, lo cual confundía: el poster mostraba contenido
+// A, pero al abrir el video salía contenido B):
+//   1. PRIMERO: si existe un poster dedicado en /media/optimized/posters/
+//      con el mismo basename que el video, usarlo.
+//   2. SEGUNDO: buscar una foto de la misma location cuyo basename
+//      comparta tokens con el video (>=50% match) — captura casos como
+//      "Cerdeña_Golfo-Aranci.MP4" ↔ "Cerde\xF1a_Golfo-Aranci.jpg".
+//   3. TERCERO: rotar entre las fotos disponibles de la location (round
+//      robin por índice) en lugar de dar siempre la #0, así cada video
+//      tiene un poster distinto y la grid deja de verse repetitiva.
+//   4. CUARTO: si la location no tiene fotos, usar el cover.
 //
-// Este paso ejecuta DESPUÉS del circuit breaker, así que cualquier foto
-// referenciada como poster ya está garantizada en el servidor.
+// Ejecuta DESPUÉS del circuit breaker, así que cualquier ruta referenciada
+// como poster ya está garantizada en el servidor.
+const _basename = (path) => {
+  const slash = path.lastIndexOf('/');
+  const tail = slash >= 0 ? path.slice(slash + 1) : path;
+  const dot = tail.lastIndexOf('.');
+  return (dot >= 0 ? tail.slice(0, dot) : tail).toLowerCase();
+};
+const _tokens = (base) => base.split(/[-_]+/).filter(t => t.length >= 3);
+const _matchScore = (a, b) => {
+  const ta = _tokens(a), tb = _tokens(b);
+  if (!ta.length || !tb.length) return 0;
+  const setB = new Set(tb);
+  let hits = 0;
+  ta.forEach(t => { if (setB.has(t)) hits++; });
+  return hits / Math.max(ta.length, tb.length);
+};
+
 LOCATIONS_V2.forEach(loc => {
-  const photoSources = loc.media.filter(m => m.type === 'photo').map(m => m.src);
-  const fallbackPoster = photoSources[0] || loc.cover;
-  if (!fallbackPoster) return;
+  const photos = loc.media.filter(m => m.type === 'photo').map(m => m.src);
+  if (!photos.length && !loc.cover) return;
+
+  // Index dedicated posters in the manifest (posters/ folder) for this loc.
+  // We can only detect them through RANUK_ASSETS if defined, otherwise skip.
+  const assets = (window.RANUK_ASSETS && typeof window.RANUK_ASSETS.has === 'function') ? window.RANUK_ASSETS : null;
+
+  let rotationIdx = 0;
   loc.media.forEach(m => {
-    if (m.type !== 'photo' && !m.poster) m.poster = fallbackPoster;
+    if (m.type === 'photo' || m.poster) return;
+
+    const vidBase = _basename(m.src);
+
+    // 1) Dedicated poster with same basename
+    if (assets) {
+      const dedicated = `media/optimized/posters/${vidBase}.jpg`;
+      if (assets.has(dedicated)) { m.poster = dedicated; return; }
+    }
+
+    // 2) Best token match against location photos
+    let best = null, bestScore = 0;
+    photos.forEach(p => {
+      const s = _matchScore(vidBase, _basename(p));
+      if (s > bestScore) { bestScore = s; best = p; }
+    });
+    if (best && bestScore >= 0.5) { m.poster = best; return; }
+
+    // 3) Round-robin rotation across location photos
+    if (photos.length) {
+      m.poster = photos[rotationIdx % photos.length];
+      rotationIdx++;
+      return;
+    }
+
+    // 4) Fallback to cover
+    if (loc.cover) m.poster = loc.cover;
   });
 });
 
