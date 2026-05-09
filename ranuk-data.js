@@ -415,26 +415,28 @@ LOCATIONS_V2.forEach(loc => {
   });
 });
 
-// ─── POSTER FALLBACK ─────────────────────────────────────────────────────
-// De 102 medias en producción, ~80 son videos SIN poster → el browser los
-// renderiza en negro hasta el hover. Resultado: el usuario ve "70% del
-// contenido no carga" cuando en realidad sí está ahí.
+// ─── POSTER STRATEGY v3 (honest previews) ────────────────────────────────
+// El problema con v2: cuando un video no tenía poster dedicado, el algoritmo
+// rotaba entre fotos arbitrarias de la misma location. Resultado: el preview
+// mostraba una foto del Golfo Aranci pero al abrir el video aparecía
+// Cala Sabina. La relación preview ↔ contenido era ficticia.
 //
-// Estrategia v2 (evita que TODOS los videos de la misma location usen la
-// MISMA foto como poster, lo cual confundía: el poster mostraba contenido
-// A, pero al abrir el video salía contenido B):
-//   1. PRIMERO: si existe un poster dedicado en /media/optimized/posters/
-//      con el mismo basename que el video, usarlo.
-//   2. SEGUNDO: buscar una foto de la misma location cuyo basename
-//      comparta tokens con el video (>=50% match) — captura casos como
-//      "Cerdeña_Golfo-Aranci.MP4" ↔ "Cerde\xF1a_Golfo-Aranci.jpg".
-//   3. TERCERO: rotar entre las fotos disponibles de la location (round
-//      robin por índice) en lugar de dar siempre la #0, así cada video
-//      tiene un poster distinto y la grid deja de verse repetitiva.
-//   4. CUARTO: si la location no tiene fotos, usar el cover.
+// Nueva estrategia:
+//   1. Poster dedicado en /media/optimized/posters/<basename>.jpg → usarlo.
+//      Estos son frames REALES del video, tomados con ffmpeg en build time.
+//   2. Match fuerte (>=0.6) por tokens contra una foto de la location →
+//      usarlo y marcar `_posterMatch = 'photo'`. Sólo captura pares donde
+//      el basename del video y la foto comparten la mayoría de los tokens
+//      (ej. "Cerdeña_Golfo-Aranci.MP4" ↔ "Cerdeña_Golfo-Aranci.jpg").
+//      Elevé el threshold de 0.5 → 0.6 para reducir falsos positivos.
+//   3. Si NO hay match honesto: usar el cover de la location con marca
+//      `_posterMatch = 'fallback'`. El frontend renderiza esta tile con un
+//      tratamiento distinto (overlay oscuro + título del video superpuesto)
+//      para dejar claro que el preview es una referencia de lugar, NO un
+//      frame del contenido. Nunca más mostramos una foto aleatoria como si
+//      fuera el contenido real del video.
 //
-// Ejecuta DESPUÉS del circuit breaker, así que cualquier ruta referenciada
-// como poster ya está garantizada en el servidor.
+// Ejecuta DESPUÉS del circuit breaker: toda ruta referenciada ya existe.
 const _basename = (path) => {
   const slash = path.lastIndexOf('/');
   const tail = slash >= 0 ? path.slice(slash + 1) : path;
@@ -453,41 +455,40 @@ const _matchScore = (a, b) => {
 
 LOCATIONS_V2.forEach(loc => {
   const photos = loc.media.filter(m => m.type === 'photo').map(m => m.src);
-  if (!photos.length && !loc.cover) return;
-
-  // Index dedicated posters in the manifest (posters/ folder) for this loc.
-  // We can only detect them through RANUK_ASSETS if defined, otherwise skip.
   const assets = (window.RANUK_ASSETS && typeof window.RANUK_ASSETS.has === 'function') ? window.RANUK_ASSETS : null;
 
-  let rotationIdx = 0;
   loc.media.forEach(m => {
     if (m.type === 'photo' || m.poster) return;
 
     const vidBase = _basename(m.src);
 
-    // 1) Dedicated poster with same basename
+    // 1) Dedicated poster (real frame from video)
     if (assets) {
       const dedicated = `media/optimized/posters/${vidBase}.jpg`;
-      if (assets.has(dedicated)) { m.poster = dedicated; return; }
+      if (assets.has(dedicated)) {
+        m.poster = dedicated;
+        m._posterMatch = 'dedicated';
+        return;
+      }
     }
 
-    // 2) Best token match against location photos
+    // 2) Strong token match against a location photo
     let best = null, bestScore = 0;
     photos.forEach(p => {
       const s = _matchScore(vidBase, _basename(p));
       if (s > bestScore) { bestScore = s; best = p; }
     });
-    if (best && bestScore >= 0.5) { m.poster = best; return; }
-
-    // 3) Round-robin rotation across location photos
-    if (photos.length) {
-      m.poster = photos[rotationIdx % photos.length];
-      rotationIdx++;
+    if (best && bestScore >= 0.6) {
+      m.poster = best;
+      m._posterMatch = 'photo';
       return;
     }
 
-    // 4) Fallback to cover
-    if (loc.cover) m.poster = loc.cover;
+    // 3) Honest fallback: location cover with "generic" treatment
+    if (loc.cover) {
+      m.poster = loc.cover;
+      m._posterMatch = 'fallback';
+    }
   });
 });
 
