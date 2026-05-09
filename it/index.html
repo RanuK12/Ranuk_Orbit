@@ -942,6 +942,68 @@ input, textarea, select { font: inherit; color: inherit; }
   pointer-events: none;
 }
 
+/* Custom video controls — replace native <video controls> to avoid iOS
+   Safari pointer-event conflicts with the close button overlay. */
+.lb-video-wrap { position: relative; width: 100%; }
+.lb-video-wrap .lb-media { cursor: pointer; }
+.lb-video-controls {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: rgba(10,10,10,0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 10px;
+  z-index: 3;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.lb-video-wrap:hover .lb-video-controls,
+.lb-video-controls:focus-within { opacity: 1; }
+@media (hover: none) {
+  /* On touch devices, always show — no hover to reveal */
+  .lb-video-controls { opacity: 1; }
+}
+.lb-vbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 999px;
+  color: var(--celestial);
+  background: transparent;
+  border: 1px solid rgba(247,247,245,0.35);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.lb-vbtn:hover { background: rgba(247,247,245,0.1); border-color: var(--celestial); }
+.lb-vbtn:active { transform: scale(0.95); }
+.lb-progress {
+  flex: 1; min-width: 40px; height: 3px;
+  background: rgba(247,247,245,0.2);
+  border-radius: 999px;
+  cursor: pointer;
+  position: relative;
+}
+.lb-progress-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--celestial);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.lb-time {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(247,247,245,0.7);
+  flex-shrink: 0;
+}
+@media (max-width: 520px) {
+  .lb-time { display: none; }
+  .lb-video-controls { gap: 8px; padding: 6px 10px; }
+}
+
 /* ─── STORY ──────────────────────────────────────────────────────── */
 .story {
   position: relative;
