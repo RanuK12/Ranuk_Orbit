@@ -713,6 +713,45 @@ input, textarea, select { font: inherit; color: inherit; }
 .chip.is-active { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
 .chip-year { font-size: 10px; padding: 6px 12px; letter-spacing: 0.15em; }
 
+/* Archive — advanced filters (place / mood / altitude).
+   Each filter row is its own flex line with a small tag-style label on
+   the left and an inline wrap of chips to the right. Added in PR #4 to
+   satisfy the original brief's "browse by place / mood / altitude"
+   requirement; the data model already carries these fields. */
+.archive-places, .archive-moods, .archive-altitudes, .archive-more-row {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.archive-filter-label {
+  font-family: 'Marcellus', serif;
+  font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+  color: rgba(247,247,245,0.45);
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.chip-place, .chip-mood, .chip-alt { font-size: 10px; padding: 6px 12px; letter-spacing: 0.12em; }
+.chip-flag { font-size: 14px; line-height: 1; margin-right: 2px; }
+.chip-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 6px; vertical-align: middle;
+  box-shadow: 0 0 6px currentColor;
+}
+.chip-dot--oceanic { background: #1E6FA4; color: #1E6FA4; }
+.chip-dot--golden  { background: #C9A227; color: #C9A227; }
+.chip-dot--cold    { background: #8FA8C0; color: #8FA8C0; }
+.chip-dot--warm    { background: #B85C38; color: #B85C38; }
+.chip-dot--green   { background: #2D7A4A; color: #2D7A4A; }
+.chip-toggle {
+  font-size: 10px; padding: 6px 12px; letter-spacing: 0.15em;
+  border-style: dashed;
+}
+.chip-toggle.is-active { background: transparent; color: var(--celestial); border-color: var(--celestial); border-style: solid; }
+.chip-reset {
+  font-size: 10px; padding: 6px 12px; letter-spacing: 0.15em;
+  color: rgba(247,247,245,0.55);
+  border-color: rgba(247,247,245,0.18);
+}
+.chip-reset:hover { color: var(--desert); border-color: var(--desert); }
+
 .gallery-masonry {
   max-width: var(--max); margin: 0 auto;
   display: grid;
