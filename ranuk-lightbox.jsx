@@ -1,4 +1,4 @@
-// Ranuk Orbit — Lightbox v2 with EXIF, filmstrip, download
+// Ranuk Orbit — Lightbox v3: robust close, 8s preview download for videos
 const { createContext, useContext, useState, useCallback, useEffect, useRef } = React;
 
 const LightboxContext = createContext(null);
@@ -7,14 +7,15 @@ function LightboxProvider({ children }) {
   const [state, setState] = useState({ items: [], index: 0, open: false });
   const open = useCallback((items, index = 0) => {
     setState({ items, index, open: true });
-    document.body.style.overflow = 'hidden';
+    try { document.body.style.overflow = 'hidden'; } catch (_) {}
   }, []);
   const close = useCallback(() => {
     setState(s => ({ ...s, open: false }));
-    document.body.style.overflow = '';
+    try { document.body.style.overflow = ''; } catch (_) {}
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
   }, []);
-  const prev = useCallback(() => setState(s => ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length })), []);
-  const next = useCallback(() => setState(s => ({ ...s, index: (s.index + 1) % s.items.length })), []);
+  const prev = useCallback(() => setState(s => s.items.length ? ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length }) : s), []);
+  const next = useCallback(() => setState(s => s.items.length ? ({ ...s, index: (s.index + 1) % s.items.length }) : s), []);
   const goto = useCallback((i) => setState(s => ({ ...s, index: i })), []);
   return (
     <LightboxContext.Provider value={{ ...state, open, close, prev, next, goto }}>
@@ -42,13 +43,16 @@ function Lightbox() {
   useEffect(() => {
     if (!lb.open) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') lb.close();
-      if (e.key === 'ArrowLeft') lb.prev();
-      if (e.key === 'ArrowRight') lb.next();
+      if (e.key === 'Escape') { e.preventDefault(); lb.close(); }
+      else if (e.key === 'ArrowLeft') lb.prev();
+      else if (e.key === 'ArrowRight') lb.next();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [lb.open, lb.close, lb.prev, lb.next]);
+
+  // Failsafe: if the component unmounts while open, restore body scroll
+  useEffect(() => () => { try { document.body.style.overflow = ''; } catch (_) {} }, []);
 
   // Scroll active thumb into view
   useEffect(() => {
@@ -71,22 +75,13 @@ function Lightbox() {
 
   const downloadHref = isVideo ? previewPathFor(item.src) : item.src;
 
-  // Click handler robusto: cierra solo si el click fue en el backdrop directo (no en stage ni botones)
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) lb.close();
-  };
-  // Handler para botones, dispara onPointerDown para responder antes que video controls capturen el evento
-  const closeHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.close(); };
-  const prevHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.prev(); };
-  const nextHandler = (e) => { e.preventDefault(); e.stopPropagation(); lb.next(); };
-
   return (
     <div
       className="lightbox"
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      onClick={handleBackdropClick}
+      onClick={(e) => { if (e.target === e.currentTarget) lb.close(); }}
     >
       <div className="lb-topbar" onClick={(e) => e.stopPropagation()}>
         <span className="lb-counter">{lb.index + 1} / {lb.items.length}</span>
@@ -125,7 +120,10 @@ function Lightbox() {
             key={item.id}
             className="lb-media"
             src={item.src}
-            controls autoPlay playsInline
+            controls
+            controlsList="nodownload"
+            autoPlay
+            playsInline
           />
         ) : (
           <img key={item.id} className="lb-media" src={item.src} alt={title} />
@@ -149,8 +147,12 @@ function Lightbox() {
             {item.mood && <div className="lb-exif-item"><span className="lb-exif-label">Mood</span><span>{item.mood}</span></div>}
           </div>
           <div className="lb-actions">
-            <a href={downloadHref} download className="lb-download">{isVideo ? dlLabel : dlPhotoLabel}</a>
-            <span className="lb-counter">{lb.index + 1} / {lb.items.length}</span>
+            <a
+              href={downloadHref}
+              download
+              className="lb-download"
+              onClick={(e) => e.stopPropagation()}
+            >↓ {isVideo ? dlLabel : dlPhotoLabel}</a>
           </div>
         </div>
 

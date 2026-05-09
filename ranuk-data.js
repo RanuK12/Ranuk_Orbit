@@ -253,7 +253,7 @@ const LOCATIONS_V2 = [
     ]
   },
   {
-    id: 'lasleñas',
+    id: 'laslenas',
     name: { en: 'Las Leñas', es: 'Las Leñas', it: 'Las Leñas' },
     country: { en: 'Argentina', es: 'Argentina', it: 'Argentina' },
     flag: '🇦🇷',
@@ -407,10 +407,10 @@ if (window.RANUK_ASSETS && window.RANUK_ASSETS.size > 0) {
   if (dropped > 0) console.info('[ranuk] manifest: dropped', dropped, 'items pending optimization');
 }
 
-// Cada media hereda el year correcto de su location (sobrescribe years viejos en M(...))
+// Cada media hereda el location ref. Year propio del media se preserva (era sobrescrito antes).
 LOCATIONS_V2.forEach(loc => {
   loc.media.forEach(m => {
-    m.year = loc.year;
+    if (m.year == null) m.year = loc.year;
     m.location = { id: loc.id, name: loc.name, flag: loc.flag, year: loc.year };
   });
 });
@@ -559,22 +559,18 @@ const TESTIMONIALS_V2 = [
   },
 ];
 
-const PROFILE_PHOTOS = [
-  'media/optimized/Fotos_Emilio_Perfil/7c9ab927-bed6-451d-9052-2435effcf914.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-0232.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-0565.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-2072.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-2868.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-3224.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-3831.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-3983.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-4080.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-5441.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-7204.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-8589.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-8895.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-9396.webp',
+const PRESS_V2 = [
+  { name: 'DJI Pilot Showcase', year: 2024 },
+  { name: 'Italian Tourism Board', year: 2024 },
+  { name: 'Patagonia Travel Co.', year: 2023 },
+  { name: 'Marrakech Films', year: 2023 },
+  { name: 'Ray-Ban Meta Creators', year: 2025 },
 ];
+
+// Profile carousel — author portraits at different locations
+const PROFILE_PHOTOS = Array.from({length: 14}, (_, i) =>
+  `media/optimized/perfil/perfil-${String(i+1).padStart(2,'0')}.jpg`
+);
 
 Object.assign(window, {
   LOCATIONS_V2,

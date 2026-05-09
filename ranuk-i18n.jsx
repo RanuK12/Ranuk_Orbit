@@ -17,7 +17,7 @@ const COPY = {
     },
     atlas: {
       overline: 'The Atlas',
-      title: 'Twelve places, three years.',
+      title: '{n} places, three years.',
       sub: 'Drag the globe. Click any pin to enter the place.',
       hint: 'Drag · Click pins to explore',
       sidebar_title: 'Locations',
@@ -41,11 +41,7 @@ const COPY = {
         'The drone was a shift in perspective. As a kid I dreamt of flying, and somehow that dream came true through the controller. But more than altitude, what it gave me was another way to read the same place — the line of the coast, the pattern of the forest, what the land says when you pull away from it.',
         'Today I combine air and ground: the drone for the composition only seen from above, the Ray-Ban Meta for the presence only felt walking. Every project starts with the same question — what does this place want to say, and how do I tell it without a postcard?',
       ],
-      stats: [
-        { value: 12, label: 'Countries' },
-        { value: 280, label: 'Hours flown' },
-        { value: 24, label: 'Projects delivered' },
-      ],
+      stat_labels: { countries: 'Countries', hours: 'Hours flown', projects: 'Projects delivered' },
       pull: '"A good image starts in the eyes, not in the camera."',
     },
     pov: {
@@ -143,7 +139,7 @@ const COPY = {
     },
     atlas: {
       overline: 'El Atlas',
-      title: 'Doce lugares, tres años.',
+      title: '{n} lugares, tres años.',
       sub: 'Arrastrá el globo. Hacé clic en un pin para entrar al lugar.',
       hint: 'Arrastrá · Clic en los pins para explorar',
       sidebar_title: 'Lugares',
@@ -167,11 +163,7 @@ const COPY = {
         'El drone fue un cambio de perspectiva. De chico soñaba con volar, y de algún modo ese sueño se cumplió desde el control. Pero más que la altura, lo que me dio fue otra forma de leer el mismo lugar — la línea de la costa, el patrón del bosque, lo que la tierra dice cuando uno se aleja.',
         'Hoy combino aire y tierra: el drone para la composición que sólo se ve desde arriba, las Ray-Ban Meta para la presencia que sólo se siente caminando. Cada proyecto empieza con la misma pregunta — ¿qué quiere decir este lugar, y cómo lo cuento sin postal?',
       ],
-      stats: [
-        { value: 12, label: 'Países' },
-        { value: 280, label: 'Horas voladas' },
-        { value: 24, label: 'Proyectos entregados' },
-      ],
+      stat_labels: { countries: 'Países', hours: 'Horas voladas', projects: 'Proyectos entregados' },
       pull: '"La buena imagen empieza en los ojos, no en la cámara."',
     },
     pov: {
@@ -269,7 +261,7 @@ const COPY = {
     },
     atlas: {
       overline: 'L\'Atlante',
-      title: 'Dodici luoghi, tre anni.',
+      title: '{n} luoghi, tre anni.',
       sub: 'Trascina il globo. Clicca un pin per entrare nel luogo.',
       hint: 'Trascina · Clicca i pin per esplorare',
       sidebar_title: 'Luoghi',
@@ -293,11 +285,7 @@ const COPY = {
         'Il drone è stato un cambio di prospettiva. Da bambino sognavo di volare, e in qualche modo quel sogno si è avverato attraverso il radiocomando. Ma più dell\'altitudine, mi ha dato un altro modo di leggere lo stesso luogo — la linea della costa, il pattern del bosco, ciò che la terra dice quando ti allontani.',
         'Oggi unisco aria e terra: il drone per la composizione che si vede solo dall\'alto, i Ray-Ban Meta per la presenza che si sente solo camminando. Ogni progetto inizia con la stessa domanda — cosa vuole dire questo luogo, e come lo racconto senza cartolina?',
       ],
-      stats: [
-        { value: 12, label: 'Paesi' },
-        { value: 280, label: 'Ore di volo' },
-        { value: 24, label: 'Progetti consegnati' },
-      ],
+      stat_labels: { countries: 'Paesi', hours: 'Ore di volo', projects: 'Progetti consegnati' },
       pull: '"Una buona immagine nasce negli occhi, non nella macchina."',
     },
     pov: {
@@ -384,6 +372,8 @@ const COPY = {
 
 const LangContext = createContext(null);
 
+// Resolve initial lang in priority: window.RANUK_LANG (injected by /es/ /en/ /it/ pages)
+//   → URL path prefix (/es/, /en/, /it/) → localStorage → navigator.language → 'en'
 function resolveInitialLang() {
   try {
     if (typeof window !== 'undefined' && window.RANUK_LANG) {
@@ -402,6 +392,8 @@ function resolveInitialLang() {
   } catch (e) { return 'en'; }
 }
 
+// Navigate to the locale-prefixed URL preserving fragment + query.
+// On the root site we go to /<lang>/, on a subpath we replace the prefix.
 function navigateToLocale(lang) {
   try {
     const path = location.pathname || '/';
