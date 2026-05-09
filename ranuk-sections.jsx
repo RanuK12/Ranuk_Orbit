@@ -347,24 +347,54 @@ function CountUp({ to, duration = 1800, suffix = '' }) {
   const [val, setVal] = useState(0);
   const ref = useRef(null);
   const startedRef = useRef(false);
+  const rafRef = useRef(null);
 
   useEffect(() => {
     if (!ref.current) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting || startedRef.current) return;
+
+    const animate = () => {
+      if (startedRef.current) return;
       startedRef.current = true;
       const start = performance.now();
       const tick = (now) => {
         const tt = Math.min((now - start) / duration, 1);
         const eased = 1 - Math.pow(1 - tt, 3);
         setVal(Math.round(eased * to));
-        if (tt < 1) requestAnimationFrame(tick);
+        if (tt < 1) rafRef.current = requestAnimationFrame(tick);
       };
-      requestAnimationFrame(tick);
-    }, { threshold: 0.4 });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    // If already intersecting at mount (e.g. navigated directly to anchor),
+    // skip the observer and animate right away.
+    try {
+      const r = ref.current.getBoundingClientRect();
+      const inView = r.top < window.innerHeight && r.bottom > 0;
+      if (inView) { animate(); return () => rafRef.current && cancelAnimationFrame(rafRef.current); }
+    } catch (_) {}
+
+    // Lowered threshold from 0.4 → 0.01 so short viewports (mobile landscape,
+    // split screens) still trigger. Also use rootMargin so we start just
+    // before the element scrolls in.
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      animate();
+      obs.disconnect();
+    }, { threshold: 0.01, rootMargin: '0px 0px -10% 0px' });
     obs.observe(ref.current);
-    return () => obs.disconnect();
+
+    return () => {
+      obs.disconnect();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [to, duration]);
+
+  // Reset when `to` changes (e.g. language switch re-renders), so the
+  // counter restarts from 0 and lands on the new value.
+  useEffect(() => {
+    startedRef.current = false;
+    setVal(0);
+  }, [to]);
 
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
@@ -411,11 +441,23 @@ function ProfileRotator() {
 function StorySection() {
   const { t, lang } = useChangeLang();
   const s = window.STATS_V2 || {};
-  const labels = (t.story && t.story.stat_labels) || { countries: 'Countries', hours: 'Hours flown', projects: 'Projects' };
+  // Same 4 stats as StatsBand (Atlas) → guarantees the numbers under the
+  // story always match the ones above. Suffix "+" for growth metrics, none
+  // for fixed totals, mirroring StatsBand exactly.
+  const storyLabels = (t.story && t.story.stat_labels) || {};
+  const bandLabels = {
+    es: { countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas' },
+    en: { countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands' },
+    it: { countries: 'paesi', flights: 'voli', hours: 'ore in volo', brands: 'brand' },
+  };
+  const L = bandLabels[lang] || bandLabels.es;
+  // Prefer the short story label if defined, otherwise the StatsBand label.
+  const labelFor = (key, fallback) => (storyLabels[key] || fallback);
   const stats = [
-    { value: s.countries || 0, label: labels.countries },
-    { value: s.hours_flown || 0, label: labels.hours },
-    { value: s.projects || 0, label: labels.projects },
+    { value: s.countries || 0, suffix: '',  label: labelFor('countries', L.countries) },
+    { value: s.flights   || 0, suffix: '+', label: L.flights },
+    { value: s.hours_flown || 0, suffix: '+', label: labelFor('hours', L.hours) },
+    { value: s.projects  || 0, suffix: '',  label: labelFor('projects', L.brands) },
   ];
   return (
     <section className="story" id="story">
@@ -442,7 +484,7 @@ function StorySection() {
       <div className="story-stats">
         {stats.map((s, i) => (
           <div key={i} className="story-stat">
-            <div className="story-stat-num"><CountUp to={s.value} /></div>
+            <div className="story-stat-num"><CountUp to={s.value} suffix={s.suffix || ''} /></div>
             <div className="story-stat-label">{s.label}</div>
           </div>
         ))}
