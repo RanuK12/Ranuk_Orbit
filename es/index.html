@@ -836,6 +836,25 @@ input, textarea, select { font: inherit; color: inherit; }
 .lb-close:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
 .lb-close:active { transform: scale(0.96); }
 
+/* Invisible safety zone in the top-right corner. Always closes the
+   lightbox on tap, even if the native <video> element captured the
+   pointer. Sits above the video but below the visible .lb-close so
+   the styled button is what the user interacts with when they aim. */
+.lb-close-zone {
+  position: fixed;
+  top: 0; right: 0;
+  width: 96px; height: 72px;
+  background: transparent;
+  border: 0; padding: 0; margin: 0;
+  cursor: pointer;
+  z-index: 2147483645;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+}
+@media (max-width: 720px) {
+  .lb-close-zone { width: 84px; height: 64px; }
+}
 .lb-nav {
   position: fixed;
   width: 48px; height: 48px; border-radius: 50%;
@@ -1006,7 +1025,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .story-stats {
   position: relative;
   max-width: var(--max); margin: 80px auto 0;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
   padding-top: 60px;
   border-top: 1px solid rgba(10,10,10,0.12);
 }
@@ -1551,7 +1570,7 @@ body.konami { animation: rainbow 6s linear; }
   .archive-controls { flex-direction: column; }
   .services-grid { grid-template-columns: 1fr; }
   .rayban-grid { grid-template-columns: 1fr; }
-  .story-stats { grid-template-columns: 1fr; gap: 30px; }
+  .story-stats { grid-template-columns: repeat(2, 1fr); gap: 30px; }
   .footer-cols { grid-template-columns: 1fr 1fr; }
   .contact-row { grid-template-columns: 1fr; }
   .lb-meta { grid-template-columns: 1fr; gap: 12px; }
