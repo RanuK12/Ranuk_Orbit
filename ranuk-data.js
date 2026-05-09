@@ -415,6 +415,30 @@ LOCATIONS_V2.forEach(loc => {
   });
 });
 
+// ─── POSTER FALLBACK ─────────────────────────────────────────────────────
+// De 102 medias en producción, ~80 son videos SIN poster → el browser los
+// renderiza en negro hasta el hover. Resultado: el usuario ve "70% del
+// contenido no carga" cuando en realidad sí está ahí.
+//
+// Estrategia:
+//   1. Para cada video/POV sin poster, usar la primera foto de la MISMA
+//      location (ya son .jpg optimizados, 400-900KB).
+//   2. Si la location no tiene fotos (p. ej. Roma, Ámsterdam, Las Leñas,
+//      Mar del Plata solo tienen videos), usar el cover de la location.
+//   3. El cover siempre existe (se auto-corrige arriba si el declarado no
+//      estaba en el manifest).
+//
+// Este paso ejecuta DESPUÉS del circuit breaker, así que cualquier foto
+// referenciada como poster ya está garantizada en el servidor.
+LOCATIONS_V2.forEach(loc => {
+  const photoSources = loc.media.filter(m => m.type === 'photo').map(m => m.src);
+  const fallbackPoster = photoSources[0] || loc.cover;
+  if (!fallbackPoster) return;
+  loc.media.forEach(m => {
+    if (m.type !== 'photo' && !m.poster) m.poster = fallbackPoster;
+  });
+});
+
 // VISITED_DOTS_V2 — pins decorativos en el globo (paises visitados sin material)
 // Click no abre lightbox, solo tooltip con nombre
 const VISITED_DOTS_V2 = [
@@ -459,14 +483,17 @@ const VISITED_DOTS_V2 = [
 const ALL_MEDIA_V2 = LOCATIONS_V2.flatMap(l => l.media);
 const YEARS_V2 = [...new Set(LOCATIONS_V2.map(l => l.year))].sort((a,b)=>b-a);
 
-// Stats for Story counters
-// Cálculo: ~640 horas de vuelo / 30 min promedio por batería = ~1280 vuelos
-const STATS_V2 = {
-  countries: 6,
-  hours_flown: 640,
-  flights: 1280,
-  projects: 24,
-};
+// ─── STATS — single source of truth ─────────────────────────────────────
+// Atlas StatsBand y Story StorySection LEEN de aquí. No hardcodear en JSX.
+// `countries` = locations con material + países visitados en el globo.
+// `flights` ≈ hours × 2 (batería DJI Mini 4 Pro ~30 min).
+const STATS_V2 = (() => {
+  const countries = LOCATIONS_V2.length + VISITED_DOTS_V2.length;
+  const hours_flown = 640;
+  const flights = hours_flown * 2; // 1 batería = ~30 min
+  const projects = 24;
+  return { countries, hours_flown, flights, projects };
+})();
 
 // FAQ
 const FAQ_V2 = [
@@ -567,10 +594,26 @@ const PRESS_V2 = [
   { name: 'Ray-Ban Meta Creators', year: 2025 },
 ];
 
-// Profile carousel — author portraits at different locations
-const PROFILE_PHOTOS = Array.from({length: 14}, (_, i) =>
-  `media/optimized/perfil/perfil-${String(i+1).padStart(2,'0')}.jpg`
-);
+// Profile carousel — author portraits at different locations.
+// Files live in media/optimized/Fotos_Emilio_Perfil/ as .webp (already optimized).
+// Paths are URL-encoding safe (underscores, not spaces). Do not rename without
+// updating ranuk-manifest.js too.
+const PROFILE_PHOTOS = [
+  'media/optimized/Fotos_Emilio_Perfil/img-0232.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-0565.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-2072.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-2868.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3224.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3831.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3983.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-4080.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-5441.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-7204.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-8589.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-8895.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-9396.webp',
+  'media/optimized/Fotos_Emilio_Perfil/7c9ab927-bed6-451d-9052-2435effcf914.webp',
+];
 
 Object.assign(window, {
   LOCATIONS_V2,
