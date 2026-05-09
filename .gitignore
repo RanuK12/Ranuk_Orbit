@@ -93,7 +93,10 @@ media/fotos/
 !media/posters/
 
 # Ignorar originales pesados dentro de media/optimized/Fotos_Emilio_Perfil
+# (mantener .webp — son los optimizados que sirve el sitio)
 media/optimized/Fotos_Emilio_Perfil/*.jpeg
 media/optimized/Fotos_Emilio_Perfil/*.jpg
 media/optimized/Fotos_Emilio_Perfil/*.JPG
+media/optimized/Fotos_Emilio_Perfil/*.JPEG
 media/optimized/Fotos_Emilio_Perfil/*.heic
+media/optimized/Fotos_Emilio_Perfil/*.HEIC

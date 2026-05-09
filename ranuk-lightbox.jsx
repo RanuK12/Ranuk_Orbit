@@ -28,17 +28,26 @@ function useLightbox() { return useContext(LightboxContext); }
 // Convert a video src to its 8s preview path. Mirrors gen-previews.sh layout.
 // videos-drone/foo.mp4 → previews/foo.mp4
 // videos-rayban/bar.mp4 → previews/bar.mp4
+// If the preview is not registered in window.RANUK_ASSETS, fall back to the
+// original source so the user never lands on a 404.
 function previewPathFor(src) {
   if (!src) return src;
   const m = src.match(/media\/optimized\/(?:videos-drone|videos-rayban)\/(.+\.(?:mp4|mov))$/i);
   if (!m) return src;
-  return `media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
+  const previewPath = `media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
+  try {
+    if (window.RANUK_ASSETS && window.RANUK_ASSETS.has(previewPath)) return previewPath;
+  } catch (_) {}
+  // Fallback: request a media fragment — browsers that honour the hint will
+  // only fetch the first 8s. Those that don't, get the full file (still valid).
+  return `${src}#t=0,8`;
 }
 
 function Lightbox() {
   const lb = useLightbox();
   const { lang } = useLang();
   const stripRef = useRef(null);
+  const rootRef = useRef(null);
 
   useEffect(() => {
     if (!lb.open) return;
@@ -61,6 +70,17 @@ function Lightbox() {
     if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [lb.index, lb.open]);
 
+  // Mobile safety net: if user taps anywhere on the backdrop (the .lightbox
+  // root itself, NOT the media/controls), close. Works around Safari quirks
+  // where synthetic click on the close button doesn't fire after a video
+  // fullscreen control dispatched first.
+  const handleBackdrop = useCallback((e) => {
+    if (e.target === rootRef.current) {
+      e.preventDefault();
+      lb.close();
+    }
+  }, [lb]);
+
   if (!lb.open || !lb.items.length) return null;
   const item = lb.items[lb.index];
   const title = item._displayTitle || pick(item.title, lang) || '';
@@ -75,21 +95,31 @@ function Lightbox() {
 
   const downloadHref = isVideo ? previewPathFor(item.src) : item.src;
 
+  // Fire-and-forget close. Fires on both click and touchend so iOS Safari
+  // doesn't drop the event when native video controls were the previous
+  // touch target.
+  const closeAndStop = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    lb.close();
+  };
+
   return (
     <div
       className="lightbox"
+      ref={rootRef}
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      onClick={(e) => { if (e.target === e.currentTarget) lb.close(); }}
+      onClick={handleBackdrop}
     >
-      <div className="lb-topbar" onClick={(e) => e.stopPropagation()}>
+      <div className="lb-topbar">
         <span className="lb-counter">{lb.index + 1} / {lb.items.length}</span>
         <span className="lb-esc-hint">{escHint}</span>
         <button
           type="button"
           className="lb-close"
-          onClick={(e) => { e.stopPropagation(); lb.close(); }}
+          onClick={closeAndStop}
+          onTouchEnd={closeAndStop}
           aria-label={closeLabel}
         >
           <span aria-hidden="true">×</span>
@@ -120,8 +150,10 @@ function Lightbox() {
             key={item.id}
             className="lb-media"
             src={item.src}
+            poster={item.poster || undefined}
             controls
-            controlsList="nodownload"
+            controlsList="nodownload noplaybackrate"
+            disablePictureInPicture
             autoPlay
             playsInline
           />
