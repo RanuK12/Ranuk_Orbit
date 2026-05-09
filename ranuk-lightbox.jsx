@@ -1,4 +1,5 @@
-// Ranuk Orbit — Lightbox v3: robust close, 8s preview download for videos
+// Ranuk Orbit — Lightbox v4: custom video controls so the native <video>
+// chrome never competes with the overlay UI. Close button always wins.
 const { createContext, useContext, useState, useCallback, useEffect, useRef } = React;
 
 const LightboxContext = createContext(null);
@@ -26,10 +27,8 @@ function LightboxProvider({ children }) {
 function useLightbox() { return useContext(LightboxContext); }
 
 // Convert a video src to its 8s preview path. Mirrors gen-previews.sh layout.
-// videos-drone/foo.mp4 → previews/foo.mp4
-// videos-rayban/bar.mp4 → previews/bar.mp4
-// If the preview is not registered in window.RANUK_ASSETS, fall back to the
-// original source so the user never lands on a 404.
+// If the preview is not registered in window.RANUK_ASSETS, fall back to a
+// media-fragment URL (#t=0,8) so the browser only streams the first 8s.
 function previewPathFor(src) {
   if (!src) return src;
   const m = src.match(/media\/optimized\/(?:videos-drone|videos-rayban)\/(.+\.(?:mp4|mov))$/i);
@@ -38,8 +37,6 @@ function previewPathFor(src) {
   try {
     if (window.RANUK_ASSETS && window.RANUK_ASSETS.has(previewPath)) return previewPath;
   } catch (_) {}
-  // Fallback: request a media fragment — browsers that honour the hint will
-  // only fetch the first 8s. Those that don't, get the full file (still valid).
   return `${src}#t=0,8`;
 }
 
@@ -50,18 +47,43 @@ function Lightbox() {
   const rootRef = useRef(null);
   const videoRef = useRef(null);
 
+  // Custom video controls state. We deliberately do NOT use the browser's
+  // native <video controls> chrome — on iOS Safari the native controls
+  // capture pointer events aggressively and shadow the overlay close
+  // button (the root cause of the persistent "close doesn't work" bug).
+  // By rendering our own play/pause + mute buttons inside the lightbox
+  // tree, we guarantee that the close button always wins taps.
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  // Reset custom-control state each time the active item changes.
+  useEffect(() => {
+    setPlaying(true);
+    setMuted(true);
+    setProgress(0);
+    setDuration(0);
+  }, [lb.index]);
+
+  // Global keyboard handling while open
   useEffect(() => {
     if (!lb.open) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); lb.close(); }
+      if (e.key === 'Escape') { e.preventDefault(); hardClose(); }
       else if (e.key === 'ArrowLeft') lb.prev();
       else if (e.key === 'ArrowRight') lb.next();
+      else if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        togglePlay();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lb.open, lb.close, lb.prev, lb.next]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lb.open, lb.index, lb.close, lb.prev, lb.next]);
 
-  // Failsafe: if the component unmounts while open, restore body scroll
+  // Failsafe: restore body scroll if the component unmounts while open
   useEffect(() => () => { try { document.body.style.overflow = ''; } catch (_) {} }, []);
 
   // Scroll active thumb into view
@@ -71,16 +93,56 @@ function Lightbox() {
     if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [lb.index, lb.open]);
 
-  // Mobile safety net: if user taps anywhere on the backdrop (the .lightbox
-  // root itself, NOT the media/controls), close. Works around Safari quirks
-  // where synthetic click on the close button doesn't fire after a video
-  // fullscreen control dispatched first.
+  // Backdrop tap: close only when the target is the root element itself.
   const handleBackdrop = useCallback((e) => {
     if (e.target === rootRef.current) {
       e.preventDefault();
-      lb.close();
+      hardClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lb]);
+
+  // Robust close: stops the video, drops any fullscreen, calls lb.close().
+  const hardClose = (e) => {
+    if (e) {
+      try { e.preventDefault(); } catch (_) {}
+      try { e.stopPropagation(); } catch (_) {}
+    }
+    try {
+      const v = videoRef.current;
+      if (v) { v.pause(); v.removeAttribute('controls'); v.currentTime = 0; }
+    } catch (_) {}
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
+    try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
+    lb.close();
+  };
+
+  const togglePlay = (e) => {
+    if (e) e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) { v.play().catch(() => {}); setPlaying(true); }
+    else { v.pause(); setPlaying(false); }
+  };
+
+  const toggleMute = (e) => {
+    if (e) e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  };
+
+  const onSeek = (e) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX ?? (e.touches?.[0]?.clientX)) - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    v.currentTime = pct * duration;
+    setProgress(pct);
+  };
 
   if (!lb.open || !lb.items.length) return null;
   const item = lb.items[lb.index];
@@ -93,29 +155,18 @@ function Lightbox() {
   const dlPhotoLabel = lang === 'es' ? 'Descargar foto' : lang === 'it' ? 'Scarica foto' : 'Download photo';
   const closeLabel = lang === 'es' ? 'Cerrar' : lang === 'it' ? 'Chiudi' : 'Close';
   const escHint = lang === 'es' ? 'ESC para cerrar' : lang === 'it' ? 'ESC per chiudere' : 'ESC to close';
+  const playLabel = lang === 'es' ? 'Reproducir' : lang === 'it' ? 'Riproduci' : 'Play';
+  const pauseLabel = lang === 'es' ? 'Pausar' : lang === 'it' ? 'Metti in pausa' : 'Pause';
+  const soundOn = lang === 'es' ? 'Con sonido' : lang === 'it' ? 'Audio attivo' : 'Sound on';
+  const soundOff = lang === 'es' ? 'Sin sonido' : lang === 'it' ? 'Audio disattivato' : 'Sound off';
 
   const downloadHref = isVideo ? previewPathFor(item.src) : item.src;
 
-  // Fire-and-forget close. Stops the native video FIRST so its controls
-  // don't keep capturing pointer events (the root cause of the iOS Safari
-  // "close button does nothing" bug — the controls intercept the synthetic
-  // click). Handles both pointer-up and click to cover all input modes.
-  const hardClose = (e) => {
-    if (e) {
-      try { e.preventDefault(); } catch (_) {}
-      try { e.stopPropagation(); } catch (_) {}
-    }
-    try {
-      const v = videoRef.current;
-      if (v) {
-        v.pause();
-        v.removeAttribute('controls');
-        v.currentTime = 0;
-      }
-    } catch (_) {}
-    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
-    try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
-    lb.close();
+  const fmtTime = (s) => {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const ss = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${ss}`;
   };
 
   return (
@@ -142,11 +193,10 @@ function Lightbox() {
         </button>
       </div>
 
-      {/* Invisible top-right safety zone. Covers the corner of the viewport
-          so a tap there always closes the lightbox, even if the video
-          element has captured pointer events further down. Sits ABOVE the
-          video (huge z-index) but BELOW the actual close button so the
-          button still works when the user hits it precisely. */}
+      {/* Invisible top-right safety zone. Covers the corner so a tap there
+          always closes the lightbox, even if a different element grabbed
+          the pointer. Lower z-index than the visible .lb-close so the
+          styled button is what the user interacts with when they aim. */}
       <button
         type="button"
         className="lb-close-zone"
@@ -174,18 +224,75 @@ function Lightbox() {
 
       <div className="lb-stage" onClick={(e) => e.stopPropagation()}>
         {isVideo ? (
-          <video
-            key={item.id}
-            ref={videoRef}
-            className="lb-media"
-            src={item.src}
-            poster={item.poster || undefined}
-            controls
-            controlsList="nodownload noplaybackrate nofullscreen"
-            disablePictureInPicture
-            autoPlay
-            playsInline
-          />
+          <div className="lb-video-wrap">
+            <video
+              key={item.id}
+              ref={videoRef}
+              className="lb-media"
+              src={item.src}
+              poster={item.poster || undefined}
+              // No native controls — we render our own below. This is the
+              // decisive fix for the iOS Safari close-button bug.
+              disablePictureInPicture
+              autoPlay
+              playsInline
+              muted={muted}
+              onClick={togglePlay}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+              onTimeUpdate={(e) => {
+                const d = e.currentTarget.duration;
+                if (d) setProgress(e.currentTarget.currentTime / d);
+              }}
+              onEnded={() => setPlaying(false)}
+            />
+            <div className="lb-video-controls" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className="lb-vbtn"
+                onClick={togglePlay}
+                aria-label={playing ? pauseLabel : playLabel}
+              >
+                {playing ? (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <rect x="3" y="2" width="4" height="12" rx="1"/>
+                    <rect x="9" y="2" width="4" height="12" rx="1"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M3 2 L13 8 L3 14 Z"/>
+                  </svg>
+                )}
+              </button>
+              <div className="lb-progress" onClick={onSeek} role="slider" aria-label="Seek" aria-valuenow={Math.round(progress * 100)}>
+                <div className="lb-progress-fill" style={{ width: `${progress * 100}%` }} />
+              </div>
+              <span className="lb-time">
+                {fmtTime((videoRef.current?.currentTime) || 0)} / {fmtTime(duration)}
+              </span>
+              <button
+                type="button"
+                className="lb-vbtn"
+                onClick={toggleMute}
+                aria-label={muted ? soundOff : soundOn}
+              >
+                {muted ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                    <line x1="23" y1="9" x2="17" y2="15"/>
+                    <line x1="17" y1="9" x2="23" y2="15"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
         ) : (
           <img key={item.id} className="lb-media" src={item.src} alt={title} />
         )}

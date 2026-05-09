@@ -37,6 +37,23 @@ window.RANUK_ASSETS = new Set([
   'media/optimized/fotos-rayban/salinas-grandes-jujuy.jpg',
   'media/optimized/fotos-rayban/taghazout-marruecos.jpg',
   'media/optimized/fotos-rayban/templo-wat-phra-kaew-thai.jpg',
+  // Posters dedicados: matchean el basename del video en /videos-drone/ o
+  // /videos-rayban/ y se sirven como thumb cuando el video se abre en la
+  // grilla. El algoritmo de ranuk-data.js (step 1) los prioriza sobre el
+  // match por tokens.
+  'media/optimized/posters/alpes-italianos-atardecer.jpg',
+  'media/optimized/posters/alpes-italianos-dolomitas-perro.jpg',
+  'media/optimized/posters/alpes-italianos-trentino.jpg',
+  'media/optimized/posters/alpes-italianos.jpg',
+  'media/optimized/posters/atardecer-nieve-alpes-italianos-trentino.jpg',
+  'media/optimized/posters/atardecer-nieve-hero.jpg',
+  'media/optimized/posters/castillo-calabria-9-16.jpg',
+  'media/optimized/posters/cerde-na-isla-magdalena-hero.jpg',
+  'media/optimized/posters/cerro7colores-jujuy.jpg',
+  'media/optimized/posters/paseo-perro-alpes-it.jpg',
+  'media/optimized/posters/rio-limay-patagonia.jpg',
+  'media/optimized/posters/valle-encantado-rio-limay.jpg',
+  'media/optimized/posters/villa-pehuenia-neuquen.jpg',
   'media/optimized/videos-drone/aghroud-marruecos.mp4',
   'media/optimized/videos-drone/aghroud-panoramica.mp4',
   'media/optimized/videos-drone/alpes-italianos-atardecer.mp4',
