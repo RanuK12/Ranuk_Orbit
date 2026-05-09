@@ -304,11 +304,15 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointermove', onDrag);
 
-    // Animate
+    // Animate with viewport-gating: when the canvas container scrolls out of
+    // sight or the tab loses visibility, pause the RAF loop entirely. A dead
+    // globe on a 5-year-old MacBook Pro is the single biggest CPU/GPU drain.
     let t = 0, rafId;
     let arcAnimT = 0;
+    let paused = false;
     const animate = () => {
       rafId = requestAnimationFrame(animate);
+      if (paused) return;
       t += 0.016;
       if (autoRotate) {
         earth.rotation.y += 0.0015;
@@ -350,6 +354,14 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     };
     animate();
 
+    // Gate: IntersectionObserver on the mount node, document visibility
+    const vpObs = new IntersectionObserver(([entry]) => {
+      paused = !entry.isIntersecting;
+    }, { threshold: 0.01 });
+    vpObs.observe(mount);
+    const onVisChange = () => { paused = document.hidden || paused; };
+    document.addEventListener('visibilitychange', onVisChange);
+
     const onResize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
       camera.aspect = w / h;
@@ -382,6 +394,8 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
 
     return () => {
       cancelAnimationFrame(rafId);
+      try { vpObs.disconnect(); } catch (_) {}
+      document.removeEventListener('visibilitychange', onVisChange);
       renderer.domElement.removeEventListener('pointermove', onMove);
       renderer.domElement.removeEventListener('click', onClick);
       renderer.domElement.removeEventListener('pointerdown', onDown);
@@ -436,7 +450,7 @@ function AtlasSection() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.matchMedia('(max-width: 900px)').matches);
+    const check = () => setIsMobile(window.matchMedia('(max-width: 1180px)').matches);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -488,21 +502,25 @@ function AtlasSection() {
               <div className="globe-hint">{t.atlas.hint}</div>
             </div>
             <aside className="atlas-sidebar">
-              <h3 className="atlas-sidebar-title">{t.atlas.sidebar_title}</h3>
+              <h3 className="atlas-sidebar-title">
+                <span>{t.atlas.sidebar_title}</span>
+                <span className="atlas-sidebar-count">{locs.length}</span>
+              </h3>
               <ul className="atlas-list">
                 {locs.map(loc => (
                   <li
                     key={loc.id}
                     className="atlas-list-item"
+                    style={{ ['--accent']: loc.accentColor }}
                     onClick={() => handleSidebarClick(loc)}
                     onDoubleClick={() => handleClick(loc.id)}
                   >
                     <span className="atlas-list-flag">{loc.flag}</span>
                     <div className="atlas-list-text">
                       <div className="atlas-list-name">{pick(loc.name, lang)}</div>
-                      <div className="atlas-list-country">{pick(loc.country, lang)} · {loc.year}</div>
+                      <div className="atlas-list-country"><b>{pick(loc.country, lang)}</b> · {loc.year}</div>
                     </div>
-                    <span className="atlas-list-dot" style={{ background: loc.accentColor }} />
+                    <span className="atlas-list-dot" style={{ background: loc.accentColor, color: loc.accentColor }} />
                   </li>
                 ))}
               </ul>

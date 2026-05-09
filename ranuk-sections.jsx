@@ -125,6 +125,95 @@ function Nav() {
 }
 
 // ─── ARCHIVE / GALLERY V2 ─────────────────────────────────────────────────
+// Detect reduced motion once — modules may read this synchronously
+const _prefersReducedMotion = () => {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch (_) { return false; }
+};
+
+// Memoized tile: only mounts a <video> element when the user is hovering
+// the card; idle state stays as a cheap <img poster>. Uses an
+// IntersectionObserver so off-screen tiles never allocate DOM for the video.
+function GalleryTile({ item, index, className, thumb, displayName, onOpen }) {
+  const ref = useRef(null);
+  const videoRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  const [active, setActive] = useState(false); // hover desktop / tap mobile
+  const isVideo = item.type !== 'photo';
+
+  useEffect(() => {
+    if (!ref.current || !isVideo) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      setInView(entry.isIntersecting);
+      // Pause videos when they scroll out — crucial on mobile Safari
+      if (!entry.isIntersecting && videoRef.current) {
+        try { videoRef.current.pause(); } catch (_) {}
+      }
+    }, { rootMargin: '200px 0px' });
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [isVideo]);
+
+  const onEnter = useCallback(() => {
+    if (_prefersReducedMotion()) return;
+    setActive(true);
+    // Schedule play on next tick so React mounts the <video> first
+    requestAnimationFrame(() => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (!v.src) v.src = item.src;
+      v.play().catch(() => {});
+    });
+  }, [item.src]);
+
+  const onLeave = useCallback(() => {
+    const v = videoRef.current;
+    if (v) { try { v.pause(); v.currentTarget = 0; } catch (_) {} }
+    setActive(false);
+  }, []);
+
+  return (
+    <button
+      ref={ref}
+      data-id={item.id}
+      className={className}
+      onClick={onOpen}
+      onMouseEnter={isVideo ? onEnter : undefined}
+      onMouseLeave={isVideo ? onLeave : undefined}
+      style={{ ['--accent']: item.location.accentColor }}
+    >
+      {/* Poster layer — always present, cheap cost (img) */}
+      <img
+        src={thumb}
+        alt={item._displayTitle}
+        loading="lazy"
+        decoding="async"
+        className="gallery-thumb"
+      />
+      {/* Video layer — only mounted when in-view AND user hovers */}
+      {isVideo && inView && active && (
+        <video
+          ref={videoRef}
+          className="gallery-video"
+          muted loop playsInline
+          preload="none"
+          poster={item.poster}
+        />
+      )}
+      <div className="gallery-overlay">
+        <div className="gallery-meta">
+          <span className="gallery-flag">{item.location.flag}</span>
+          <div className="gallery-meta-text">
+            <h4>{item._displayTitle}</h4>
+            <p>{displayName} · {item.year}</p>
+          </div>
+        </div>
+        {isVideo && <span className="gallery-play">▶</span>}
+      </div>
+    </button>
+  );
+}
+
 function ArchiveSection() {
   const { t, lang } = useChangeLang();
   const lb = useLightbox();
@@ -233,38 +322,15 @@ function ArchiveSection() {
           const cls = `gallery-item${spotlight ? ' is-spotlight' : ''} gallery-item--${it.type}`;
           const thumb = it.type === 'photo' ? it.src : (it.poster || it.src);
           return (
-            <button
+            <GalleryTile
               key={it.id}
-              data-id={it.id}
+              item={it}
+              index={i}
               className={cls}
-              onClick={() => openItem(i)}
-              style={{ ['--accent']: it.location.accentColor }}
-            >
-              {it.type === 'photo' ? (
-                <img src={thumb} alt={it._displayTitle} loading="lazy" />
-              ) : (
-                <video
-                  muted loop playsInline preload="none"
-                  poster={it.poster}
-                  onMouseEnter={(e) => {
-                    // Carga el src bajo demanda al hover (lazy)
-                    if (!e.currentTarget.src) e.currentTarget.src = it.src;
-                    e.currentTarget.play().catch(() => {});
-                  }}
-                  onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                />
-              )}
-              <div className="gallery-overlay">
-                <div className="gallery-meta">
-                  <span className="gallery-flag">{it.location.flag}</span>
-                  <div className="gallery-meta-text">
-                    <h4>{it._displayTitle}</h4>
-                    <p>{pick(it.location.name, lang)} · {it.year}</p>
-                  </div>
-                </div>
-                {it.type !== 'photo' && <span className="gallery-play">▶</span>}
-              </div>
-            </button>
+              thumb={thumb}
+              displayName={pick(it.location.name, lang)}
+              onOpen={() => openItem(i)}
+            />
           );
         })}
       </div>
@@ -306,22 +372,36 @@ function CountUp({ to, duration = 1800, suffix = '' }) {
 function ProfileRotator() {
   const photos = window.PROFILE_PHOTOS || [];
   const [idx, setIdx] = useState(0);
+
+  // Rotate every 10s. Crossfade is done in CSS via .is-active.
   useEffect(() => {
     if (photos.length < 2) return;
     const id = setInterval(() => setIdx(i => (i + 1) % photos.length), 10000);
     return () => clearInterval(id);
   }, [photos.length]);
+
+  // Preload the next image so the crossfade never flashes a half-loaded frame.
+  useEffect(() => {
+    if (photos.length < 2) return;
+    const next = photos[(idx + 1) % photos.length];
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = next;
+  }, [idx, photos]);
+
   if (photos.length === 0) return null;
+
   return (
-    <div className="story-portrait-frame profile-rotator">
+    <div className="profile-rotator" aria-label="Emilio Ranucoli">
       {photos.map((src, i) => (
         <img
           key={src}
           src={src}
-          alt="Emilio Ranucoli"
+          alt=""
           className={`profile-photo${i === idx ? ' is-active' : ''}`}
-          loading={i === 0 ? 'eager' : 'lazy'}
+          loading={i < 2 ? 'eager' : 'lazy'}
           decoding="async"
+          fetchPriority={i === 0 ? 'high' : 'auto'}
         />
       ))}
     </div>
@@ -331,10 +411,9 @@ function ProfileRotator() {
 function StorySection() {
   const { t, lang } = useChangeLang();
   const s = window.STATS_V2 || {};
-  const numCountries = (window.LOCATIONS_V2?.length || 0) + (window.VISITED_DOTS_V2?.length || 0);
   const labels = (t.story && t.story.stat_labels) || { countries: 'Countries', hours: 'Hours flown', projects: 'Projects' };
   const stats = [
-    { value: numCountries || s.countries || 0, label: labels.countries },
+    { value: s.countries || 0, label: labels.countries },
     { value: s.hours_flown || 0, label: labels.hours },
     { value: s.projects || 0, label: labels.projects },
   ];
@@ -432,31 +511,50 @@ function ServicesSection() {
 function PovLens({ visible, pool, startIdx }) {
   const [idx, setIdx] = useState(startIdx);
   const [prevIdx, setPrevIdx] = useState(null);
+  const reducedMotion = _prefersReducedMotion();
+
   useEffect(() => {
-    if (!pool || pool.length < 2) return;
+    if (!pool || pool.length < 2 || reducedMotion) return;
     const id = setInterval(() => {
       setPrevIdx(idx);
       setIdx(i => (i + 2) % pool.length);
     }, 15000);
     return () => clearInterval(id);
-  }, [pool, idx]);
+  }, [pool, idx, reducedMotion]);
+
   if (!pool || pool.length === 0) return <div className="rayban-lens" />;
   const cur = pool[idx % pool.length];
   const prev = prevIdx != null ? pool[prevIdx % pool.length] : null;
+
+  // Not visible yet, or reducedMotion: just show the poster image.
+  if (!visible || reducedMotion) {
+    return (
+      <div className="rayban-lens">
+        <img src={cur.poster} alt="" className="rayban-lens-video is-cur" loading="lazy" decoding="async" />
+      </div>
+    );
+  }
+
   return (
     <div className="rayban-lens">
       {prev && (
-        <video key={`prev-${prev.id}`} src={prev.src} poster={prev.poster}
+        <video
+          key={`prev-${prev.id}`}
+          src={prev.src}
+          poster={prev.poster}
           muted loop playsInline autoPlay
-          className="rayban-lens-video is-prev" />
+          preload="metadata"
+          className="rayban-lens-video is-prev"
+        />
       )}
-      {visible ? (
-        <video key={`cur-${cur.id}`} src={cur.src} poster={cur.poster}
-          muted loop playsInline autoPlay
-          className="rayban-lens-video is-cur" />
-      ) : (
-        <img src={cur.poster} alt="" className="rayban-lens-video is-cur" />
-      )}
+      <video
+        key={`cur-${cur.id}`}
+        src={cur.src}
+        poster={cur.poster}
+        muted loop playsInline autoPlay
+        preload="metadata"
+        className="rayban-lens-video is-cur"
+      />
     </div>
   );
 }
@@ -640,15 +738,15 @@ function StatsBand() {
   const labels = {
     es: { kicker: 'Tres años, una órbita', countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
     en: { kicker: 'Three years, one orbit', countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
+    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', flights: 'voli', hours: 'ore in volo', brands: 'brand', footer: 'Numeri ad oggi. L\'orbita continua.' },
   };
   const L = labels[lang] || labels.es;
-  const s = window.STATS_V2 || {};
-  const numCountries = (window.LOCATIONS_V2?.length || 0) + (window.VISITED_DOTS_V2?.length || 0);
+  const s = window.STATS_V2 || { countries: 0, flights: 0, hours_flown: 0, projects: 0 };
   const STATS = [
-    { value: String(numCountries || 13), label: L.countries },
-    { value: String(s.flights || 1280) + '+', label: L.flights },
-    { value: String(s.hours_flown || 640) + '+', label: L.hours },
-    { value: String(s.projects || 24),   label: L.brands },
+    { value: String(s.countries), label: L.countries },
+    { value: String(s.flights) + '+', label: L.flights },
+    { value: String(s.hours_flown) + '+', label: L.hours },
+    { value: String(s.projects),   label: L.brands },
   ];
   return (
     <section className="stats-band" aria-labelledby="stats-kicker">
@@ -920,27 +1018,45 @@ function CustomCursor() {
   const trailRef = useRef(null);
   useEffect(() => {
     if (window.matchMedia('(hover: none)').matches) return;
+    if (_prefersReducedMotion()) return;
+
     let x = 0, y = 0, tx = 0, ty = 0;
-    const onMove = (e) => { x = e.clientX; y = e.clientY; };
-    document.addEventListener('mousemove', onMove);
+    let needsUpdate = false;
+    const onMove = (e) => { x = e.clientX; y = e.clientY; needsUpdate = true; };
+    document.addEventListener('mousemove', onMove, { passive: true });
+
     let raf;
     const tick = () => {
-      tx += (x - tx) * 0.22;
-      ty += (y - ty) * 0.22;
-      if (cursorRef.current) cursorRef.current.style.transform = `translate(${x}px, ${y}px)`;
-      if (trailRef.current) trailRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
+      if (needsUpdate) {
+        tx += (x - tx) * 0.22;
+        ty += (y - ty) * 0.22;
+        if (cursorRef.current) cursorRef.current.style.transform = `translate(${x}px, ${y}px)`;
+        if (trailRef.current) trailRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
+        // Keep damping active for 6 frames after last move, then coast
+        if (Math.abs(x - tx) < 0.5 && Math.abs(y - ty) < 0.5) needsUpdate = false;
+      }
       raf = requestAnimationFrame(tick);
     };
     tick();
+
     const overInteractive = (e) => {
       const isLink = e.target.closest && e.target.closest('a, button, [role=button], input, textarea, select');
       if (cursorRef.current) cursorRef.current.classList.toggle('is-link', !!isLink);
       if (trailRef.current) trailRef.current.classList.toggle('is-link', !!isLink);
     };
     document.addEventListener('mouseover', overInteractive);
+
+    // Pause tick when tab hidden
+    const onVis = () => {
+      if (document.hidden) { cancelAnimationFrame(raf); }
+      else { raf = requestAnimationFrame(tick); }
+    };
+    document.addEventListener('visibilitychange', onVis);
+
     return () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseover', overInteractive);
+      document.removeEventListener('visibilitychange', onVis);
       cancelAnimationFrame(raf);
     };
   }, []);
