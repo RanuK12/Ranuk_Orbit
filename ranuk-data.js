@@ -567,10 +567,26 @@ const PRESS_V2 = [
   { name: 'Ray-Ban Meta Creators', year: 2025 },
 ];
 
-// Profile carousel — author portraits at different locations
-const PROFILE_PHOTOS = Array.from({length: 14}, (_, i) =>
-  `media/optimized/perfil/perfil-${String(i+1).padStart(2,'0')}.jpg`
-);
+// Profile carousel — author portraits at different locations.
+// Files live in media/optimized/Fotos_Emilio_Perfil/ as .webp (already optimized).
+// Paths are URL-encoding safe (underscores, not spaces). Do not rename without
+// updating ranuk-manifest.js too.
+const PROFILE_PHOTOS = [
+  'media/optimized/Fotos_Emilio_Perfil/img-0232.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-0565.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-2072.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-2868.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3224.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3831.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-3983.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-4080.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-5441.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-7204.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-8589.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-8895.webp',
+  'media/optimized/Fotos_Emilio_Perfil/img-9396.webp',
+  'media/optimized/Fotos_Emilio_Perfil/7c9ab927-bed6-451d-9052-2435effcf914.webp',
+];
 
 Object.assign(window, {
   LOCATIONS_V2,
