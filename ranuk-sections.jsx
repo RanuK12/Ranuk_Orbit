@@ -219,6 +219,10 @@ function ArchiveSection() {
   const lb = useLightbox();
   const [filter, setFilter] = useState('all'); // all | drone | pov | photo
   const [year, setYear] = useState('all');
+  const [place, setPlace] = useState('all'); // locationId | all
+  const [mood, setMood] = useState('all');   // oceanic | golden | cold | warm | green | all
+  const [altitude, setAltitude] = useState('all'); // aerial | mountain | street | water | all
+  const [advOpen, setAdvOpen] = useState(false); // toggles the mood/altitude chip row
   const containerRef = useRef(null);
 
   const allItems = useMemo(() => {
@@ -240,13 +244,16 @@ function ArchiveSection() {
   const filtered = useMemo(() => {
     return allItems.filter(it => {
       if (year !== 'all' && String(it.year) !== String(year)) return false;
+      if (place !== 'all' && it.locationId !== place) return false;
+      if (mood !== 'all' && it.mood !== mood) return false;
+      if (altitude !== 'all' && it.altitude !== altitude) return false;
       if (filter === 'all') return true;
       if (filter === 'drone') return it.type === 'video' || (it.type === 'photo' && it.src && it.src.includes('fotos-drone'));
       if (filter === 'pov') return it.type === 'pov';
       if (filter === 'photo') return it.type === 'photo';
       return true;
     });
-  }, [allItems, filter, year]);
+  }, [allItems, filter, year, place, mood, altitude]);
 
   // FLIP animation on filter change
   const prevRectsRef = useRef(new Map());
@@ -277,7 +284,67 @@ function ArchiveSection() {
     return Array.from(s).sort((a, b) => b - a);
   }, [allItems]);
 
+  // Distinct places / moods / altitudes present in the dataset, computed
+  // ONCE (not filtered) so the user can always choose any axis regardless
+  // of the current filter selection. Each chip shows a live count of how
+  // many items match *after* the current filter stack, so the user sees
+  // which combinations produce results.
+  const places = useMemo(() => {
+    const byId = new Map();
+    allItems.forEach(it => {
+      if (!byId.has(it.locationId)) {
+        byId.set(it.locationId, { id: it.locationId, name: it.location.name, flag: it.location.flag, count: 0 });
+      }
+    });
+    return Array.from(byId.values());
+  }, [allItems]);
+
+  const moods = useMemo(() => {
+    const s = new Set();
+    allItems.forEach(it => it.mood && s.add(it.mood));
+    return Array.from(s).sort();
+  }, [allItems]);
+
+  const altitudes = useMemo(() => {
+    const s = new Set();
+    allItems.forEach(it => it.altitude && s.add(it.altitude));
+    return Array.from(s).sort();
+  }, [allItems]);
+
   const openItem = useCallback((idx) => { lb.open(filtered, idx); }, [filtered, lb]);
+
+  // Local copy for chip labels so we don't depend on i18n strings that
+  // may be missing in some locales (mood/altitude were not in v1 i18n).
+  const moodCopy = {
+    oceanic:  { es: 'Oceánico', en: 'Oceanic', it: 'Oceanico' },
+    golden:   { es: 'Dorado',    en: 'Golden',  it: 'Dorato'   },
+    cold:     { es: 'Frío',      en: 'Cold',    it: 'Freddo'   },
+    warm:     { es: 'Cálido',    en: 'Warm',    it: 'Caldo'    },
+    green:    { es: 'Verde',     en: 'Green',   it: 'Verde'    },
+  };
+  const altCopy = {
+    aerial:   { es: 'Aéreo',      en: 'Aerial',   it: 'Aereo'     },
+    mountain: { es: 'Montaña',    en: 'Mountain', it: 'Montagna'  },
+    street:   { es: 'Calle',      en: 'Street',   it: 'Strada'    },
+    water:    { es: 'Agua',       en: 'Water',    it: 'Acqua'     },
+  };
+  const uiCopy = {
+    place:       { es: 'Lugar',        en: 'Place',       it: 'Luogo' },
+    mood:        { es: 'Atmósfera',    en: 'Mood',        it: 'Atmosfera' },
+    altitude:    { es: 'Altitud',      en: 'Altitude',    it: 'Altitudine' },
+    all_places:  { es: 'Todos los lugares', en: 'All places', it: 'Tutti i luoghi' },
+    all_moods:   { es: 'Todos',        en: 'Any',         it: 'Tutti' },
+    all_alts:    { es: 'Todos',        en: 'Any',         it: 'Tutti' },
+    more:        { es: 'Más filtros',  en: 'More filters', it: 'Altri filtri' },
+    less:        { es: 'Menos filtros',en: 'Fewer filters', it: 'Meno filtri' },
+    reset:       { es: 'Limpiar',      en: 'Reset',       it: 'Reset' },
+  };
+  const txt = (k) => (uiCopy[k] && uiCopy[k][lang]) || (uiCopy[k] && uiCopy[k].en) || k;
+  const moodTxt = (m) => (moodCopy[m] && moodCopy[m][lang]) || m;
+  const altTxt  = (a) => (altCopy[a]  && altCopy[a][lang])  || a;
+
+  const anyAdvActive = mood !== 'all' || altitude !== 'all' || place !== 'all';
+  const resetAll = () => { setFilter('all'); setYear('all'); setPlace('all'); setMood('all'); setAltitude('all'); };
 
   return (
     <section className="archive" id="archive">
@@ -314,6 +381,89 @@ function ArchiveSection() {
             </button>
           ))}
         </div>
+
+        {/* Place filter: one chip per location with material */}
+        <div className="archive-places" role="group" aria-label={txt('place')}>
+          <span className="archive-filter-label">{txt('place')}</span>
+          <button
+            className={`chip chip-place${place === 'all' ? ' is-active' : ''}`}
+            onClick={() => setPlace('all')}
+          >
+            {txt('all_places')}
+          </button>
+          {places.map(p => (
+            <button
+              key={p.id}
+              className={`chip chip-place${place === p.id ? ' is-active' : ''}`}
+              onClick={() => setPlace(p.id)}
+            >
+              <span className="chip-flag">{p.flag}</span>
+              {pick(p.name, lang)}
+            </button>
+          ))}
+        </div>
+
+        {/* Toggleable advanced row (mood + altitude) — these exist in the
+            data model since v2 but were not exposed. Collapsed by default
+            to keep the filter bar clean; visible when user wants to
+            browse cinematographically. */}
+        <div className="archive-more-row">
+          <button
+            type="button"
+            className={`chip chip-toggle${advOpen || anyAdvActive ? ' is-active' : ''}`}
+            onClick={() => setAdvOpen(o => !o)}
+            aria-expanded={advOpen || anyAdvActive}
+          >
+            {advOpen || anyAdvActive ? txt('less') : txt('more')}
+          </button>
+          {(filter !== 'all' || year !== 'all' || anyAdvActive) && (
+            <button type="button" className="chip chip-reset" onClick={resetAll}>
+              {txt('reset')} ×
+            </button>
+          )}
+        </div>
+
+        {(advOpen || anyAdvActive) && (
+          <>
+            <div className="archive-moods" role="group" aria-label={txt('mood')}>
+              <span className="archive-filter-label">{txt('mood')}</span>
+              <button
+                className={`chip chip-mood${mood === 'all' ? ' is-active' : ''}`}
+                onClick={() => setMood('all')}
+              >
+                {txt('all_moods')}
+              </button>
+              {moods.map(m => (
+                <button
+                  key={m}
+                  className={`chip chip-mood chip-mood--${m}${mood === m ? ' is-active' : ''}`}
+                  onClick={() => setMood(m)}
+                >
+                  <span className={`chip-dot chip-dot--${m}`} aria-hidden="true" />
+                  {moodTxt(m)}
+                </button>
+              ))}
+            </div>
+            <div className="archive-altitudes" role="group" aria-label={txt('altitude')}>
+              <span className="archive-filter-label">{txt('altitude')}</span>
+              <button
+                className={`chip chip-alt${altitude === 'all' ? ' is-active' : ''}`}
+                onClick={() => setAltitude('all')}
+              >
+                {txt('all_alts')}
+              </button>
+              {altitudes.map(a => (
+                <button
+                  key={a}
+                  className={`chip chip-alt chip-alt--${a}${altitude === a ? ' is-active' : ''}`}
+                  onClick={() => setAltitude(a)}
+                >
+                  {altTxt(a)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="gallery-masonry" ref={containerRef}>
