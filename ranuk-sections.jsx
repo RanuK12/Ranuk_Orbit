@@ -330,8 +330,14 @@ function ProfileRotator() {
 
 function StorySection() {
   const { t, lang } = useChangeLang();
-  // story.stats lives in COPY[lang].story.stats
-  const stats = (t.story && t.story.stats) || [];
+  const s = window.STATS_V2 || {};
+  const numCountries = (window.LOCATIONS_V2?.length || 0) + (window.VISITED_DOTS_V2?.length || 0);
+  const labels = (t.story && t.story.stat_labels) || { countries: 'Countries', hours: 'Hours flown', projects: 'Projects' };
+  const stats = [
+    { value: numCountries || s.countries || 0, label: labels.countries },
+    { value: s.hours_flown || 0, label: labels.hours },
+    { value: s.projects || 0, label: labels.projects },
+  ];
   return (
     <section className="story" id="story">
       <div className="story-grain" aria-hidden="true" />
@@ -423,13 +429,44 @@ function ServicesSection() {
 }
 
 // ─── RAY-BAN META POV V2 ──────────────────────────────────────────────────
+function PovLens({ visible, pool, startIdx }) {
+  const [idx, setIdx] = useState(startIdx);
+  const [prevIdx, setPrevIdx] = useState(null);
+  useEffect(() => {
+    if (!pool || pool.length < 2) return;
+    const id = setInterval(() => {
+      setPrevIdx(idx);
+      setIdx(i => (i + 2) % pool.length);
+    }, 15000);
+    return () => clearInterval(id);
+  }, [pool, idx]);
+  if (!pool || pool.length === 0) return <div className="rayban-lens" />;
+  const cur = pool[idx % pool.length];
+  const prev = prevIdx != null ? pool[prevIdx % pool.length] : null;
+  return (
+    <div className="rayban-lens">
+      {prev && (
+        <video key={`prev-${prev.id}`} src={prev.src} poster={prev.poster}
+          muted loop playsInline autoPlay
+          className="rayban-lens-video is-prev" />
+      )}
+      {visible ? (
+        <video key={`cur-${cur.id}`} src={cur.src} poster={cur.poster}
+          muted loop playsInline autoPlay
+          className="rayban-lens-video is-cur" />
+      ) : (
+        <img src={cur.poster} alt="" className="rayban-lens-video is-cur" />
+      )}
+    </div>
+  );
+}
+
 function RayBanSection() {
   const { t, lang } = useChangeLang();
   const lb = useLightbox();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [glassesVisible, setGlassesVisible] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(0);
   const sectionRef = useRef(null);
 
   useEffect(() => {
@@ -457,15 +494,6 @@ function RayBanSection() {
     return items.slice(0, 6);
   }, [lang]);
 
-  const leftItem = povItems[currentIdx];
-  const rightItem = povItems[(currentIdx + 1) % povItems.length];
-
-  useEffect(() => {
-    if (povItems.length < 2) return;
-    const id = setInterval(() => setCurrentIdx(i => (i + 2) % povItems.length), 15000);
-    return () => clearInterval(id);
-  }, [povItems.length]);
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email.includes('@')) return;
@@ -481,32 +509,10 @@ function RayBanSection() {
         <p className="section-sub">{t.pov.sub}</p>
       </div>
 
-      <div className="rayban-glasses" aria-hidden="true">
-        <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <clipPath id="lensL"><ellipse cx="170" cy="100" rx="100" ry="70" /></clipPath>
-            <clipPath id="lensR"><ellipse cx="430" cy="100" rx="100" ry="70" /></clipPath>
-          </defs>
-          <foreignObject x="70" y="30" width="200" height="140" clipPath="url(#lensL)">
-            {glassesVisible && leftItem ? (
-              <video xmlns="http://www.w3.org/1999/xhtml" src={leftItem.src} autoPlay muted loop playsInline poster={leftItem.poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : leftItem ? (
-              <img xmlns="http://www.w3.org/1999/xhtml" src={leftItem.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : null}
-          </foreignObject>
-          <foreignObject x="330" y="30" width="200" height="140" clipPath="url(#lensR)">
-            {glassesVisible && rightItem ? (
-              <video xmlns="http://www.w3.org/1999/xhtml" src={rightItem.src} autoPlay muted loop playsInline poster={rightItem.poster} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : rightItem ? (
-              <img xmlns="http://www.w3.org/1999/xhtml" src={rightItem.poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : null}
-          </foreignObject>
-          <ellipse cx="170" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />
-          <ellipse cx="430" cy="100" rx="100" ry="70" fill="none" stroke="#0A0A0A" strokeWidth="6" />
-          <path d="M 270 100 Q 300 80 330 100" fill="none" stroke="#0A0A0A" strokeWidth="6" />
-          <path d="M 70 80 Q 40 70 20 90" fill="none" stroke="#0A0A0A" strokeWidth="6" strokeLinecap="round" />
-          <path d="M 530 80 Q 560 70 580 90" fill="none" stroke="#0A0A0A" strokeWidth="6" strokeLinecap="round" />
-        </svg>
+      <div className="rayban-lenses" aria-hidden="true">
+        <PovLens visible={glassesVisible} pool={povItems} startIdx={0} />
+        <span className="rayban-bridge" />
+        <PovLens visible={glassesVisible} pool={povItems} startIdx={1} />
       </div>
 
       <div className="rayban-grid">

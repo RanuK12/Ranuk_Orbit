@@ -465,7 +465,7 @@ function AtlasSection() {
         <div className="atlas-head">
           <div>
             <span className="section-overline">{t.atlas.overline}</span>
-            <h2 className="section-title">{t.atlas.title}</h2>
+            <h2 className="section-title">{(t.atlas.title || '').replace('{n}', String((window.LOCATIONS_V2 || []).length))}</h2>
             <p className="section-subtitle">{t.atlas.sub}</p>
           </div>
           <div className="year-chips">

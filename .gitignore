@@ -77,6 +77,9 @@ yarn-error.log*
 .vercel/
 .netlify/
 
+# ─── Local tool metadata / hidden worktrees ───────────────────────────────
+.claude/
+
 # ─── Mantener carpeta de assets web pero ignorar lo crudo ────────────────
 media/optimized/.tmp/
 media/videos-drone/
@@ -88,3 +91,9 @@ media/fotos/
 # Solo media/optimized/ y media/posters/ van al repo
 !media/optimized/
 !media/posters/
+
+# Ignorar originales pesados dentro de media/optimized/Fotos_Emilio_Perfil
+media/optimized/Fotos_Emilio_Perfil/*.jpeg
+media/optimized/Fotos_Emilio_Perfil/*.jpg
+media/optimized/Fotos_Emilio_Perfil/*.JPG
+media/optimized/Fotos_Emilio_Perfil/*.heic
