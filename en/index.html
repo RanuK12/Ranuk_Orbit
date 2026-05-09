@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>window.RANUK_LANG="en"</script>
 <meta charset="utf-8" />
 <title>Ranuk Orbit — Earth, from another angle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -11,22 +12,56 @@
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Ranuk Orbit — Earth, from another angle" />
 <meta property="og:description" content="Cinematic aerial photography & travel storytelling. Drone, Ray-Ban Meta POV, editorial." />
-<meta property="og:image" content="media/posters/og-image.jpg" />
-<meta property="og:url" content="https://ranukorbit.com/" />
+<meta property="og:image" content="/media/posters/og-image.jpg" />
+<meta property="og:url" content="https://ranukorbit.com/en/" />
 <meta property="og:site_name" content="Ranuk Orbit" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:locale:alternate" content="en_US" />
+<meta property="og:locale:alternate" content="it_IT" />
+
+<!-- Canonical & hreflang -->
+<link rel="canonical" href="https://ranukorbit.com/en/" />
+<link rel="alternate" hreflang="es" href="https://ranukorbit.com/es/" />
+<link rel="alternate" hreflang="en" href="https://ranukorbit.com/en/" />
+<link rel="alternate" hreflang="it" href="https://ranukorbit.com/it/" />
+<link rel="alternate" hreflang="x-default" href="https://ranukorbit.com/" />
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Ranuk Orbit — Earth, from another angle" />
 <meta name="twitter:description" content="Cinematic aerial photography & travel storytelling." />
-<meta name="twitter:image" content="media/posters/og-image.jpg" />
+<meta name="twitter:image" content="/media/posters/og-image.jpg" />
 
 <!-- Favicon (SVG inline mark) -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/><line x1='4' y1='32' x2='60' y2='32' stroke='%23F7F7F5' stroke-width='1.5'/><line x1='32' y1='4' x2='32' y2='60' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
 
-<!-- Preload del primer poster del hero (LCP) -->
-<link rel="preload" as="image" href="media/optimized/posters/cerde-na-isla-magdalena-hero.jpg" fetchpriority="high" />
+<!-- Preload del primer poster del hero (LCP) + secundarios -->
+<link rel="preload" as="image" href="/media/optimized/posters/cerde-na-isla-magdalena-hero.jpg" fetchpriority="high" />
+<link rel="preload" as="image" href="/media/optimized/posters/rio-limay-patagonia.jpg" />
+<link rel="preload" as="image" href="/media/optimized/posters/atardecer-nieve-hero.jpg" />
+
+<!-- JSON-LD: Person -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Emilio Ranucoli",
+  "alternateName": "Ranuk Orbit",
+  "url": "https://ranukorbit.com/",
+  "image": "https://ranukorbit.com/media/posters/og-image.jpg",
+  "jobTitle": "Drone cinematographer & travel photographer",
+  "address": { "@type": "PostalAddress", "addressLocality": "Mar del Plata", "addressCountry": "AR" },
+  "sameAs": [
+    "https://www.instagram.com/emi_ranucoli/",
+    "https://www.linkedin.com/in/emilio-ranucoli/",
+    "https://x.com/EmilioRanucoli",
+    "https://vsco.co/emiliorturletto/gallery"
+  ]
+}
+</script>
 
 <!-- Fonts (DM Sans reducido a 400/500 — los otros pesos no se usaban) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -515,6 +550,7 @@ input, textarea, select { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 24px;
+  min-height: 0;
 }
 .atlas-sidebar-title {
   font-family: 'Marcellus', serif;
@@ -526,8 +562,9 @@ input, textarea, select { font: inherit; color: inherit; }
 .atlas-list {
   display: flex; flex-direction: column;
   list-style: none;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  max-height: 480px;
   scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
 }
 .atlas-list::-webkit-scrollbar { width: 4px; }
@@ -672,6 +709,17 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 40px;
   animation: fadeIn 0.3s ease;
 }
+.lb-stage {
+  position: relative;
+  max-width: 1200px; width: 100%;
+  max-height: 100%;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.lb-media {
+  width: 100%; max-height: 70vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
 .lb-topbar {
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 100001;
@@ -710,19 +758,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .lb-close > span[aria-hidden] { font-size: 20px; line-height: 1; }
 .lb-close:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
 .lb-close:active { transform: scale(0.96); }
-.lb-close-label { display: none; }
 
-.lb-stage {
-  position: relative;
-  max-width: 1200px; width: 100%;
-  max-height: 100%;
-  display: flex; flex-direction: column; gap: 16px;
-}
-.lb-media {
-  width: 100%; max-height: 70vh;
-  object-fit: contain;
-  border-radius: 4px;
-}
 .lb-nav {
   position: fixed;
   width: 48px; height: 48px; border-radius: 50%;
@@ -733,19 +769,21 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 24px; line-height: 1;
   cursor: pointer;
   z-index: 100000;
-  pointer-events: auto;
   touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
-.lb-nav:active { transform: scale(0.92); }
+.lb-nav:active { transform: translateY(-50%) scale(0.92); }
 .lb-nav:hover { background: var(--celestial); color: var(--ink); }
 .lb-nav-prev { left: 24px; top: 50%; transform: translateY(-50%); }
 .lb-nav-next { right: 24px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 720px) {
+  .lb-esc-hint { display: none; }
+  .lb-topbar { padding: 12px 14px; }
+  .lb-close { padding: 8px 14px; font-size: 11px; }
+}
 .lb-meta {
   display: grid; grid-template-columns: 1fr auto auto; gap: 24px;
   padding: 14px 0;
@@ -1009,11 +1047,41 @@ input, textarea, select { font: inherit; color: inherit; }
   background: linear-gradient(to bottom, var(--ink) 0%, #0d0d0d 100%);
 }
 .rayban-head { max-width: var(--max); margin: 0 auto 50px; text-align: center; }
-.rayban-glasses {
-  max-width: 520px; margin: 0 auto 50px;
-  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+.rayban-lenses {
+  max-width: 720px; margin: 0 auto 60px;
+  display: flex; align-items: center; justify-content: center; gap: 40px;
+  position: relative;
 }
-.rayban-glasses svg { width: 100%; height: auto; }
+.rayban-lens {
+  position: relative;
+  width: 280px; aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--ink);
+  box-shadow:
+    0 25px 60px rgba(0,0,0,0.55),
+    inset 0 0 0 6px rgba(10,10,10,0.95),
+    inset 0 0 0 8px rgba(247,247,245,0.08);
+}
+.rayban-lens-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: opacity 1.4s ease;
+}
+.rayban-lens-video.is-prev { opacity: 0; z-index: 1; }
+.rayban-lens-video.is-cur  { opacity: 1; z-index: 2; animation: lensFadeIn 1.4s ease both; }
+@keyframes lensFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.rayban-bridge {
+  width: 60px; height: 6px;
+  background: rgba(10,10,10,0.85);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+@media (max-width: 720px) {
+  .rayban-lenses { gap: 20px; }
+  .rayban-lens { width: 180px; }
+  .rayban-bridge { width: 30px; }
+}
 .rayban-grid {
   max-width: var(--max); margin: 0 auto;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
@@ -1372,7 +1440,7 @@ body.konami { animation: rainbow 6s linear; }
 </style>
 
 <!-- Marketing components CSS (StatsBand, Process/HowIWork, social, WhatsApp, etc.) -->
-<link rel="stylesheet" href="MARKETING_CSS.css" />
+<link rel="stylesheet" href="/MARKETING_CSS.css" />
 
 <!-- Google Analytics 4 — propiedad de ranukorbit.com -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PQHE07PV1"></script>
@@ -1410,17 +1478,14 @@ body.konami { animation: rainbow 6s linear; }
   };
 </script>
 
-<!-- Lang override -->
-<script>window.RANUK_LANG='en';</script>
-
 <!-- Asset manifest (qué archivos existen realmente en /optimized/) -->
-<script src="../ranuk-manifest.js"></script>
+<script src="/ranuk-manifest.js"></script>
 
 <!-- Data -->
-<script src="../ranuk-data.js"></script>
+<script src="/ranuk-data.js"></script>
 
 <!-- App bundle (esbuild-compiled) -->
-<script src="../ranuk-app.min.js"></script>
+<script src="/ranuk-app.min.js"></script>
 
 <!-- Mount -->
 <script>
