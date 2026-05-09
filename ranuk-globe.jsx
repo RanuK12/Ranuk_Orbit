@@ -274,7 +274,16 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       const hits = raycaster.intersectObjects(stateRef.current.pinMeshes);
-      if (hits.length > 0) onLocationClick(hits[0].object.userData.locId);
+      if (hits.length > 0) {
+        const locId = hits[0].object.userData.locId;
+        // Cinematic zoom — rotate AND push camera in for an Apple/A24
+        // style reveal before the lightbox opens.
+        if (stateRef.current.highlight) stateRef.current.highlight(locId, { zoom: true });
+        // Delay lightbox open so the zoom plays visibly; the user sees
+        // the planet swing and push in, then the place's media takes
+        // over the screen.
+        setTimeout(() => onLocationClick(locId), 700);
+      }
     };
 
     renderer.domElement.addEventListener('pointermove', onMove);
@@ -283,14 +292,22 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     // Drag rotation
     let isDown = false, lastX = 0, lastY = 0, autoRotate = true;
     let rotX = 0, rotY = 0;
-    const dist = 5.5;
+    // `_dist` is mutable so the cinematic zoom can animate it in and out.
+    let _dist = 5.5;
     const updateCam = () => {
-      camera.position.x = dist * Math.sin(rotY) * Math.cos(rotX);
-      camera.position.y = dist * Math.sin(rotX);
-      camera.position.z = dist * Math.cos(rotY) * Math.cos(rotX);
+      camera.position.x = _dist * Math.sin(rotY) * Math.cos(rotX);
+      camera.position.y = _dist * Math.sin(rotX);
+      camera.position.z = _dist * Math.cos(rotY) * Math.cos(rotX);
       camera.lookAt(0, 0, 0);
     };
-    const onDown = (e) => { isDown = true; autoRotate = false; lastX = e.clientX; lastY = e.clientY; };
+    const onDown = (e) => {
+      isDown = true; autoRotate = false;
+      // User took manual control — cancel any ongoing cinematic zoom
+      // and snap back to default distance smoothly.
+      if (stateRef.current.zoomRaf) { cancelAnimationFrame(stateRef.current.zoomRaf); stateRef.current.zoomRaf = null; }
+      if (stateRef.current.resetZoom) stateRef.current.resetZoom();
+      lastX = e.clientX; lastY = e.clientY;
+    };
     const onUp = () => { isDown = false; };
     const onDrag = (e) => {
       if (!isDown) return;
@@ -370,8 +387,10 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     };
     window.addEventListener('resize', onResize);
 
-    // Expose programmatic highlight for sidebar interaction
-    stateRef.current.highlight = (locId) => {
+    // Expose programmatic highlight for sidebar interaction + cinematic
+    // zoom on pin click. Called from the raycaster onClick path AND from
+    // the sidebar effect below.
+    stateRef.current.highlight = (locId, opts = {}) => {
       const target = stateRef.current.locById[locId];
       if (!target) return;
       const ring = target.ring;
@@ -386,14 +405,68 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       const loc = locations[target.idx];
       const targetLng = loc.coords.lng;
       const targetLat = loc.coords.lat;
-      rotY = -((targetLng) * Math.PI / 180) - earth.rotation.y;
-      rotX = Math.max(-1.2, Math.min(1.2, (targetLat) * Math.PI / 180 * 0.6));
+      const destRotY = -((targetLng) * Math.PI / 180) - earth.rotation.y;
+      const destRotX = Math.max(-1.2, Math.min(1.2, (targetLat) * Math.PI / 180 * 0.6));
+
+      // Cinematic zoom: ease camera distance from 5.5 → 3.4 while
+      // simultaneously easing rotX/rotY toward destination. Uses a single
+      // rAF driver that writes into the existing rotX/rotY/dist closure
+      // vars, so updateCam() sees the interpolated values.
       autoRotate = false;
-      updateCam();
+      const doZoom = opts.zoom !== false;
+      const startRotX = rotX, startRotY = rotY;
+      const startDist = _dist;
+      // Find shortest Y arc — we don't want to spin 340° when 20° the other way works
+      let dRotY = destRotY - startRotY;
+      dRotY = ((dRotY + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+      const dRotX = destRotX - startRotX;
+      const destDist = doZoom ? 3.4 : startDist;
+      const dDist = destDist - startDist;
+
+      const duration = 1400; // ms — cinematic but not sluggish
+      const t0 = performance.now();
+      if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf);
+      const ease = (x) => 1 - Math.pow(1 - x, 3); // easeOutCubic, Apple-ish
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / duration);
+        const e = ease(k);
+        rotX = startRotX + dRotX * e;
+        rotY = startRotY + dRotY * e;
+        _dist = startDist + dDist * e;
+        updateCam();
+        if (k < 1) stateRef.current.zoomRaf = requestAnimationFrame(tick);
+        else stateRef.current.zoomRaf = null;
+      };
+      stateRef.current.zoomRaf = requestAnimationFrame(tick);
     };
+
+    // Zoom back out when lightbox closes or user drags.
+    stateRef.current.resetZoom = () => {
+      if (_dist === 5.5) return;
+      const startDist = _dist;
+      const dDist = 5.5 - startDist;
+      const duration = 900;
+      const t0 = performance.now();
+      if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf);
+      const ease = (x) => 1 - Math.pow(1 - x, 2);
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / duration);
+        _dist = startDist + dDist * ease(k);
+        updateCam();
+        if (k < 1) stateRef.current.zoomRaf = requestAnimationFrame(tick);
+      };
+      stateRef.current.zoomRaf = requestAnimationFrame(tick);
+    };
+
+    // Expose globally so the lightbox can call reset on close without a
+    // React-context round-trip. The Globe component is the sole owner of
+    // camera state, so this is the natural place to gate it.
+    window.__ranukGlobeResetZoom = stateRef.current.resetZoom;
 
     return () => {
       cancelAnimationFrame(rafId);
+      try { if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf); } catch (_) {}
+      try { delete window.__ranukGlobeResetZoom; } catch (_) {}
       try { vpObs.disconnect(); } catch (_) {}
       document.removeEventListener('visibilitychange', onVisChange);
       renderer.domElement.removeEventListener('pointermove', onMove);

@@ -124,6 +124,125 @@ function Nav() {
   );
 }
 
+// ─── REEL MODAL ────────────────────────────────────────────────────────
+// Dedicated fullscreen player for the "Watch the reel" CTA. NOT an archive
+// item — it's a standalone highlight compilation. If window.RANUK_REEL_URL
+// is set (e.g. '/media/optimized/reel.mp4'), plays that video. Otherwise
+// shows a "coming soon" card so the button never falls through silently.
+function ReelModal({ open, onClose }) {
+  const { lang } = useChangeLang();
+  const videoRef = useRef(null);
+  const dialogRef = useRef(null);
+  const reelUrl = typeof window !== 'undefined' ? window.RANUK_REEL_URL : null;
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
+    window.addEventListener('keydown', onKey);
+    try { document.body.style.overflow = 'hidden'; } catch (_) {}
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      try { document.body.style.overflow = ''; } catch (_) {}
+      try {
+        const v = videoRef.current;
+        if (v) { v.pause(); v.currentTime = 0; }
+      } catch (_) {}
+      try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const copy = {
+    es: {
+      title: 'The Reel',
+      sub: 'Tres años, una órbita — compilado de highlights.',
+      soon_title: 'Próximamente',
+      soon_body: 'Estoy editando un reel de 90 segundos con los mejores momentos de Cerdeña, los Alpes, Patagonia, Marruecos y Tailandia. Mientras tanto, podés entrar al Atlas y ver los lugares uno por uno.',
+      close: 'Cerrar',
+      explore: 'Explorar el Atlas',
+      esc: 'ESC para cerrar',
+    },
+    en: {
+      title: 'The Reel',
+      sub: 'Three years, one orbit — a highlights compilation.',
+      soon_title: 'Coming soon',
+      soon_body: "I'm editing a 90-second reel with the best moments from Sardinia, the Alps, Patagonia, Morocco and Thailand. In the meantime, you can explore the Atlas and visit each place one by one.",
+      close: 'Close',
+      explore: 'Explore the Atlas',
+      esc: 'ESC to close',
+    },
+    it: {
+      title: 'The Reel',
+      sub: 'Tre anni, un\'orbita — una compilation di highlight.',
+      soon_title: 'Prossimamente',
+      soon_body: 'Sto montando un reel di 90 secondi con i migliori momenti di Sardegna, Alpi, Patagonia, Marocco e Thailandia. Nel frattempo, puoi esplorare l\'Atlante e visitare ogni luogo.',
+      close: 'Chiudi',
+      explore: 'Esplora l\'Atlante',
+      esc: 'ESC per chiudere',
+    },
+  }[lang] || { title: 'The Reel', sub: '', soon_title: 'Coming soon', soon_body: '', close: 'Close', explore: 'Explore', esc: 'ESC' };
+
+  const handleBackdrop = (e) => { if (e.target === dialogRef.current) onClose(); };
+
+  return (
+    <div
+      className="reel-modal"
+      ref={dialogRef}
+      onClick={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-label={copy.title}
+    >
+      <div className="reel-modal-inner">
+        <header className="reel-modal-head">
+          <div>
+            <span className="reel-modal-kicker">Ranuk Orbit</span>
+            <h2 className="reel-modal-title">{copy.title}</h2>
+            <p className="reel-modal-sub">{copy.sub}</p>
+          </div>
+          <button
+            type="button"
+            className="reel-modal-close"
+            onClick={onClose}
+            aria-label={copy.close}
+          >
+            <span aria-hidden="true">×</span>
+            <span className="reel-modal-close-label">{copy.close}</span>
+          </button>
+        </header>
+
+        <div className="reel-modal-stage">
+          {reelUrl ? (
+            <video
+              ref={videoRef}
+              className="reel-modal-video"
+              src={reelUrl}
+              autoPlay
+              playsInline
+              controls
+              controlsList="nodownload"
+            />
+          ) : (
+            <div className="reel-modal-soon">
+              <div className="reel-modal-soon-mark">⊕</div>
+              <h3>{copy.soon_title}</h3>
+              <p>{copy.soon_body}</p>
+              <a href="#explore" className="reel-modal-cta" onClick={onClose}>
+                {copy.explore} <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          )}
+        </div>
+
+        <footer className="reel-modal-foot">
+          <span>{copy.esc}</span>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 // ─── ARCHIVE / GALLERY V2 ─────────────────────────────────────────────────
 // Detect reduced motion once — modules may read this synchronously
 const _prefersReducedMotion = () => {
@@ -168,7 +287,7 @@ function GalleryTile({ item, index, className, thumb, displayName, onOpen }) {
 
   const onLeave = useCallback(() => {
     const v = videoRef.current;
-    if (v) { try { v.pause(); v.currentTarget = 0; } catch (_) {} }
+    if (v) { try { v.pause(); v.currentTime = 0; } catch (_) {} }
     setActive(false);
   }, []);
 
@@ -466,10 +585,47 @@ function ArchiveSection() {
         )}
       </div>
 
+      <ArchiveGallery
+        filtered={filtered}
+        filterActive={filter !== 'all' || year !== 'all' || place !== 'all' || mood !== 'all' || altitude !== 'all'}
+        onOpen={openItem}
+        lang={lang}
+        containerRef={containerRef}
+        locationsMap={useMemo(() => {
+          const map = {};
+          (window.LOCATIONS_V2 || []).forEach(loc => { map[loc.id] = loc; });
+          return map;
+        }, [])}
+      />
+
+      {filtered.length === 0 && (
+        <div className="archive-empty">{t.archive.empty}</div>
+      )}
+    </section>
+  );
+}
+
+// ─── ARCHIVE GALLERY (grouped by location, flat when filtered) ───────────
+// Two render modes:
+//   - GROUPED: default view. One section per location. Shows up to
+//     INITIAL_PER_GROUP items per location; a "Show all (N)" button expands
+//     the rest inline. Kills the "scroll forever" problem without hiding
+//     content from the user.
+//   - FLAT: when the user applies a filter (year/place/mood/altitude/
+//     type ≠ all), we already narrowed the set, so a flat masonry is what
+//     the user expects. Same GalleryTile component reused.
+const INITIAL_PER_GROUP = 6;   // first 6 items per location visible by default
+const RAYBAN_INITIAL = 12;     // Rayban/POV section is already fine — keep it loose
+
+function ArchiveGallery({ filtered, filterActive, onOpen, lang, containerRef, locationsMap }) {
+  // FLAT mode: simple masonry, no grouping.
+  if (filterActive) {
+    return (
       <div className="gallery-masonry" ref={containerRef}>
         {filtered.map((it, i) => {
           const spotlight = (i + 1) % 5 === 0;
-          const cls = `gallery-item${spotlight ? ' is-spotlight' : ''} gallery-item--${it.type}`;
+          const fallback = it._posterMatch === 'fallback' ? ' is-fallback-poster' : '';
+          const cls = `gallery-item${spotlight ? ' is-spotlight' : ''} gallery-item--${it.type}${fallback}`;
           const thumb = it.type === 'photo' ? it.src : (it.poster || it.src);
           return (
             <GalleryTile
@@ -479,14 +635,106 @@ function ArchiveSection() {
               className={cls}
               thumb={thumb}
               displayName={pick(it.location.name, lang)}
-              onOpen={() => openItem(i)}
+              onOpen={() => onOpen(i)}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  // GROUPED mode: one card per location.
+  return (
+    <div className="archive-groups" ref={containerRef}>
+      {(() => {
+        // Preserve the order of LOCATIONS_V2 (already hand-curated).
+        const groups = new Map();
+        filtered.forEach((it, globalIdx) => {
+          if (!groups.has(it.locationId)) groups.set(it.locationId, []);
+          groups.get(it.locationId).push({ ...it, _globalIdx: globalIdx });
+        });
+        return Array.from(groups.entries()).map(([locId, items]) => (
+          <ArchiveGroup
+            key={locId}
+            loc={locationsMap[locId]}
+            items={items}
+            onOpen={onOpen}
+            lang={lang}
+          />
+        ));
+      })()}
+    </div>
+  );
+}
+
+function ArchiveGroup({ loc, items, onOpen, lang }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!loc) return null;
+
+  const copy = {
+    es: { show_all: 'Ver los', items: 'items', collapse: 'Ocultar', more: 'más' },
+    en: { show_all: 'Show all', items: 'items', collapse: 'Collapse', more: 'more' },
+    it: { show_all: 'Mostra tutti', items: 'elementi', collapse: 'Riduci', more: 'altri' },
+  }[lang] || { show_all: 'Show all', items: 'items', collapse: 'Collapse', more: 'more' };
+
+  const over = items.length > INITIAL_PER_GROUP;
+  const visible = expanded ? items : items.slice(0, INITIAL_PER_GROUP);
+  const hiddenCount = items.length - INITIAL_PER_GROUP;
+
+  return (
+    <section
+      className="archive-group"
+      style={{ ['--accent']: loc.accentColor }}
+      aria-labelledby={`grp-${loc.id}`}
+    >
+      <header className="archive-group-head">
+        <div className="archive-group-title">
+          <span className="archive-group-flag">{loc.flag}</span>
+          <div>
+            <h3 id={`grp-${loc.id}`} className="archive-group-name">{pick(loc.name, lang)}</h3>
+            <p className="archive-group-meta">
+              <span>{pick(loc.country, lang)}</span>
+              <span className="archive-group-dot">·</span>
+              <span>{loc.year}</span>
+              <span className="archive-group-dot">·</span>
+              <span className="archive-group-count">{items.length} {copy.items}</span>
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="archive-group-grid">
+        {visible.map((it, i) => {
+          const cls = `gallery-item gallery-item--${it.type}${it._posterMatch === 'fallback' ? ' is-fallback-poster' : ''}`;
+          const thumb = it.type === 'photo' ? it.src : (it.poster || it.src);
+          return (
+            <GalleryTile
+              key={it.id}
+              item={it}
+              index={i}
+              className={cls}
+              thumb={thumb}
+              displayName={pick(it.location.name, lang)}
+              onOpen={() => onOpen(it._globalIdx)}
             />
           );
         })}
       </div>
 
-      {filtered.length === 0 && (
-        <div className="archive-empty">{t.archive.empty}</div>
+      {over && (
+        <div className="archive-group-foot">
+          <button
+            type="button"
+            className="archive-group-toggle"
+            onClick={() => setExpanded(e => !e)}
+            aria-expanded={expanded}
+          >
+            {expanded
+              ? <>↑ {copy.collapse}</>
+              : <>+ {copy.show_all} <b>{hiddenCount}</b> {copy.more}</>
+            }
+          </button>
+        </div>
       )}
     </section>
   );
@@ -1300,9 +1548,22 @@ function useScrollReveal() {
 // ─── APP ROOT ─────────────────────────────────────────────────────────────
 function App() {
   const [loaded, setLoaded] = useState(false);
+  const [reelOpen, setReelOpen] = useState(false);
   useEffect(() => {
     const tt = setTimeout(() => setLoaded(true), 1200);
     return () => clearTimeout(tt);
+  }, []);
+  // Global reel trigger: any anchor pointing to #reel (or calling
+  // window.openReel()) opens the modal. Keeps the CTA in hero-jsx decoupled
+  // from the reel implementation here.
+  useEffect(() => {
+    window.openReel = () => setReelOpen(true);
+    const onClick = (e) => {
+      const a = e.target.closest && e.target.closest('a[href="#reel"], [data-reel]');
+      if (a) { e.preventDefault(); setReelOpen(true); }
+    };
+    document.addEventListener('click', onClick);
+    return () => { document.removeEventListener('click', onClick); delete window.openReel; };
   }, []);
   useKonami();
   useScrollReveal();
@@ -1328,6 +1589,7 @@ function App() {
         </main>
         <Footer />
         <Lightbox />
+        <ReelModal open={reelOpen} onClose={() => setReelOpen(false)} />
         <WhatsAppFloat />
       </LightboxProvider>
     </LangProvider>
