@@ -156,7 +156,7 @@ function HeroSection() {
         <p className="hero-sub" style={{ animationDelay: '1.4s' }}>{t.hero.sub}</p>
         <div className="hero-cta-row" style={{ animationDelay: '1.6s' }}>
           <a href="#explore" className="btn-ghost">{t.hero.cta} <span className="btn-arrow">→</span></a>
-          <a href="#archive" className="btn-link-light">{t.hero.cta_secondary}</a>
+          <a href="#reel" className="btn-link-light" data-reel>{t.hero.cta_secondary}</a>
         </div>
       </div>
 
