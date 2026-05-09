@@ -28,11 +28,19 @@ function useLightbox() { return useContext(LightboxContext); }
 // Convert a video src to its 8s preview path. Mirrors gen-previews.sh layout.
 // videos-drone/foo.mp4 → previews/foo.mp4
 // videos-rayban/bar.mp4 → previews/bar.mp4
+// If the preview is not registered in window.RANUK_ASSETS, fall back to the
+// original source so the user never lands on a 404.
 function previewPathFor(src) {
   if (!src) return src;
   const m = src.match(/media\/optimized\/(?:videos-drone|videos-rayban)\/(.+\.(?:mp4|mov))$/i);
   if (!m) return src;
-  return `media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
+  const previewPath = `media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
+  try {
+    if (window.RANUK_ASSETS && window.RANUK_ASSETS.has(previewPath)) return previewPath;
+  } catch (_) {}
+  // Fallback: request a media fragment — browsers that honour the hint will
+  // only fetch the first 8s. Those that don't, get the full file (still valid).
+  return `${src}#t=0,8`;
 }
 
 function Lightbox() {
