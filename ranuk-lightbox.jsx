@@ -14,6 +14,10 @@ function LightboxProvider({ children }) {
     setState(s => ({ ...s, open: false }));
     try { document.body.style.overflow = ''; } catch (_) {}
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
+    // If the lightbox was opened from a globe pin, ease the camera back
+    // to its default orbit distance so the user sees the reverse of the
+    // cinematic zoom-in instead of a cold cut back to the atlas view.
+    try { if (typeof window.__ranukGlobeResetZoom === 'function') window.__ranukGlobeResetZoom(); } catch (_) {}
   }, []);
   const prev = useCallback(() => setState(s => s.items.length ? ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length }) : s), []);
   const next = useCallback(() => setState(s => s.items.length ? ({ ...s, index: (s.index + 1) % s.items.length }) : s), []);
