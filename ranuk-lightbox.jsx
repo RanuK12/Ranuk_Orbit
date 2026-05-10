@@ -1,5 +1,17 @@
-// Ranuk Orbit — Lightbox v4: custom video controls so the native <video>
-// chrome never competes with the overlay UI. Close button always wins.
+// Ranuk Orbit — Lightbox v5: Apple-inspired premium viewer.
+//
+// Design goals (v5, May 2026):
+//   • Media is the protagonist. Chrome fades away and only appears on
+//     intent (hover on pointer devices, always on touch).
+//   • Close is bulletproof: X button, click on backdrop, and ESC key
+//     each route through the same hardClose() that tears down video,
+//     fullscreen, and body-scroll lock.
+//   • No native <video controls>. iOS Safari's native chrome was the
+//     root cause of the "can't close" bug (it captures pointer events
+//     at a z-index that shadows the overlay). We render our own thin
+//     custom controls that behave consistently everywhere.
+//   • Rounded corners, subtle glass backdrop, SF-symbol-style hairline
+//     icons, slow easing, and lots of negative space.
 const { createContext, useContext, useState, useCallback, useEffect, useRef } = React;
 
 const LightboxContext = createContext(null);
@@ -37,12 +49,64 @@ function previewPathFor(src) {
   if (!src) return src;
   const m = src.match(/media\/optimized\/(?:videos-drone|videos-rayban)\/(.+\.(?:mp4|mov))$/i);
   if (!m) return src;
-  const previewPath = `media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
+  const previewPath = `/media/optimized/previews/${m[1].replace(/\.(mov|MOV)$/i, '.mp4')}`;
   try {
     if (window.RANUK_ASSETS && window.RANUK_ASSETS.has(previewPath)) return previewPath;
   } catch (_) {}
   return `${src}#t=0,8`;
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Thin SF-symbol style glyphs. stroke: currentColor · 1.5px.
+// ──────────────────────────────────────────────────────────────────────
+const Icon = {
+  close: (p) => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" {...p}>
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </svg>
+  ),
+  prev: (p) => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M15 5l-7 7 7 7"/>
+    </svg>
+  ),
+  next: (p) => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M9 5l7 7-7 7"/>
+    </svg>
+  ),
+  play: (p) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" {...p}>
+      <path d="M7 4.5v15a.5.5 0 0 0 .77.42l12-7.5a.5.5 0 0 0 0-.84l-12-7.5A.5.5 0 0 0 7 4.5Z"/>
+    </svg>
+  ),
+  pause: (p) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" {...p}>
+      <rect x="6.5" y="4.5" width="4" height="15" rx="1"/>
+      <rect x="13.5" y="4.5" width="4" height="15" rx="1"/>
+    </svg>
+  ),
+  speakerOn: (p) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M10 6.5L5.5 10H3v4h2.5L10 17.5V6.5z" fill="currentColor" stroke="none"/>
+      <path d="M14.5 8.5a4 4 0 0 1 0 7"/>
+      <path d="M17.5 5.5a8 8 0 0 1 0 13"/>
+    </svg>
+  ),
+  speakerOff: (p) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M10 6.5L5.5 10H3v4h2.5L10 17.5V6.5z" fill="currentColor" stroke="none"/>
+      <path d="M15 9.5l5 5M20 9.5l-5 5"/>
+    </svg>
+  ),
+  download: (p) => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M12 4v12"/>
+      <path d="M7 11l5 5 5-5"/>
+      <path d="M5 20h14"/>
+    </svg>
+  ),
+};
 
 function Lightbox() {
   const lb = useLightbox();
@@ -55,8 +119,6 @@ function Lightbox() {
   // native <video controls> chrome — on iOS Safari the native controls
   // capture pointer events aggressively and shadow the overlay close
   // button (the root cause of the persistent "close doesn't work" bug).
-  // By rendering our own play/pause + mute buttons inside the lightbox
-  // tree, we guarantee that the close button always wins taps.
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -70,44 +132,8 @@ function Lightbox() {
     setDuration(0);
   }, [lb.index]);
 
-  // Global keyboard handling while open
-  useEffect(() => {
-    if (!lb.open) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); hardClose(); }
-      else if (e.key === 'ArrowLeft') lb.prev();
-      else if (e.key === 'ArrowRight') lb.next();
-      else if (e.key === ' ' || e.key === 'k') {
-        e.preventDefault();
-        togglePlay();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lb.open, lb.index, lb.close, lb.prev, lb.next]);
-
-  // Failsafe: restore body scroll if the component unmounts while open
-  useEffect(() => () => { try { document.body.style.overflow = ''; } catch (_) {} }, []);
-
-  // Scroll active thumb into view
-  useEffect(() => {
-    if (!lb.open || !stripRef.current) return;
-    const el = stripRef.current.querySelector(`[data-i="${lb.index}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }, [lb.index, lb.open]);
-
-  // Backdrop tap: close only when the target is the root element itself.
-  const handleBackdrop = useCallback((e) => {
-    if (e.target === rootRef.current) {
-      e.preventDefault();
-      hardClose();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lb]);
-
   // Robust close: stops the video, drops any fullscreen, calls lb.close().
-  const hardClose = (e) => {
+  const hardClose = useCallback((e) => {
     if (e) {
       try { e.preventDefault(); } catch (_) {}
       try { e.stopPropagation(); } catch (_) {}
@@ -119,25 +145,54 @@ function Lightbox() {
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
     try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
     lb.close();
-  };
+  }, [lb]);
 
-  const togglePlay = (e) => {
+  const togglePlay = useCallback((e) => {
     if (e) e.stopPropagation();
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) { v.play().catch(() => {}); setPlaying(true); }
     else { v.pause(); setPlaying(false); }
-  };
+  }, []);
 
-  const toggleMute = (e) => {
+  // Global keyboard handling while open
+  useEffect(() => {
+    if (!lb.open) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); hardClose(); }
+      else if (e.key === 'ArrowLeft') lb.prev();
+      else if (e.key === 'ArrowRight') lb.next();
+      else if (e.key === ' ' || e.key === 'k') { e.preventDefault(); togglePlay(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lb.open, hardClose, lb.prev, lb.next, togglePlay]);
+
+  // Failsafe: restore body scroll if the component unmounts while open
+  useEffect(() => () => { try { document.body.style.overflow = ''; } catch (_) {} }, []);
+
+  // Scroll active thumb into view
+  useEffect(() => {
+    if (!lb.open || !stripRef.current) return;
+    const el = stripRef.current.querySelector(`[data-i="${lb.index}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [lb.index, lb.open]);
+
+  // Backdrop click: close only when the target is the root element itself,
+  // not when the user clicked a child (stage, caption, strip, etc.)
+  const handleBackdrop = useCallback((e) => {
+    if (e.target === rootRef.current) hardClose(e);
+  }, [hardClose]);
+
+  const toggleMute = useCallback((e) => {
     if (e) e.stopPropagation();
     const v = videoRef.current;
     if (!v) return;
     v.muted = !v.muted;
     setMuted(v.muted);
-  };
+  }, []);
 
-  const onSeek = (e) => {
+  const onSeek = useCallback((e) => {
     e.stopPropagation();
     const v = videoRef.current;
     if (!v || !duration) return;
@@ -146,7 +201,7 @@ function Lightbox() {
     const pct = Math.max(0, Math.min(1, x / rect.width));
     v.currentTime = pct * duration;
     setProgress(pct);
-  };
+  }, [duration]);
 
   if (!lb.open || !lb.items.length) return null;
   const item = lb.items[lb.index];
@@ -156,9 +211,11 @@ function Lightbox() {
   const locName = item.location ? pick(item.location.name, lang) : '';
 
   const dlLabel = lang === 'es' ? 'Descargar preview (8s)' : lang === 'it' ? 'Scarica preview (8s)' : 'Download preview (8s)';
-  const dlPhotoLabel = lang === 'es' ? 'Descargar foto' : lang === 'it' ? 'Scarica foto' : 'Download photo';
+  const dlPhotoLabel = lang === 'es' ? 'Descargar' : lang === 'it' ? 'Scarica' : 'Download';
   const closeLabel = lang === 'es' ? 'Cerrar' : lang === 'it' ? 'Chiudi' : 'Close';
   const escHint = lang === 'es' ? 'ESC para cerrar' : lang === 'it' ? 'ESC per chiudere' : 'ESC to close';
+  const prevLabel = lang === 'es' ? 'Anterior' : lang === 'it' ? 'Precedente' : 'Previous';
+  const nextLabel = lang === 'es' ? 'Siguiente' : lang === 'it' ? 'Successivo' : 'Next';
   const playLabel = lang === 'es' ? 'Reproducir' : lang === 'it' ? 'Riproduci' : 'Play';
   const pauseLabel = lang === 'es' ? 'Pausar' : lang === 'it' ? 'Metti in pausa' : 'Pause';
   const soundOn = lang === 'es' ? 'Con sonido' : lang === 'it' ? 'Audio attivo' : 'Sound on';
@@ -182,32 +239,17 @@ function Lightbox() {
       aria-label={title}
       onClick={handleBackdrop}
     >
-      <div className="lb-topbar">
-        <span className="lb-counter">{lb.index + 1} / {lb.items.length}</span>
-        <span className="lb-esc-hint">{escHint}</span>
-        <button
-          type="button"
-          className="lb-close"
-          onPointerUp={hardClose}
-          onClick={hardClose}
-          aria-label={closeLabel}
-        >
-          <span aria-hidden="true">×</span>
-          <span className="lb-close-label">{closeLabel}</span>
-        </button>
-      </div>
-
-      {/* Invisible top-right safety zone. Covers the corner so a tap there
-          always closes the lightbox, even if a different element grabbed
-          the pointer. Lower z-index than the visible .lb-close so the
-          styled button is what the user interacts with when they aim. */}
+      {/* Floating close — always on top, always clickable */}
       <button
         type="button"
-        className="lb-close-zone"
-        aria-label={closeLabel}
+        className="lb-close"
         onPointerUp={hardClose}
         onClick={hardClose}
-      />
+        aria-label={closeLabel}
+        title={closeLabel}
+      >
+        <Icon.close />
+      </button>
 
       {lb.items.length > 1 && (
         <>
@@ -215,28 +257,28 @@ function Lightbox() {
             type="button"
             className="lb-nav lb-nav-prev"
             onClick={(e) => { e.stopPropagation(); lb.prev(); }}
-            aria-label="Previous"
-          >‹</button>
+            aria-label={prevLabel}
+            title={prevLabel}
+          ><Icon.prev /></button>
           <button
             type="button"
             className="lb-nav lb-nav-next"
             onClick={(e) => { e.stopPropagation(); lb.next(); }}
-            aria-label="Next"
-          >›</button>
+            aria-label={nextLabel}
+            title={nextLabel}
+          ><Icon.next /></button>
         </>
       )}
 
       <div className="lb-stage" onClick={(e) => e.stopPropagation()}>
         {isVideo ? (
-          <div className="lb-video-wrap">
+          <div className="lb-media-wrap lb-media-wrap--video">
             <video
               key={item.id}
               ref={videoRef}
               className="lb-media"
               src={item.src}
               poster={item.poster || undefined}
-              // No native controls — we render our own below. This is the
-              // decisive fix for the iOS Safari close-button bug.
               disablePictureInPicture
               autoPlay
               playsInline
@@ -258,22 +300,20 @@ function Lightbox() {
                 onClick={togglePlay}
                 aria-label={playing ? pauseLabel : playLabel}
               >
-                {playing ? (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <rect x="3" y="2" width="4" height="12" rx="1"/>
-                    <rect x="9" y="2" width="4" height="12" rx="1"/>
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <path d="M3 2 L13 8 L3 14 Z"/>
-                  </svg>
-                )}
+                {playing ? <Icon.pause /> : <Icon.play />}
               </button>
-              <div className="lb-progress" onClick={onSeek} role="slider" aria-label="Seek" aria-valuenow={Math.round(progress * 100)}>
+              <div
+                className="lb-progress"
+                onClick={onSeek}
+                role="slider"
+                aria-label="Seek"
+                aria-valuenow={Math.round(progress * 100)}
+              >
+                <div className="lb-progress-track" />
                 <div className="lb-progress-fill" style={{ width: `${progress * 100}%` }} />
               </div>
               <span className="lb-time">
-                {fmtTime((videoRef.current?.currentTime) || 0)} / {fmtTime(duration)}
+                {fmtTime((videoRef.current?.currentTime) || 0)} · {fmtTime(duration)}
               </span>
               <button
                 type="button"
@@ -281,51 +321,44 @@ function Lightbox() {
                 onClick={toggleMute}
                 aria-label={muted ? soundOff : soundOn}
               >
-                {muted ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-                    <line x1="23" y1="9" x2="17" y2="15"/>
-                    <line x1="17" y1="9" x2="23" y2="15"/>
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                  </svg>
-                )}
+                {muted ? <Icon.speakerOff /> : <Icon.speakerOn />}
               </button>
             </div>
           </div>
         ) : (
-          <img key={item.id} className="lb-media" src={item.src} alt={title} />
+          <div className="lb-media-wrap">
+            <img key={item.id} className="lb-media" src={item.src} alt={title} />
+          </div>
         )}
 
-        <div className="lb-meta">
-          <div className="lb-meta-main">
+        <div className="lb-caption">
+          <div className="lb-caption-main">
             <h3 className="lb-title">{title}</h3>
-            <div className="lb-loc">
+            <div className="lb-sub">
               {locName && <span>{locName}</span>}
-              {item.year && <span className="lb-dot">·</span>}
+              {locName && item.year && <span className="lb-dot">·</span>}
               {item.year && <span>{item.year}</span>}
-              {item.location?.flag && <span className="lb-flag">{item.location.flag}</span>}
+              {item.location?.flag && <span className="lb-flag" aria-hidden="true">{item.location.flag}</span>}
             </div>
           </div>
-          <div className="lb-exif">
-            {exif.camera && <div className="lb-exif-item"><span className="lb-exif-label">Camera</span><span>{exif.camera}</span></div>}
-            {exif.lens && <div className="lb-exif-item"><span className="lb-exif-label">Lens</span><span>{exif.lens}</span></div>}
-            {exif.loc && <div className="lb-exif-item"><span className="lb-exif-label">Location</span><span>{exif.loc}</span></div>}
-            {item.altitude && <div className="lb-exif-item"><span className="lb-exif-label">Altitude</span><span>{item.altitude}</span></div>}
-            {item.mood && <div className="lb-exif-item"><span className="lb-exif-label">Mood</span><span>{item.mood}</span></div>}
-          </div>
-          <div className="lb-actions">
-            <a
-              href={downloadHref}
-              download
-              className="lb-download"
-              onClick={(e) => e.stopPropagation()}
-            >↓ {isVideo ? dlLabel : dlPhotoLabel}</a>
-          </div>
+          {(exif.camera || exif.lens || item.altitude || item.mood) && (
+            <div className="lb-exif">
+              {exif.camera && <span className="lb-exif-item">{exif.camera}</span>}
+              {exif.lens && <span className="lb-exif-item">{exif.lens}</span>}
+              {item.altitude && <span className="lb-exif-item">{item.altitude}</span>}
+              {item.mood && <span className="lb-exif-item">{item.mood}</span>}
+            </div>
+          )}
+          <a
+            href={downloadHref}
+            download
+            className="lb-download"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={isVideo ? dlLabel : dlPhotoLabel}
+          >
+            <Icon.download />
+            <span>{isVideo ? dlLabel : dlPhotoLabel}</span>
+          </a>
         </div>
 
         {lb.items.length > 1 && (
@@ -344,9 +377,12 @@ function Lightbox() {
                   {it.type === 'photo' ? (
                     <img src={thumbSrc} loading="lazy" alt="" />
                   ) : (
-                    <div className="lb-thumb-vid" style={{ backgroundColor: '#111' }}>
-                      <span className="lb-thumb-play">▶</span>
-                    </div>
+                    <>
+                      {it.poster ? <img src={it.poster} loading="lazy" alt="" /> : <div className="lb-thumb-bg" />}
+                      <span className="lb-thumb-badge" aria-hidden="true">
+                        <svg viewBox="0 0 12 12" width="8" height="8" fill="currentColor"><path d="M3 2l7 4-7 4z"/></svg>
+                      </span>
+                    </>
                   )}
                 </button>
               );
@@ -354,6 +390,10 @@ function Lightbox() {
           </div>
         )}
       </div>
+
+      {/* Tiny corner hints — fade in subtly, never compete with the media */}
+      <div className="lb-hint lb-hint-counter">{lb.index + 1} / {lb.items.length}</div>
+      <div className="lb-hint lb-hint-esc">{escHint}</div>
     </div>
   );
 }

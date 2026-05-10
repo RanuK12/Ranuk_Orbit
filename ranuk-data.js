@@ -15,11 +15,15 @@ const _slug = (n) => {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 };
-const FOTO_DRONE  = (n) => `media/optimized/fotos-drone/${_slug(n)}.jpg`;
-const VIDEO_DRONE = (n) => `media/optimized/videos-drone/${_slug(n)}.mp4`;
-const FOTO_RB     = (n) => `media/optimized/fotos-rayban/${_slug(n)}.jpg`;
-const VIDEO_RB    = (n) => `media/optimized/videos-rayban/${_slug(n)}.mp4`;
-const POSTER      = (n) => `media/optimized/posters/${n}`;
+// Absolute paths (leading slash) so the manifest resolves identically
+// whether the page is served from "/", "/en/", "/es/" or "/it/". Using
+// relative paths broke the gallery when switching to a locale subfolder
+// because "media/…" was resolved as "/en/media/…" → 404.
+const FOTO_DRONE  = (n) => `/media/optimized/fotos-drone/${_slug(n)}.jpg`;
+const VIDEO_DRONE = (n) => `/media/optimized/videos-drone/${_slug(n)}.mp4`;
+const FOTO_RB     = (n) => `/media/optimized/fotos-rayban/${_slug(n)}.jpg`;
+const VIDEO_RB    = (n) => `/media/optimized/videos-rayban/${_slug(n)}.mp4`;
+const POSTER      = (n) => `/media/optimized/posters/${n}`;
 
 const M = (id, type, src, title, mood, altitude, year, exif) => ({
   id, type, src, title, mood, altitude, year, exif: exif || null
@@ -464,7 +468,7 @@ LOCATIONS_V2.forEach(loc => {
 
     // 1) Dedicated poster (real frame from video)
     if (assets) {
-      const dedicated = `media/optimized/posters/${vidBase}.jpg`;
+      const dedicated = `/media/optimized/posters/${vidBase}.jpg`;
       if (assets.has(dedicated)) {
         m.poster = dedicated;
         m._posterMatch = 'dedicated';
@@ -652,20 +656,20 @@ const PRESS_V2 = [
 // Paths are URL-encoding safe (underscores, not spaces). Do not rename without
 // updating ranuk-manifest.js too.
 const PROFILE_PHOTOS = [
-  'media/optimized/Fotos_Emilio_Perfil/img-0232.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-0565.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-2072.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-2868.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-3224.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-3831.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-3983.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-4080.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-5441.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-7204.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-8589.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-8895.webp',
-  'media/optimized/Fotos_Emilio_Perfil/img-9396.webp',
-  'media/optimized/Fotos_Emilio_Perfil/7c9ab927-bed6-451d-9052-2435effcf914.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-0232.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-0565.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-2072.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-2868.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-3224.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-3831.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-3983.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-4080.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-5441.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-7204.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-8589.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-8895.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/img-9396.webp',
+  '/media/optimized/Fotos_Emilio_Perfil/7c9ab927-bed6-451d-9052-2435effcf914.webp',
 ];
 
 Object.assign(window, {
