@@ -1642,6 +1642,22 @@ function App() {
   useKonami();
   useScrollReveal();
 
+  // Cross-module symbols: these are declared in other files (ranuk-i18n.jsx,
+  // ranuk-lightbox.jsx, ranuk-hero.jsx, ranuk-globe.jsx) and exported via
+  // `Object.assign(window, …)`. esbuild's `--bundle` mode does NOT thread
+  // bindings across imported .jsx files when they attach to `window` — each
+  // module gets its own scope, and a literal `<LangProvider>` in this file
+  // would be compiled to `React.createElement(LangProvider, …)` with an
+  // undefined identifier, crashing the app at mount with
+  // "ReferenceError: LangProvider is not defined". We therefore resolve these
+  // at render time from `window.*`, which the other modules have populated
+  // by the time <App/> executes.
+  const LangProvider = window.LangProvider;
+  const LightboxProvider = window.LightboxProvider;
+  const Lightbox = window.Lightbox;
+  const HeroSection = window.HeroSection;
+  const AtlasSection = window.AtlasSection;
+
   return (
     <LangProvider>
       <LightboxProvider>
