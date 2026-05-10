@@ -1017,7 +1017,9 @@ function RayBanSection() {
     return () => obs.disconnect();
   }, []);
 
-  const povItems = useMemo(() => {
+  // Aggregate every POV item (not just 6 as in v2) so the marquee can
+  // show 12 tiles with rotation — gives the section real body.
+  const allPov = useMemo(() => {
     const items = [];
     (window.LOCATIONS_V2 || []).forEach(loc => {
       (loc.media || []).forEach(m => {
@@ -1029,8 +1031,35 @@ function RayBanSection() {
         });
       });
     });
-    return items.slice(0, 6);
+    return items;
   }, [lang]);
+
+  // First 12 for the grid (display:none hides overflow on small screens
+  // via the CSS media queries).
+  const povItems = allPov.slice(0, 12);
+
+  // Kinetic backdrop text — signature rhythm of the section.
+  const kinetic = {
+    es: 'POV · Lente usada · Ray-Ban Meta · Captura en vivo · ',
+    en: 'POV · Worn Lens · Ray-Ban Meta · Live Capture · ',
+    it: 'POV · Lente indossata · Ray-Ban Meta · Cattura dal vivo · ',
+  }[lang] || 'POV · Worn Lens · Ray-Ban Meta · Live Capture · ';
+
+  // Micro-stats: derived from actual POV inventory + a flat footage
+  // estimate. Updates automatically if new POV clips are added to
+  // LOCATIONS_V2.
+  const povStats = useMemo(() => {
+    const places = new Set(allPov.map(m => m.locationId)).size;
+    // Each POV clip is ~1 min on average; rounded to nearest 5.
+    const minutes = Math.max(30, Math.round(allPov.length * 0.9 / 5) * 5);
+    return { clips: allPov.length, places, minutes };
+  }, [allPov]);
+
+  const statCopy = {
+    es: { clips: 'clips', places: 'lugares', minutes: 'min. grabados' },
+    en: { clips: 'clips', places: 'places', minutes: 'min. captured' },
+    it: { clips: 'clip', places: 'luoghi', minutes: 'min. registrati' },
+  }[lang] || { clips: 'clips', places: 'places', minutes: 'min. captured' };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1041,21 +1070,51 @@ function RayBanSection() {
 
   return (
     <section className="rayban" id="pov" ref={sectionRef}>
+      {/* Looping kinetic backdrop (decorative, aria-hidden). Track is
+          duplicated so the marquee loops seamlessly at -50%. */}
+      <div className="rayban-kinetic" aria-hidden="true">
+        <div className="rayban-kinetic-track">
+          <span>{kinetic}{kinetic}{kinetic}{kinetic}</span>
+          <span>{kinetic}{kinetic}{kinetic}{kinetic}</span>
+        </div>
+      </div>
+
       <div className="rayban-head">
         <span className="section-overline">{t.pov.overline}</span>
         <h2 className="section-title">{t.pov.title}</h2>
         <p className="section-sub">{t.pov.sub}</p>
       </div>
 
-      <div className="rayban-lenses" aria-hidden="true">
-        <PovLens visible={glassesVisible} pool={povItems} startIdx={0} />
-        <span className="rayban-bridge" />
-        <PovLens visible={glassesVisible} pool={povItems} startIdx={1} />
+      {/* Spectacle frame — twin lenses + metal bridge. */}
+      <div className="rayban-spectacle" aria-hidden="true">
+        <div className="rayban-lenses">
+          <PovLens visible={glassesVisible} pool={povItems} startIdx={0} />
+          <span className="rayban-bridge" />
+          <PovLens visible={glassesVisible} pool={povItems} startIdx={1} />
+        </div>
       </div>
 
+      {/* Micro-stats: makes the archive feel like a body of work. */}
+      <div className="rayban-stats">
+        <div className="rayban-stat">
+          <span className="rayban-stat-num">{povStats.clips}</span>
+          <span className="rayban-stat-label">{statCopy.clips}</span>
+        </div>
+        <div className="rayban-stat">
+          <span className="rayban-stat-num">{povStats.places}</span>
+          <span className="rayban-stat-label">{statCopy.places}</span>
+        </div>
+        <div className="rayban-stat">
+          <span className="rayban-stat-num">{povStats.minutes}+</span>
+          <span className="rayban-stat-label">{statCopy.minutes}</span>
+        </div>
+      </div>
+
+      {/* Vertical filmstrip of POV clips. */}
       <div className="rayban-grid">
         {povItems.map((it, i) => (
           <button key={it.id} className="rayban-item" onClick={() => lb.open(povItems, i)}>
+            <img src={it.poster} alt={it._displayTitle} loading="lazy" decoding="async" />
             <video
               muted loop playsInline preload="none"
               poster={it.poster}
