@@ -100,3 +100,9 @@ media/optimized/Fotos_Emilio_Perfil/*.JPG
 media/optimized/Fotos_Emilio_Perfil/*.JPEG
 media/optimized/Fotos_Emilio_Perfil/*.heic
 media/optimized/Fotos_Emilio_Perfil/*.HEIC
+
+
+# ─── Next.js rebuild (next-app/) — source tree is tracked ────────────────
+!next-app/
+!next-app/src/
+!next-app/src/**
