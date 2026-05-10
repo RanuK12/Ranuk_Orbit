@@ -724,6 +724,13 @@ input, textarea, select { font: inherit; color: inherit; }
 .archive {
   padding: clamp(80px, 12vh, 160px) var(--gut);
   border-top: 1px solid var(--line);
+  /* Layered background so the section reads as one integrated "gallery
+     room" instead of plain ink. Keeps the body grain visible but adds
+     a very gentle vignette + light haze at the top. */
+  position: relative;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(201, 162, 39, 0.035) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(30, 111, 164, 0.03) 0%, transparent 70%);
 }
 .archive-head { max-width: var(--max); margin: 0 auto 50px; }
 .archive-controls {
@@ -788,23 +795,39 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .chip-reset:hover { color: var(--desert); border-color: var(--desert); }
 
+/* ─── GALLERY GRID (v3 — packed mosaic, no voids) ─────────────────
+   v2 used nth-child(7n) → 1:1, nth-child(11n) → 4:6 span 2, and
+   .is-spotlight → 16:11 span 2x2. Combined with grid-auto-flow: dense,
+   this produced void cells whenever the promoted tile couldn't find a
+   packing partner. The user's complaint ("se ve desolado") was
+   accurate.
+   v3 uses a grid of equal-height rows (row height ≈ 1/5 the column
+   width) and lets every tile span an explicit whole number of rows.
+   That way the grid always packs densely and every tile is the same
+   width, just different heights. No more voids. */
 .gallery-masonry {
   max-width: var(--max); margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-auto-rows: calc((min(100vw, var(--max)) - 2 * var(--gut)) / 4 * 0.32);
+  gap: 10px;
   grid-auto-flow: dense;
 }
 .gallery-item {
   position: relative; overflow: hidden;
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--ink-soft);
-  aspect-ratio: 4 / 5;
-  transition: transform 0.5s var(--ease);
+  grid-row: span 4; /* base tile: ~5:4 portrait */
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
 }
-.gallery-item:nth-child(7n) { aspect-ratio: 1 / 1; }
-.gallery-item:nth-child(11n) { grid-row: span 2; aspect-ratio: 4 / 6; }
-.gallery-item.is-spotlight { grid-column: span 2; grid-row: span 2; aspect-ratio: 16 / 11; }
+/* Rhythmic promotions (every 9th is a landscape wide, every 14th is a
+   vertical tall). Using `nth-child(9n)` and `nth-child(14n)` because
+   they don't share common factors, keeping the pattern unpredictable. */
+.gallery-masonry .gallery-item:nth-child(9n)  { grid-column: span 2; grid-row: span 3; }
+.gallery-masonry .gallery-item:nth-child(14n) { grid-row: span 5; }
+.gallery-item.is-spotlight { grid-column: span 2; grid-row: span 6; }
+.gallery-item:hover { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45); }
 .gallery-item img, .gallery-item video,
 .gallery-item .gallery-thumb, .gallery-item .gallery-video {
   width: 100%; height: 100%; object-fit: cover;
@@ -843,10 +866,19 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 /* ─── ARCHIVE GROUPS (by location) ───────────────────────────────── */
-/* Grouped layout: replaces the flat 100-item masonry when no filter is
-   active. Each group is a location-scoped section with its own head,
-   grid and "Show all (N more)" toggle. Stops the "scroll forever"
-   problem of v1 while keeping all content one click away. */
+/* v3 redesign — premium "plate" with integrated backdrop.
+   Problem with v2: dark glass panel + 12px gaps = archipelago feel.
+   Photos floated apart, black leaked through gaps, the section looked
+   desolate.
+   v3 treatment:
+   - Plate uses a location-accent gradient at very low opacity so every
+     group has its own subtle color identity without fighting the media.
+   - Inner grid uses a uniform row unit (same as the flat .gallery-masonry)
+     so every tile packs cleanly and tiles can promote to 2x1 / 2x2 without
+     leaving holes.
+   - Tiny 6px gaps read as a composed mosaic, not separate photos.
+   - Frame: a single rounded outline that groups the mosaic into one
+     visual object. */
 .archive-groups {
   max-width: var(--max); margin: 0 auto;
   display: flex; flex-direction: column;
@@ -854,26 +886,45 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .archive-group {
   position: relative;
-  padding: 28px clamp(18px, 2.5vw, 32px) 32px;
-  border-radius: 18px;
-  /* Dark glass panel — subtle gradient, soft border, backdrop blur.
-     Reads as "plate of content" without competing with the photos. */
-  background: linear-gradient(180deg, rgba(247,247,245,0.035) 0%, rgba(247,247,245,0.012) 100%);
-  border: 1px solid rgba(247,247,245,0.08);
-  backdrop-filter: blur(12px) saturate(1.05);
-  -webkit-backdrop-filter: blur(12px) saturate(1.05);
+  padding: 32px clamp(22px, 2.6vw, 36px) 36px;
+  border-radius: 22px;
+  /* Dual-gradient plate: a very low-intensity wash of the accent color
+     layered over a deep neutral base. `--accent` is set inline per
+     group from loc.accentColor. `color-mix` would be ideal but we
+     stick to rgba gradients for older Safari support. */
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, color-mix(in srgb, var(--accent, #8FA8C0) 16%, transparent) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(16, 18, 24, 0.92) 0%, rgba(10, 11, 15, 0.96) 60%, rgba(8, 9, 13, 0.98) 100%);
+  border: 1px solid rgba(247, 247, 245, 0.07);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.04),
-    0 24px 64px rgba(0,0,0,0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 30px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
 }
+/* Subtle accent glow along the top edge — signals the location's color
+   without dominating. */
 .archive-group::before {
   content: '';
-  position: absolute; left: 0; top: 24px;
-  width: 3px; height: 36px;
-  background: var(--accent, var(--celestial));
-  border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 12px var(--accent, transparent);
-  opacity: 0.9;
+  position: absolute; inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent, #fff) 70%, transparent) 30%,
+    color-mix(in srgb, var(--accent, #fff) 90%, transparent) 50%,
+    color-mix(in srgb, var(--accent, #fff) 70%, transparent) 70%,
+    transparent 100%);
+  opacity: 0.6;
+}
+/* Fallback for browsers without color-mix support. */
+@supports not (background: color-mix(in srgb, red, blue)) {
+  .archive-group {
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(143, 168, 192, 0.12) 0%, transparent 70%),
+      linear-gradient(180deg, rgba(16, 18, 24, 0.92) 0%, rgba(10, 11, 15, 0.96) 60%, rgba(8, 9, 13, 0.98) 100%);
+  }
+  .archive-group::before {
+    background: linear-gradient(90deg, transparent, var(--accent, #F7F7F5), transparent);
+  }
 }
 .archive-group-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -899,16 +950,25 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .archive-group-dot { opacity: 0.5; }
 .archive-group-count { color: var(--accent, var(--celestial)); }
+/* Grid: uniform row height, explicit spans, no voids. Mirrors .gallery-masonry
+   rules so the visual rhythm is the same whether you're in grouped or
+   flat mode. */
 .archive-group-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  grid-auto-rows: minmax(0, auto);
+  grid-auto-rows: calc((min(100vw, var(--max)) - 2 * var(--gut) - 2 * clamp(22px, 2.6vw, 36px)) / 4 * 0.34);
+  gap: 6px;
+  grid-auto-flow: dense;
 }
-.archive-group-grid .gallery-item { aspect-ratio: 4 / 5; }
-.archive-group-grid .gallery-item:nth-child(4n+1) { aspect-ratio: 1 / 1; }
+.archive-group-grid .gallery-item { grid-row: span 4; border-radius: 4px; }
+/* First tile of each group is a spotlight — immediate "this is the
+   location's best frame" cue, and it fills what would otherwise be a
+   boring uniform quadrant. */
+.archive-group-grid .gallery-item:nth-child(1) { grid-column: span 2; grid-row: span 6; border-radius: 6px; }
+/* Occasional tall promotions give the grid a vertical breath. */
+.archive-group-grid .gallery-item:nth-child(5n+3) { grid-row: span 5; }
 .archive-group-foot {
-  margin-top: 20px;
+  margin-top: 22px;
   display: flex; justify-content: center;
 }
 .archive-group-toggle {
@@ -936,13 +996,40 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .archive-group-toggle:hover b { color: var(--ink); }
 @media (max-width: 1180px) {
-  .archive-group-grid { grid-template-columns: repeat(3, 1fr); }
+  .archive-group-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: calc((100vw - 2 * var(--gut) - 2 * clamp(22px, 2.6vw, 36px)) / 3 * 0.34);
+  }
+  /* At 3 cols the first-child-spotlight (span 2) works perfectly. */
 }
 @media (max-width: 768px) {
   .archive-group { padding: 20px 14px 24px; border-radius: 14px; }
-  .archive-group-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .archive-group-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: calc((100vw - 2 * var(--gut) - 28px) / 2 * 0.36);
+    gap: 4px;
+  }
+  .archive-group-grid .gallery-item:nth-child(1) { grid-column: span 2; grid-row: span 5; }
+  .archive-group-grid .gallery-item:nth-child(5n+3) { grid-row: span 4; }
   .archive-group-head { flex-direction: column; align-items: flex-start; gap: 8px; }
   .archive-group-name { font-size: 20px; }
+}
+/* Flat-mode responsive fallbacks — same column count decrease at
+   smaller viewports. */
+@media (max-width: 1180px) {
+  .gallery-masonry {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: calc((100vw - 2 * var(--gut)) / 3 * 0.34);
+  }
+}
+@media (max-width: 768px) {
+  .gallery-masonry {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: calc((100vw - 2 * var(--gut)) / 2 * 0.36);
+    gap: 4px;
+  }
+  .gallery-masonry .gallery-item:nth-child(9n)  { grid-column: span 2; grid-row: span 3; }
+  .gallery-masonry .gallery-item:nth-child(14n) { grid-row: span 4; }
 }
 
 /* Honest preview overlay: when a video's poster is a location fallback
@@ -1599,28 +1686,109 @@ input, textarea, select { font: inherit; color: inherit; }
   color: rgba(247,247,245,0.75);
 }
 
-/* ─── RAY-BAN POV ────────────────────────────────────────────────── */
+/* ─── RAY-BAN POV (v3 — editorial cinematic) ─────────────────────
+   v2 had two floating circular "lenses" with a 6-tile grid below and
+   an email-capture. Felt gimmicky and the email field is dead (nothing
+   to send to). v3 treatment:
+   - Full editorial frame: keeps the glasses silhouette but renders the
+     frame as a real SVG spectacle outline with two live video fills.
+     Title sits above; kinetic kicker strip moves across the backdrop.
+   - Marquee of vertical POV clips below — 9:16 aspect matches the
+     smart-glasses native format and reads like a first-person feed.
+   - Replaces the email form with a subtle "Follow the feed" CTA that
+     links to Instagram where the live POV content actually lives.
+   - Dedicated dark plate background so the section feels like a
+     separate chapter, not just another strip of content. */
 .rayban {
-  padding: clamp(80px, 12vh, 160px) var(--gut);
+  padding: clamp(90px, 14vh, 180px) var(--gut);
   border-top: 1px solid var(--line);
-  background: linear-gradient(to bottom, var(--ink) 0%, #0d0d0d 100%);
-}
-.rayban-head { max-width: var(--max); margin: 0 auto 50px; text-align: center; }
-.rayban-lenses {
-  max-width: 720px; margin: 0 auto 60px;
-  display: flex; align-items: center; justify-content: center; gap: 40px;
   position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201, 162, 39, 0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(30, 111, 164, 0.045) 0%, transparent 75%),
+    linear-gradient(180deg, #08090c 0%, #0a0b0f 50%, #060709 100%);
+}
+/* Kinetic kicker that loops horizontally behind the head — "POV · WORN
+   LENS · RAY-BAN META · LIVE CAPTURE ·" — reads as signature rhythm. */
+.rayban-kinetic {
+  position: absolute; top: clamp(50px, 8vh, 110px); left: 0; right: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.055;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
+}
+.rayban-kinetic-track {
+  display: flex;
+  gap: 80px;
+  white-space: nowrap;
+  font-family: 'Italiana', serif;
+  font-size: clamp(96px, 14vw, 220px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--celestial);
+  animation: raybanMarquee 36s linear infinite;
+  will-change: transform;
+}
+.rayban-kinetic-track span { display: inline-block; }
+@keyframes raybanMarquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .rayban-kinetic-track { animation: none; }
+}
+
+.rayban-head {
+  max-width: var(--max); margin: 0 auto 40px;
+  text-align: center;
+  position: relative; z-index: 2;
+}
+.rayban-head .section-overline {
+  color: var(--desert);
+}
+
+/* ── Spectacle frame: real glasses silhouette built with SVG clip-paths.
+   The two <video> fills sit inside each lens via CSS mask-image so the
+   frame reads as Ray-Ban rather than "two circles". Uses percentage
+   positioning so it scales fluidly. */
+.rayban-spectacle {
+  position: relative; z-index: 2;
+  max-width: 880px; margin: 0 auto clamp(50px, 7vh, 80px);
+  padding: 0 clamp(20px, 5vw, 60px);
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(18px, 3vw, 40px);
+}
+.rayban-lenses {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(12px, 2vw, 28px);
+  padding: clamp(18px, 3vw, 34px);
+  border-radius: 24px;
 }
 .rayban-lens {
   position: relative;
-  width: 280px; aspect-ratio: 1;
-  border-radius: 50%;
+  width: clamp(180px, 28vw, 320px);
+  aspect-ratio: 1 / 1;
+  border-radius: 46% 46% 54% 54% / 50%;  /* Subtle "aviator"-ish curve */
   overflow: hidden;
   background: var(--ink);
   box-shadow:
-    0 25px 60px rgba(0,0,0,0.55),
-    inset 0 0 0 6px rgba(10,10,10,0.95),
-    inset 0 0 0 8px rgba(247,247,245,0.08);
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 2px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 6px rgba(8, 9, 12, 0.98),   /* inner bezel */
+    inset 0 0 0 8px rgba(201, 162, 39, 0.12), /* subtle gold ring */
+    inset 0 0 40px rgba(0, 0, 0, 0.5);       /* lens darkening */
+}
+/* Reflective sheen on top of each lens — reads as a real glass surface
+   without obscuring the video below. */
+.rayban-lens::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.14) 0%, transparent 30%),
+    linear-gradient(210deg, rgba(247, 247, 245, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 4;
 }
 .rayban-lens-video {
   position: absolute; inset: 0;
@@ -1630,75 +1798,178 @@ input, textarea, select { font: inherit; color: inherit; }
 .rayban-lens-video.is-prev { opacity: 0; z-index: 1; }
 .rayban-lens-video.is-cur  { opacity: 1; z-index: 2; animation: lensFadeIn 1.4s ease both; }
 @keyframes lensFadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* The bridge — a stylized Ray-Ban nose piece instead of a flat bar. */
 .rayban-bridge {
-  width: 60px; height: 6px;
-  background: rgba(10,10,10,0.85);
-  border-radius: 3px;
+  position: relative;
+  width: clamp(20px, 4vw, 48px);
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,162,39,0.6) 50%, transparent 100%);
   flex-shrink: 0;
+  align-self: center;
 }
-@media (max-width: 720px) {
-  .rayban-lenses { gap: 20px; }
-  .rayban-lens { width: 180px; }
-  .rayban-bridge { width: 30px; }
+.rayban-bridge::before, .rayban-bridge::after {
+  content: '';
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(201, 162, 39, 0.35);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.25);
 }
+.rayban-bridge::before { left: -10px; }
+.rayban-bridge::after  { right: -10px; }
+
+/* ── Micro-stats under the spectacle: 3 numerical anchors that make
+   the POV archive feel like a body of work, not a few clips. */
+.rayban-stats {
+  max-width: 680px; margin: 0 auto clamp(40px, 6vh, 72px);
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 3vw, 32px);
+  text-align: center;
+  position: relative; z-index: 2;
+}
+.rayban-stat {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 18px 8px;
+  border-left: 1px solid rgba(247, 247, 245, 0.08);
+}
+.rayban-stat:first-child { border-left: none; }
+.rayban-stat-num {
+  font-family: 'Italiana', serif;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1;
+  color: var(--celestial);
+  letter-spacing: -0.01em;
+}
+.rayban-stat-label {
+  font-family: 'Marcellus', serif;
+  font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+  color: rgba(247, 247, 245, 0.55);
+}
+@media (max-width: 520px) {
+  .rayban-stats { gap: 10px; }
+  .rayban-stat { padding: 14px 4px; }
+  .rayban-stat-label { letter-spacing: 0.22em; font-size: 9px; }
+}
+
+/* ── Marquee grid: vertical 9:16 POV tiles that auto-slide.
+   Changed from the 4:3 landscape 3-col grid because POV footage is
+   naturally vertical (the user wears glasses and walks), and a tall
+   filmstrip reads more cinematic. */
 .rayban-grid {
+  position: relative; z-index: 2;
   max-width: var(--max); margin: 0 auto;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
 }
 .rayban-item {
-  position: relative; aspect-ratio: 4 / 3;
-  border-radius: 6px; overflow: hidden;
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 10px;
+  overflow: hidden;
   background: var(--ink-soft);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
 }
-.rayban-item video { width: 100%; height: 100%; object-fit: cover; }
+.rayban-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+}
+.rayban-item video,
+.rayban-item img { width: 100%; height: 100%; object-fit: cover; }
+/* Vignette on every tile to make the metadata pill always legible. */
+.rayban-item::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(8, 9, 12, 0.85) 100%);
+  pointer-events: none;
+}
 .rayban-item-meta {
-  position: absolute; bottom: 12px; left: 12px;
+  position: absolute; bottom: 12px; left: 12px; right: 12px;
   display: flex; align-items: center; gap: 8px;
-  padding: 6px 12px;
-  background: rgba(10,10,10,0.7);
-  backdrop-filter: blur(8px);
+  padding: 7px 12px;
+  background: rgba(8, 9, 12, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(247, 247, 245, 0.08);
   border-radius: 999px;
-  font-size: 12px;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  color: var(--celestial);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  z-index: 3;
 }
+@media (max-width: 1180px) {
+  .rayban-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .rayban-grid .rayban-item:nth-child(n+5) { display: none; }
+}
+@media (max-width: 720px) {
+  .rayban-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .rayban-grid .rayban-item:nth-child(n+5) { display: block; }
+  .rayban-grid .rayban-item:nth-child(n+7) { display: none; }
+}
+
 .rayban-cta {
-  max-width: 600px; margin: 80px auto 0; text-align: center;
+  position: relative; z-index: 2;
+  max-width: 620px; margin: clamp(60px, 9vh, 100px) auto 0;
+  text-align: center;
+  padding: clamp(28px, 4vw, 44px) clamp(24px, 4vw, 40px);
+  border-radius: 20px;
+  /* Glass plate that matches the archive-group vibe so the whole
+     section feels cohesive. */
+  background: linear-gradient(180deg, rgba(247, 247, 245, 0.04) 0%, rgba(247, 247, 245, 0.01) 100%);
+  border: 1px solid rgba(247, 247, 245, 0.09);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.4);
 }
 .rayban-cta h3 {
-  font-family: 'Italiana', serif; font-size: 36px;
+  font-family: 'Italiana', serif; font-size: clamp(28px, 3vw, 38px);
   margin-bottom: 12px;
+  letter-spacing: -0.005em;
 }
 .rayban-cta p {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
-  color: rgba(247,247,245,0.7); margin-bottom: 24px;
+  font-size: clamp(15px, 1.2vw, 17px);
+  color: rgba(247,247,245,0.75); margin-bottom: 24px;
+  max-width: 440px; margin-left: auto; margin-right: auto;
 }
 .rayban-form {
-  display: flex; gap: 8px; max-width: 480px; margin: 0 auto;
+  display: flex; gap: 8px; max-width: 460px; margin: 0 auto;
+  flex-wrap: wrap; justify-content: center;
 }
 .rayban-form input {
-  flex: 1; padding: 14px 18px;
+  flex: 1; min-width: 200px; padding: 14px 18px;
   background: rgba(247,247,245,0.04);
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.rayban-form input:focus { border-color: var(--desert); }
+.rayban-form input:focus {
+  border-color: var(--desert);
+  background: rgba(247,247,245,0.06);
+}
 .rayban-form button {
-  padding: 14px 24px;
+  padding: 14px 26px;
   background: var(--celestial); color: var(--ink);
   border-radius: 999px;
   font-family: 'Marcellus', serif; font-size: 11px;
   letter-spacing: 0.3em; text-transform: uppercase;
   display: inline-flex; align-items: center; gap: 8px;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
-.rayban-form button:hover { background: var(--desert); }
+.rayban-form button:hover {
+  background: var(--desert);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
 .rayban-thanks {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
   font-size: 18px; color: var(--desert);
 }
 .rayban-coming {
-  display: inline-block; margin-top: 16px;
+  display: inline-block; margin-top: 18px;
   font-family: 'Marcellus', serif; font-size: 10px;
   letter-spacing: 0.3em; text-transform: uppercase;
   color: rgba(247,247,245,0.4);
