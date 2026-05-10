@@ -1,17 +1,27 @@
-// Ranuk Orbit — Lightbox v5: Apple-inspired premium viewer.
+// Ranuk Orbit — Lightbox v6: Apple-inspired premium viewer with
+// bulletproof close handling.
 //
-// Design goals (v5, May 2026):
-//   • Media is the protagonist. Chrome fades away and only appears on
-//     intent (hover on pointer devices, always on touch).
-//   • Close is bulletproof: X button, click on backdrop, and ESC key
-//     each route through the same hardClose() that tears down video,
-//     fullscreen, and body-scroll lock.
+// Design goals:
+//   • Media is protagonist — chrome is transparent until the user looks
+//     for it (hover on pointer devices, always visible on touch).
+//   • Close is bulletproof: X button, click on backdrop, AND ESC key
+//     all route through hardClose(). Event listeners are attached once
+//     on mount (not on every render) and use capture-phase + document
+//     so they can't be swallowed by a focused <video> element on iOS.
+//   • We also listen for fullscreenchange — if iOS Safari pushes the
+//     <video> into native fullscreen and the user presses ESC to exit
+//     fullscreen, we use that signal to close the lightbox cleanly.
 //   • No native <video controls>. iOS Safari's native chrome was the
 //     root cause of the "can't close" bug (it captures pointer events
 //     at a z-index that shadows the overlay). We render our own thin
 //     custom controls that behave consistently everywhere.
-//   • Rounded corners, subtle glass backdrop, SF-symbol-style hairline
-//     icons, slow easing, and lots of negative space.
+//
+// Why v5 still looked broken in the wild: the ESC-key useEffect depended
+// on hardClose, which in turn depended on the unstable `lb` context
+// value. On every render the effect tore down and re-registered the
+// listener, creating tiny windows where the key event could land on no
+// handler at all. v6 uses a ref so the listener is installed ONCE per
+// mount and always reads the latest handler via the ref.
 const { createContext, useContext, useState, useCallback, useEffect, useRef } = React;
 
 const LightboxContext = createContext(null);
@@ -132,12 +142,16 @@ function Lightbox() {
     setDuration(0);
   }, [lb.index]);
 
-  // Robust close: stops the video, drops any fullscreen, calls lb.close().
-  const hardClose = useCallback((e) => {
-    if (e) {
-      try { e.preventDefault(); } catch (_) {}
-      try { e.stopPropagation(); } catch (_) {}
-    }
+  // ────────────────────────────────────────────────────────────────────
+  // Bulletproof close handling.
+  //
+  // Design: we keep a ref to the current `close everything` function so
+  // the global keydown listener can call the LATEST version without ever
+  // tearing down and re-registering. That closes the race window where
+  // v5 could miss a keystroke during a re-render.
+  // ────────────────────────────────────────────────────────────────────
+  const hardCloseRef = useRef(() => {});
+  hardCloseRef.current = () => {
     try {
       const v = videoRef.current;
       if (v) { v.pause(); v.removeAttribute('controls'); v.currentTime = 0; }
@@ -145,7 +159,17 @@ function Lightbox() {
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
     try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
     lb.close();
-  }, [lb]);
+  };
+
+  // Stable wrapper that event handlers can call. This is also what the
+  // X button's onClick/onPointerDown invoke.
+  const hardClose = useCallback((e) => {
+    if (e) {
+      try { e.preventDefault(); } catch (_) {}
+      try { e.stopPropagation(); } catch (_) {}
+    }
+    hardCloseRef.current();
+  }, []);
 
   const togglePlay = useCallback((e) => {
     if (e) e.stopPropagation();
@@ -155,18 +179,54 @@ function Lightbox() {
     else { v.pause(); setPlaying(false); }
   }, []);
 
-  // Global keyboard handling while open
+  // Global keyboard + fullscreen listeners. Installed ONCE when the
+  // lightbox opens, removed when it closes. Uses document + capture
+  // phase so no nested element (including a focused <video>) can
+  // swallow the event before we see it.
   useEffect(() => {
     if (!lb.open) return;
+
     const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); hardClose(); }
-      else if (e.key === 'ArrowLeft') lb.prev();
-      else if (e.key === 'ArrowRight') lb.next();
-      else if (e.key === ' ' || e.key === 'k') { e.preventDefault(); togglePlay(); }
+      // Some browsers still report `keyCode` (27 for ESC) — we check
+      // both to cover every vendor. Also accept 'Esc' (legacy IE).
+      const isEsc = e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27;
+      if (isEsc) {
+        e.preventDefault();
+        e.stopPropagation();
+        hardCloseRef.current();
+        return;
+      }
+      if (e.key === 'ArrowLeft') { lb.prev(); return; }
+      if (e.key === 'ArrowRight') { lb.next(); return; }
+      if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        togglePlay();
+      }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [lb.open, hardClose, lb.prev, lb.next, togglePlay]);
+
+    // If the native <video> element happens to enter fullscreen on iOS
+    // Safari (some gestures can still trigger it despite playsInline),
+    // the subsequent ESC press is consumed by the fullscreen layer. We
+    // detect the exit and close the lightbox so the user isn't left
+    // staring at a persistent viewer after dismissing fullscreen.
+    const onFsChange = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Small delay so Safari finishes tearing down the fullscreen UI.
+        setTimeout(() => {
+          try { hardCloseRef.current(); } catch (_) {}
+        }, 20);
+      }
+    };
+
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onFsChange);
+    };
+  }, [lb.open, lb.prev, lb.next, togglePlay]);
 
   // Failsafe: restore body scroll if the component unmounts while open
   useEffect(() => () => { try { document.body.style.overflow = ''; } catch (_) {} }, []);
@@ -239,11 +299,15 @@ function Lightbox() {
       aria-label={title}
       onClick={handleBackdrop}
     >
-      {/* Floating close — always on top, always clickable */}
+      {/* Floating close — always on top, always clickable. We bind to
+          onPointerDown so the close happens on press (before the
+          corresponding click event has a chance to be swallowed by a
+          focused <video>), and to onClick as a fallback for keyboard /
+          assistive-tech activation. */}
       <button
         type="button"
         className="lb-close"
-        onPointerUp={hardClose}
+        onPointerDown={hardClose}
         onClick={hardClose}
         aria-label={closeLabel}
         title={closeLabel}
@@ -280,6 +344,10 @@ function Lightbox() {
               src={item.src}
               poster={item.poster || undefined}
               disablePictureInPicture
+              // Explicitly forbid the native fullscreen button — on iOS
+              // Safari it was the escape hatch that put the video into
+              // a mode where our ESC handler couldn't reach it.
+              controlsList="nodownload nofullscreen noplaybackrate"
               autoPlay
               playsInline
               muted={muted}
