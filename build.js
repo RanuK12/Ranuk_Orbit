@@ -59,6 +59,38 @@ step('bundle ranuk-app.min.js', () => {
       '--loader:.jsx=jsx',
       '--jsx-factory=React.createElement',
       '--jsx-fragment=React.Fragment',
+      // Cross-module identifiers: each .jsx declares its symbols with
+      // `Object.assign(window, { … })` at the bottom, but other modules
+      // reference them as bare identifiers (`useLang()`, `<LangProvider>`,
+      // `pick(x, lang)`, etc.). Under `--bundle`, each file gets its own
+      // scope, so those bare references point to undefined locals and
+      // the app crashes at mount with `ReferenceError`. We fix this with
+      // `--define`: esbuild rewrites every free identifier below to
+      // `window.<name>` at compile time, so the call sites always go
+      // through the runtime global binding populated by the module that
+      // owns the symbol.
+      '--define:LangProvider=window.LangProvider',
+      '--define:useLang=window.useLang',
+      '--define:pick=window.pick',
+      '--define:COPY=window.COPY',
+      '--define:LightboxProvider=window.LightboxProvider',
+      '--define:useLightbox=window.useLightbox',
+      '--define:Lightbox=window.Lightbox',
+      '--define:HeroSection=window.HeroSection',
+      '--define:HERO_SEQUENCE=window.HERO_SEQUENCE',
+      '--define:Globe=window.Globe',
+      '--define:AtlasSection=window.AtlasSection',
+      '--define:LOCATIONS_V2=window.LOCATIONS_V2',
+      '--define:VISITED_DOTS_V2=window.VISITED_DOTS_V2',
+      '--define:ALL_MEDIA_V2=window.ALL_MEDIA_V2',
+      '--define:YEARS_V2=window.YEARS_V2',
+      '--define:STATS_V2=window.STATS_V2',
+      '--define:FAQ_V2=window.FAQ_V2',
+      '--define:PROCESS_V2=window.PROCESS_V2',
+      '--define:TESTIMONIALS_V2=window.TESTIMONIALS_V2',
+      '--define:PRESS_V2=window.PRESS_V2',
+      '--define:PROFILE_PHOTOS=window.PROFILE_PHOTOS',
+      '--define:RANUK_ASSETS=window.RANUK_ASSETS',
     ].join(' '),
     { stdio: 'inherit', cwd: ROOT }
   );
