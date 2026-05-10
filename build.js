@@ -152,3 +152,16 @@ console.log('\n✓ Build complete. Asset versions:');
 for (const [name, hash] of Object.entries(hashes)) {
   console.log(`  /${name}?v=${hash}`);
 }
+
+// 5) Generate version.json for cache-busting auto-reload system
+step('generate version.json', () => {
+  const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 13);
+  const versionData = JSON.stringify({
+    version: `${timestamp}-${hashes['ranuk-app.min.js'].slice(0, 6)}`,
+    build: timestamp
+  });
+  writeFileSync(join(ROOT, 'version.json'), versionData, 'utf-8');
+});
+
+console.log('  /version.json (auto-reload trigger)');
+

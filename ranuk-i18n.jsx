@@ -427,12 +427,16 @@ function LangProvider({ children }) {
 }
 function useLang() { return useContext(LangContext); }
 
+// Robust fallback: try requested lang → English → any available key → empty string
 const pick = (v, lang) => {
   if (!v) return '';
   if (typeof v === 'string') return v;
   if (typeof v === 'object') {
     if (v[lang]) return v[lang];
     if (v.en) return v.en;  // fallback to English
+    // Last resort: return first available value
+    const keys = Object.keys(v);
+    if (keys.length > 0) return v[keys[0]];
   }
   return '';
 };

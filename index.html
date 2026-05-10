@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<!-- Cache busting: prevent aggressive browser HTML caching -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Version check: force reload if server has newer version -->
+<script>
+(function(){var V='/version.json',K='ranuk-version';function c(){fetch(V,{cache:'no-store',headers:{'Cache-Control':'no-cache'}}).then(function(r){return r.json()}).then(function(d){var s=d.version,l=sessionStorage.getItem(K);if(!l){sessionStorage.setItem(K,s);return}if(l!==s){sessionStorage.setItem(K,s);window.location.reload(true)}}).catch(function(){})}c();setInterval(c,120000);document.addEventListener('visibilitychange',function(){if(!document.hidden)c()})})();
+</script>
 <title>Ranuk Orbit — Earth, from another angle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="description" content="Ranuk Orbit — cinematic aerial photography & travel storytelling by Emilio Ranucoli. Drone, Ray-Ban Meta POV, editorial." />
@@ -2573,6 +2581,6 @@ body.konami { animation: rainbow 6s linear; }
   var root = ReactDOM.createRoot(document.getElementById('app'));
   root.render(React.createElement(window.App));
 </script>
-
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').then(function(r){r.addEventListener('updatefound',function(){var w=r.installing;w.addEventListener('statechange',function(){if(w.state==='installed'&&navigator.serviceWorker.controller){window.location.reload()}})})}).catch(function(){})})}</script>
 </body>
 </html>
