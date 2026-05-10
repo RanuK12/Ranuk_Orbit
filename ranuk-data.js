@@ -34,17 +34,17 @@ const HERO_SEQUENCE = [
   {
     src: VIDEO_DRONE('Cerdeña_Isla-Magdalena_HERO.MP4'),
     poster: POSTER('cerde-na-isla-magdalena-hero.jpg'),
-    label: { en: 'Maddalena, Sardinia', es: 'Maddalena, Cerdeña' },
+    label: { en: 'Maddalena, Sardinia', es: 'Maddalena, Cerdeña', it: 'Maddalena, Sardegna' },
   },
   {
     src: VIDEO_DRONE('Rio_Limay_Patagonia.MP4'),
     poster: POSTER('rio-limay-patagonia.jpg'),
-    label: { en: 'Río Limay, Patagonia', es: 'Río Limay, Patagonia' },
+    label: { en: 'Río Limay, Patagonia', es: 'Río Limay, Patagonia', it: 'Río Limay, Patagonia' },
   },
   {
     src: VIDEO_DRONE('Atardecer-Nieve-HERO.mov'),
     poster: POSTER('atardecer-nieve-hero.jpg'),
-    label: { en: 'Trentino, Italian Alps', es: 'Trentino, Alpes Italianos' },
+    label: { en: 'Trentino, Italian Alps', es: 'Trentino, Alpes Italianos', it: 'Trentino, Alpi Italiane' },
   },
 ];
 
@@ -62,21 +62,22 @@ const LOCATIONS_V2 = [
     description: {
       en: 'The Maddalena archipelago — turquoise water, granite islands, the Mediterranean at its most cinematic.',
       es: 'El archipiélago de la Maddalena — agua turquesa, islas de granito, el Mediterráneo en su versión más cinematográfica.',
+      it: 'L\'arcipelago della Maddalena — acqua turchese, isole di granito, il Mediterraneo nella sua versione più cinematografica.',
     },
     media: [
-      M('cer-1', 'photo', FOTO_DRONE('Cerdeña_Magdalena.JPG'), {en:'Maddalena Dusk',es:'Maddalena al ocaso'}, 'golden', 'aerial', 2024, {camera:'DJI Mini 4 Pro', loc:'La Maddalena, IT'}),
-      M('cer-2', 'photo', FOTO_DRONE('Cerdeña-Isla_Magdalena.JPG'), {en:'Maddalena Island',es:'Isla Maddalena'}, 'oceanic', 'aerial', 2024, {camera:'DJI Mini 4 Pro', loc:'La Maddalena, IT'}),
-      M('cer-3', 'photo', FOTO_DRONE('Cerdeña_Amigos.JPG'), {en:'Friends, Sardinia',es:'Amigos, Cerdeña'}, 'oceanic', 'aerial', 2024),
-      M('cer-4', 'photo', FOTO_RB('Cerdeña-Golfo_Aranci-Isla.jpg'), {en:'Golfo Aranci POV',es:'Golfo Aranci POV'}, 'oceanic', 'water', 2024, {camera:'Ray-Ban Meta'}),
-      M('cer-5', 'photo', FOTO_RB('Cerdeña_Golfo-Aranci.jpg'), {en:'Golfo Aranci',es:'Golfo Aranci'}, 'oceanic', 'water', 2024, {camera:'Ray-Ban Meta'}),
-      M('cer-v1', 'video', VIDEO_DRONE('Cerdeña_Velero.MP4'), {en:'Sailboat, Costa Smeralda',es:'Velero, Costa Smeralda'}, 'oceanic', 'aerial', 2024),
-      M('cer-v2', 'video', VIDEO_DRONE('Cerdeña_Isla-Magdalena_HERO.MP4'), {en:'Maddalena Aerial',es:'Maddalena aérea'}, 'golden', 'aerial', 2024),
-      M('cer-v3', 'video', VIDEO_DRONE('Cerdeña_Golfo-Aranci.MP4'), {en:'Golfo Aranci',es:'Golfo Aranci'}, 'oceanic', 'aerial', 2024),
-      M('cer-v4', 'video', VIDEO_DRONE('Cerdeña_Magdalena-isla_Hotel.MP4'), {en:'Hotel, Maddalena',es:'Hotel, Maddalena'}, 'oceanic', 'aerial', 2024),
-      M('cer-v5', 'video', VIDEO_DRONE('Cerdeña_Spiaggia_Cala_Sassari.MP4'), {en:'Cala Sassari',es:'Cala Sassari'}, 'oceanic', 'aerial', 2024),
-      M('cer-v6', 'video', VIDEO_DRONE('Cerdeña_Spiaggia-Biancha.MP4'), {en:'Spiaggia Bianca',es:'Spiaggia Bianca'}, 'oceanic', 'aerial', 2024),
-      M('cer-v7', 'video', VIDEO_DRONE('Cerdeña-Magdalena_Barcos.MP4'), {en:'Boats at Anchor',es:'Barcos fondeados'}, 'oceanic', 'aerial', 2024),
-      M('cer-v8', 'video', VIDEO_DRONE('Cerdeña-Spiaggia_Cala_Sabina.MP4'), {en:'Cala Sabina',es:'Cala Sabina'}, 'oceanic', 'aerial', 2024),
+      M('cer-1', 'photo', FOTO_DRONE('Cerdeña_Magdalena.JPG'), {en:'Maddalena Dusk',es:'Maddalena al ocaso',it:'Maddalena al tramonto'}, 'golden', 'aerial', 2024, {camera:'DJI Mini 4 Pro', loc:'La Maddalena, IT'}),
+      M('cer-2', 'photo', FOTO_DRONE('Cerdeña-Isla_Magdalena.JPG'), {en:'Maddalena Island',es:'Isla Maddalena',it:'Isola Maddalena'}, 'oceanic', 'aerial', 2024, {camera:'DJI Mini 4 Pro', loc:'La Maddalena, IT'}),
+      M('cer-3', 'photo', FOTO_DRONE('Cerdeña_Amigos.JPG'), {en:'Friends, Sardinia',es:'Amigos, Cerdeña',it:'Amici, Sardegna'}, 'oceanic', 'aerial', 2024),
+      M('cer-4', 'photo', FOTO_RB('Cerdeña-Golfo_Aranci-Isla.jpg'), {en:'Golfo Aranci POV',es:'Golfo Aranci POV',it:'Golfo Aranci POV'}, 'oceanic', 'water', 2024, {camera:'Ray-Ban Meta'}),
+      M('cer-5', 'photo', FOTO_RB('Cerdeña_Golfo-Aranci.jpg'), {en:'Golfo Aranci',es:'Golfo Aranci',it:'Golfo Aranci'}, 'oceanic', 'water', 2024, {camera:'Ray-Ban Meta'}),
+      M('cer-v1', 'video', VIDEO_DRONE('Cerdeña_Velero.MP4'), {en:'Sailboat, Costa Smeralda',es:'Velero, Costa Smeralda',it:'Veliero, Costa Smeralda'}, 'oceanic', 'aerial', 2024),
+      M('cer-v2', 'video', VIDEO_DRONE('Cerdeña_Isla-Magdalena_HERO.MP4'), {en:'Maddalena Aerial',es:'Maddalena aérea',it:'Maddalena aerea'}, 'golden', 'aerial', 2024),
+      M('cer-v3', 'video', VIDEO_DRONE('Cerdeña_Golfo-Aranci.MP4'), {en:'Golfo Aranci',es:'Golfo Aranci',it:'Golfo Aranci'}, 'oceanic', 'aerial', 2024),
+      M('cer-v4', 'video', VIDEO_DRONE('Cerdeña_Magdalena-isla_Hotel.MP4'), {en:'Hotel, Maddalena',es:'Hotel, Maddalena',it:'Hotel, Maddalena'}, 'oceanic', 'aerial', 2024),
+      M('cer-v5', 'video', VIDEO_DRONE('Cerdeña_Spiaggia_Cala_Sassari.MP4'), {en:'Cala Sassari',es:'Cala Sassari',it:'Cala Sassari'}, 'oceanic', 'aerial', 2024),
+      M('cer-v6', 'video', VIDEO_DRONE('Cerdeña_Spiaggia-Biancha.MP4'), {en:'Spiaggia Bianca',es:'Spiaggia Bianca',it:'Spiaggia Bianca'}, 'oceanic', 'aerial', 2024),
+      M('cer-v7', 'video', VIDEO_DRONE('Cerdeña-Magdalena_Barcos.MP4'), {en:'Boats at Anchor',es:'Barcos fondeados',it:'Barche all\'ancora'}, 'oceanic', 'aerial', 2024),
+      M('cer-v8', 'video', VIDEO_DRONE('Cerdeña-Spiaggia_Cala_Sabina.MP4'), {en:'Cala Sabina',es:'Cala Sabina',it:'Cala Sabina'}, 'oceanic', 'aerial', 2024),
     ]
   },
   {
@@ -91,21 +92,22 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Trentino, Dolomites — sea of clouds, alpine dusk, snow at golden hour.',
       es: 'Trentino, Dolomitas — mar de nubes, ocaso alpino, nieve en hora dorada.',
+      it: 'Trentino, Dolomiti — mare di nuvole, tramonto alpino, neve nell\'ora dorata.',
     },
     media: [
-      M('alp-1', 'photo', FOTO_DRONE('Atardecer_Alpes.JPG'), {en:'Alps at Dusk',es:'Alpes al ocaso'}, 'golden', 'mountain', 2024, {camera:'DJI Mini 4 Pro', loc:'Trentino, IT'}),
-      M('alp-2', 'photo', FOTO_DRONE('Atardecer_Alpes_IT.JPG'), {en:'Italian Sunset',es:'Atardecer italiano'}, 'golden', 'mountain', 2024),
-      M('alp-3', 'photo', FOTO_DRONE('Alpes_Dolomitas.JPG'), {en:'The Dolomites',es:'Las Dolomitas'}, 'cold', 'mountain', 2024),
-      M('alp-4', 'photo', FOTO_DRONE('Atardecer_Arriba-del-Cielo.JPG'), {en:'Above the Clouds',es:'Sobre las nubes'}, 'golden', 'aerial', 2024),
-      M('alp-v1', 'video', VIDEO_DRONE('Atardecer-Nieve-HERO.mov'), {en:'Snow at Golden Hour',es:'Nieve en hora dorada'}, 'golden', 'mountain', 2024),
-      M('alp-v2', 'video', VIDEO_DRONE('Alpes_Italianos_Atardecer.mov'), {en:'Alps Sunset',es:'Atardecer Alpes'}, 'golden', 'mountain', 2024),
-      M('alp-v3', 'video', VIDEO_DRONE('Alpes_Italianos.mov'), {en:'Italian Alps',es:'Alpes italianos'}, 'cold', 'mountain', 2024),
-      M('alp-v4', 'video', VIDEO_DRONE('Alpes_Italianos_trentino.MP4'), {en:'Trentino',es:'Trentino'}, 'cold', 'mountain', 2024),
-      M('alp-v5', 'video', VIDEO_DRONE('Alpes_Italianos_Dolomitas-Perro.MP4'), {en:'Dog in the Dolomites',es:'Perro en las Dolomitas'}, 'cold', 'mountain', 2024),
-      M('alp-v6', 'video', VIDEO_DRONE('Atardecer-Nieve_Alpes-Italianos-Trentino.MP4'), {en:'Trentino Snow',es:'Nieve en Trentino'}, 'golden', 'mountain', 2024),
-      M('alp-v7', 'video', VIDEO_DRONE('Alpes_Italianos_Dolomitas-9:16.mov'), {en:'Dolomites Vertical',es:'Dolomitas vertical'}, 'cold', 'mountain', 2024),
-      M('alp-v8', 'pov', VIDEO_RB('Paseo-Perro_Alpes_IT.MOV'), {en:'Walking the Dog, Alps',es:'Paseo con el perro'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('alp-v9', 'pov', VIDEO_RB('Ski-Alpes_Italia.mov'), {en:'Skiing the Alps',es:'Esquiando los Alpes'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
+      M('alp-1', 'photo', FOTO_DRONE('Atardecer_Alpes.JPG'), {en:'Alps at Dusk',es:'Alpes al ocaso',it:'Alpi al tramonto'}, 'golden', 'mountain', 2024, {camera:'DJI Mini 4 Pro', loc:'Trentino, IT'}),
+      M('alp-2', 'photo', FOTO_DRONE('Atardecer_Alpes_IT.JPG'), {en:'Italian Sunset',es:'Atardecer italiano',it:'Tramonto italiano'}, 'golden', 'mountain', 2024),
+      M('alp-3', 'photo', FOTO_DRONE('Alpes_Dolomitas.JPG'), {en:'The Dolomites',es:'Las Dolomitas',it:'Le Dolomiti'}, 'cold', 'mountain', 2024),
+      M('alp-4', 'photo', FOTO_DRONE('Atardecer_Arriba-del-Cielo.JPG'), {en:'Above the Clouds',es:'Sobre las nubes',it:'Sopra le nuvole'}, 'golden', 'aerial', 2024),
+      M('alp-v1', 'video', VIDEO_DRONE('Atardecer-Nieve-HERO.mov'), {en:'Snow at Golden Hour',es:'Nieve en hora dorada',it:'Neve nell\'ora dorata'}, 'golden', 'mountain', 2024),
+      M('alp-v2', 'video', VIDEO_DRONE('Alpes_Italianos_Atardecer.mov'), {en:'Alps Sunset',es:'Atardecer Alpes',it:'Tramonto Alpi'}, 'golden', 'mountain', 2024),
+      M('alp-v3', 'video', VIDEO_DRONE('Alpes_Italianos.mov'), {en:'Italian Alps',es:'Alpes italianos',it:'Alpi italiane'}, 'cold', 'mountain', 2024),
+      M('alp-v4', 'video', VIDEO_DRONE('Alpes_Italianos_trentino.MP4'), {en:'Trentino',es:'Trentino',it:'Trentino'}, 'cold', 'mountain', 2024),
+      M('alp-v5', 'video', VIDEO_DRONE('Alpes_Italianos_Dolomitas-Perro.MP4'), {en:'Dog in the Dolomites',es:'Perro en las Dolomitas',it:'Cane nelle Dolomiti'}, 'cold', 'mountain', 2024),
+      M('alp-v6', 'video', VIDEO_DRONE('Atardecer-Nieve_Alpes-Italianos-Trentino.MP4'), {en:'Trentino Snow',es:'Nieve en Trentino',it:'Neve in Trentino'}, 'golden', 'mountain', 2024),
+      M('alp-v7', 'video', VIDEO_DRONE('Alpes_Italianos_Dolomitas-9:16.mov'), {en:'Dolomites Vertical',es:'Dolomitas vertical',it:'Dolomiti verticale'}, 'cold', 'mountain', 2024),
+      M('alp-v8', 'pov', VIDEO_RB('Paseo-Perro_Alpes_IT.MOV'), {en:'Walking the Dog, Alps',es:'Paseo con el perro',it:'Passeggiata col cane'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('alp-v9', 'pov', VIDEO_RB('Ski-Alpes_Italia.mov'), {en:'Skiing the Alps',es:'Esquiando los Alpes',it:'Sciando sulle Alpi'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   {
@@ -120,10 +122,11 @@ const LOCATIONS_V2 = [
     description: {
       en: 'The Forum, the Colosseum — eternal stone, walking the bones of the empire.',
       es: 'El Foro, el Coliseo — piedra eterna, caminando los huesos del imperio.',
+      it: 'Il Foro, il Colosseo — pietra eterna, camminando sulle ossa dell\'impero.',
     },
     media: [
-      M('rom-v1', 'pov', VIDEO_RB('Coliseo-Roma.mov'), {en:'Colosseum',es:'Coliseo'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta', loc:'Roma, IT'}),
-      M('rom-v2', 'pov', VIDEO_RB('Foro-Romano_Roma.mov'), {en:'Roman Forum',es:'Foro Romano'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('rom-v1', 'pov', VIDEO_RB('Coliseo-Roma.mov'), {en:'Colosseum',es:'Coliseo',it:'Colosseo'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta', loc:'Roma, IT'}),
+      M('rom-v2', 'pov', VIDEO_RB('Foro-Romano_Roma.mov'), {en:'Roman Forum',es:'Foro Romano',it:'Foro Romano'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   {
@@ -138,12 +141,13 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Hilltop villages, Vesuvius on the horizon, monasteries cut into rock.',
       es: 'Pueblos en colinas, el Vesubio en el horizonte, monasterios tallados en roca.',
+      it: 'Villaggi in collina, il Vesuvio all\'orizzonte, monasteri scavati nella roccia.',
     },
     media: [
-      M('cal-1', 'photo', FOTO_DRONE('Pueblito-Calabria.JPG'), {en:'Calabrian Village',es:'Pueblito calabrés'}, 'warm', 'mountain', 2024),
-      M('cal-v1', 'video', VIDEO_DRONE('Atardecer_Calabria-Vesubio-al-fondo.MP4'), {en:'Vesuvius Backdrop',es:'Vesubio al fondo'}, 'golden', 'aerial', 2024),
-      M('cal-v2', 'video', VIDEO_DRONE('Monasterio-Calabria-Epic_Italy.MP4'), {en:'Monastery',es:'Monasterio'}, 'warm', 'aerial', 2024),
-      M('cal-v3', 'video', VIDEO_DRONE('Castillo-Calabria_9:16.mov'), {en:'Castle, Vertical',es:'Castillo vertical'}, 'warm', 'aerial', 2024),
+      M('cal-1', 'photo', FOTO_DRONE('Pueblito-Calabria.JPG'), {en:'Calabrian Village',es:'Pueblito calabrés',it:'Villaggio calabrese'}, 'warm', 'mountain', 2024),
+      M('cal-v1', 'video', VIDEO_DRONE('Atardecer_Calabria-Vesubio-al-fondo.MP4'), {en:'Vesuvius Backdrop',es:'Vesubio al fondo',it:'Vesuvio sullo sfondo'}, 'golden', 'aerial', 2024),
+      M('cal-v2', 'video', VIDEO_DRONE('Monasterio-Calabria-Epic_Italy.MP4'), {en:'Monastery',es:'Monasterio',it:'Monastero'}, 'warm', 'aerial', 2024),
+      M('cal-v3', 'video', VIDEO_DRONE('Castillo-Calabria_9:16.mov'), {en:'Castle, Vertical',es:'Castillo vertical',it:'Castello verticale'}, 'warm', 'aerial', 2024),
     ]
   },
   // ===== ARGENTINA =====
@@ -159,18 +163,19 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Bariloche, Neuquén — the Limay river, enchanted valleys, Patagonian forests.',
       es: 'Bariloche, Neuquén — el río Limay, valles encantados, bosques patagónicos.',
+      it: 'Bariloche, Neuquén — il fiume Limay, valli incantate, foreste patagoniche.',
     },
     media: [
-      M('pat-1', 'photo', FOTO_DRONE('Valle_Encantado-Patagonia.JPG'), {en:'Enchanted Valley',es:'Valle Encantado'}, 'cold', 'mountain', 2024, {camera:'DJI Mini 4 Pro', loc:'Valle Encantado, AR'}),
-      M('pat-2', 'photo', FOTO_DRONE('Rio_Limay-Patagonia.JPG'), {en:'Limay River',es:'Río Limay'}, 'cold', 'aerial', 2024),
-      M('pat-v1', 'video', VIDEO_DRONE('Bosque_Patagonia-Argentina.MP4'), {en:'Patagonian Forest',es:'Bosque patagónico'}, 'cold', 'aerial', 2024),
-      M('pat-v2', 'video', VIDEO_DRONE('Rio_Limay_Patagonia.MP4'), {en:'Río Limay',es:'Río Limay'}, 'cold', 'aerial', 2024),
-      M('pat-v3', 'video', VIDEO_DRONE('Valle_Encantado_rio-Limay.MP4'), {en:'Enchanted Valley',es:'Valle Encantado'}, 'cold', 'aerial', 2024),
-      M('pat-v4', 'video', VIDEO_DRONE('Valle_Encantado-Rio_Limay.MP4'), {en:'Limay Valley',es:'Valle del Limay'}, 'cold', 'aerial', 2024),
-      M('pat-v5', 'video', VIDEO_DRONE('Villa-Pehuenia_Neuquen.MP4'), {en:'Villa Pehuenia',es:'Villa Pehuenia'}, 'cold', 'mountain', 2024),
-      M('pat-v6', 'video', VIDEO_DRONE('Villa_Pehuenia-Patagonia-9:16.mov'), {en:'Pehuenia Vertical',es:'Pehuenia vertical'}, 'cold', 'mountain', 2024),
-      M('pat-v7', 'pov', VIDEO_RB('Bariloche_Mirador-Circuito-Chico.MOV'), {en:'Circuito Chico Vista',es:'Mirador Circuito Chico'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
-      M('pat-v8', 'pov', VIDEO_RB('Kayak-Bariloche.mp4'), {en:'Kayak, Bariloche',es:'Kayak en Bariloche'}, 'oceanic', 'water', 2024, {camera:'Ray-Ban Meta'}),
+      M('pat-1', 'photo', FOTO_DRONE('Valle_Encantado-Patagonia.JPG'), {en:'Enchanted Valley',es:'Valle Encantado',it:'Valle Incantata'}, 'cold', 'mountain', 2024, {camera:'DJI Mini 4 Pro', loc:'Valle Encantado, AR'}),
+      M('pat-2', 'photo', FOTO_DRONE('Rio_Limay-Patagonia.JPG'), {en:'Limay River',es:'Río Limay',it:'Fiume Limay'}, 'cold', 'aerial', 2024),
+      M('pat-v1', 'video', VIDEO_DRONE('Bosque_Patagonia-Argentina.MP4'), {en:'Patagonian Forest',es:'Bosque patagónico',it:'Foresta patagonica'}, 'cold', 'aerial', 2024),
+      M('pat-v2', 'video', VIDEO_DRONE('Rio_Limay_Patagonia.MP4'), {en:'Río Limay',es:'Río Limay',it:'Río Limay'}, 'cold', 'aerial', 2024),
+      M('pat-v3', 'video', VIDEO_DRONE('Valle_Encantado_rio-Limay.MP4'), {en:'Enchanted Valley',es:'Valle Encantado',it:'Valle Incantata'}, 'cold', 'aerial', 2024),
+      M('pat-v4', 'video', VIDEO_DRONE('Valle_Encantado-Rio_Limay.MP4'), {en:'Limay Valley',es:'Valle del Limay',it:'Valle del Limay'}, 'cold', 'aerial', 2024),
+      M('pat-v5', 'video', VIDEO_DRONE('Villa-Pehuenia_Neuquen.MP4'), {en:'Villa Pehuenia',es:'Villa Pehuenia',it:'Villa Pehuenia'}, 'cold', 'mountain', 2024),
+      M('pat-v6', 'video', VIDEO_DRONE('Villa_Pehuenia-Patagonia-9:16.mov'), {en:'Pehuenia Vertical',es:'Pehuenia vertical',it:'Pehuenia verticale'}, 'cold', 'mountain', 2024),
+      M('pat-v7', 'pov', VIDEO_RB('Bariloche_Mirador-Circuito-Chico.MOV'), {en:'Circuito Chico Vista',es:'Mirador Circuito Chico',it:'Belvedere Circuito Chico'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
+      M('pat-v8', 'pov', VIDEO_RB('Kayak-Bariloche.mp4'), {en:'Kayak, Bariloche',es:'Kayak en Bariloche',it:'Kayak a Bariloche'}, 'oceanic', 'water', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   {
@@ -185,18 +190,19 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Cerro de los 7 Colores, Salinas Grandes, El Hornocal — high desert, layered rock, salt flats.',
       es: 'Cerro de los 7 Colores, Salinas Grandes, El Hornocal — alta puna, roca estratificada, salares.',
+      it: 'Cerro de los 7 Colores, Salinas Grandes, El Hornocal — alta puna, roccia stratificata, saline.',
     },
     media: [
-      M('juj-1', 'photo', FOTO_RB('Salinas_Grandes-Jujuy.jpg'), {en:'Salinas Grandes',es:'Salinas Grandes'}, 'warm', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
-      M('juj-v1', 'video', VIDEO_DRONE('Cerro_7colores.mov'), {en:'Cerro de los 7 Colores',es:'Cerro de los 7 Colores'}, 'warm', 'mountain', 2024),
-      M('juj-v2', 'video', VIDEO_DRONE('Cerro7Colores_Jujuy.mov'), {en:'7 Colores',es:'7 Colores'}, 'warm', 'mountain', 2024),
-      M('juj-v3', 'video', VIDEO_DRONE('El_Hornacal.MP4'), {en:'El Hornocal',es:'El Hornocal'}, 'warm', 'aerial', 2024),
-      M('juj-v4', 'video', VIDEO_DRONE('El_Hornacal-9:16.mov'), {en:'El Hornocal Vertical',es:'El Hornocal vertical'}, 'warm', 'aerial', 2024),
-      M('juj-v5', 'video', VIDEO_DRONE('Paseo-de-los-Angeles_Jujuy.mov'), {en:'Paseo de los Ángeles',es:'Paseo de los Ángeles'}, 'warm', 'aerial', 2024),
-      M('juj-v6', 'video', VIDEO_DRONE('Pumamarca_Jujuy.mov'), {en:'Purmamarca',es:'Purmamarca'}, 'warm', 'mountain', 2024),
-      M('juj-v7', 'video', VIDEO_DRONE('Ruta-de-la-Cornisa_Salta-Jujuy.mov'), {en:'Cornisa Route',es:'Ruta de la Cornisa'}, 'green', 'mountain', 2024),
-      M('juj-v8', 'pov', VIDEO_RB('Jujuy_Montaña.mp4'), {en:'Jujuy Mountain',es:'Montaña, Jujuy'}, 'warm', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
-      M('juj-v9', 'pov', VIDEO_RB('Jujuy_Tilcara-Compra-Tortilla.MOV'), {en:'Tortilla Stand, Tilcara',es:'Tortilla en Tilcara'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('juj-1', 'photo', FOTO_RB('Salinas_Grandes-Jujuy.jpg'), {en:'Salinas Grandes',es:'Salinas Grandes',it:'Salinas Grandes'}, 'warm', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
+      M('juj-v1', 'video', VIDEO_DRONE('Cerro_7colores.mov'), {en:'Cerro de los 7 Colores',es:'Cerro de los 7 Colores',it:'Cerro de los 7 Colores'}, 'warm', 'mountain', 2024),
+      M('juj-v2', 'video', VIDEO_DRONE('Cerro7Colores_Jujuy.mov'), {en:'7 Colores',es:'7 Colores',it:'7 Colores'}, 'warm', 'mountain', 2024),
+      M('juj-v3', 'video', VIDEO_DRONE('El_Hornacal.MP4'), {en:'El Hornocal',es:'El Hornocal',it:'El Hornocal'}, 'warm', 'aerial', 2024),
+      M('juj-v4', 'video', VIDEO_DRONE('El_Hornacal-9:16.mov'), {en:'El Hornocal Vertical',es:'El Hornocal vertical',it:'El Hornocal verticale'}, 'warm', 'aerial', 2024),
+      M('juj-v5', 'video', VIDEO_DRONE('Paseo-de-los-Angeles_Jujuy.mov'), {en:'Paseo de los Ángeles',es:'Paseo de los Ángeles',it:'Paseo de los Ángeles'}, 'warm', 'aerial', 2024),
+      M('juj-v6', 'video', VIDEO_DRONE('Pumamarca_Jujuy.mov'), {en:'Purmamarca',es:'Purmamarca',it:'Purmamarca'}, 'warm', 'mountain', 2024),
+      M('juj-v7', 'video', VIDEO_DRONE('Ruta-de-la-Cornisa_Salta-Jujuy.mov'), {en:'Cornisa Route',es:'Ruta de la Cornisa',it:'Ruta de la Cornisa'}, 'green', 'mountain', 2024),
+      M('juj-v8', 'pov', VIDEO_RB('Jujuy_Montaña.mp4'), {en:'Jujuy Mountain',es:'Montaña, Jujuy',it:'Montagna, Jujuy'}, 'warm', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
+      M('juj-v9', 'pov', VIDEO_RB('Jujuy_Tilcara-Compra-Tortilla.MOV'), {en:'Tortilla Stand, Tilcara',es:'Tortilla en Tilcara',it:'Tortilla a Tilcara'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   {
@@ -211,15 +217,16 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Sierras, lakes, the open countryside — Carlos Paz, James Craik, Los Gigantes.',
       es: 'Sierras, lagos, el campo abierto — Carlos Paz, James Craik, Los Gigantes.',
+      it: 'Sierras, laghi, la campagna aperta — Carlos Paz, James Craik, Los Gigantes.',
     },
     media: [
-      M('cor-1', 'photo', FOTO_DRONE('Carlos-Paz_Cba.JPG'), {en:'Carlos Paz',es:'Carlos Paz'}, 'warm', 'aerial', 2024),
-      M('cor-2', 'photo', FOTO_RB('James_Craik-Cordoba.jpeg'), {en:'James Craik, Córdoba',es:'James Craik, Córdoba'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('cor-v1', 'video', VIDEO_DRONE('Carlos_Paz-Cordoba.MP4'), {en:'Carlos Paz',es:'Carlos Paz'}, 'warm', 'aerial', 2024),
-      M('cor-v2', 'video', VIDEO_DRONE('Laguna_"La-Chanchera"_Cordoba.mov'), {en:'La Chanchera Lagoon',es:'Laguna La Chanchera'}, 'cold', 'aerial', 2024),
-      M('cor-v3', 'video', VIDEO_DRONE('James-Craik_Tren-9:16.mov'), {en:'Train, James Craik',es:'Tren, James Craik'}, 'warm', 'aerial', 2024),
-      M('cor-v4', 'pov', VIDEO_RB('Campo_James-Craik_Cordoba.mov'), {en:'James Craik Fields',es:'Campo James Craik'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('cor-v5', 'pov', VIDEO_RB('Sierras-Cba_Los-Gigantes.mov'), {en:'Los Gigantes',es:'Los Gigantes'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
+      M('cor-1', 'photo', FOTO_DRONE('Carlos-Paz_Cba.JPG'), {en:'Carlos Paz',es:'Carlos Paz',it:'Carlos Paz'}, 'warm', 'aerial', 2024),
+      M('cor-2', 'photo', FOTO_RB('James_Craik-Cordoba.jpeg'), {en:'James Craik, Córdoba',es:'James Craik, Córdoba',it:'James Craik, Córdoba'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('cor-v1', 'video', VIDEO_DRONE('Carlos_Paz-Cordoba.MP4'), {en:'Carlos Paz',es:'Carlos Paz',it:'Carlos Paz'}, 'warm', 'aerial', 2024),
+      M('cor-v2', 'video', VIDEO_DRONE('Laguna_"La-Chanchera"_Cordoba.mov'), {en:'La Chanchera Lagoon',es:'Laguna La Chanchera',it:'Laguna La Chanchera'}, 'cold', 'aerial', 2024),
+      M('cor-v3', 'video', VIDEO_DRONE('James-Craik_Tren-9:16.mov'), {en:'Train, James Craik',es:'Tren, James Craik',it:'Treno, James Craik'}, 'warm', 'aerial', 2024),
+      M('cor-v4', 'pov', VIDEO_RB('Campo_James-Craik_Cordoba.mov'), {en:'James Craik Fields',es:'Campo James Craik',it:'Campagna James Craik'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('cor-v5', 'pov', VIDEO_RB('Sierras-Cba_Los-Gigantes.mov'), {en:'Los Gigantes',es:'Los Gigantes',it:'Los Gigantes'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   {
@@ -234,9 +241,10 @@ const LOCATIONS_V2 = [
     description: {
       en: 'The Andes from above — vertical drop, blue shadows on white, the spine of South America.',
       es: 'Los Andes desde arriba — caída vertical, sombras azules sobre el blanco, la columna de Sudamérica.',
+      it: 'Le Ande dall\'alto — caduta verticale, ombre blu sul bianco, la spina dorsale del Sudamerica.',
     },
     media: [
-      M('men-1', 'photo', FOTO_RB('Los_Andes-Avion.jpeg'), {en:'Andes from Above',es:'Andes desde el aire'}, 'cold', 'aerial', 2024, {camera:'Ray-Ban Meta', loc:'Cordillera de los Andes'}),
+      M('men-1', 'photo', FOTO_RB('Los_Andes-Avion.jpeg'), {en:'Andes from Above',es:'Andes desde el aire',it:'Ande dall\'alto'}, 'cold', 'aerial', 2024, {camera:'Ray-Ban Meta', loc:'Cordillera de los Andes'}),
     ]
   },
   {
@@ -251,9 +259,10 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Home. The Atlantic, the open horizon — where every flight starts.',
       es: 'Casa. El Atlántico, el horizonte abierto — donde empieza cada vuelo.',
+      it: 'Casa. L\'Atlantico, l\'orizzonte aperto — dove inizia ogni volo.',
     },
     media: [
-      M('mdp-v1', 'video', VIDEO_DRONE('Mar_Del_Plata.mov'), {en:'Mar del Plata',es:'Mar del Plata'}, 'cold', 'aerial', 2024),
+      M('mdp-v1', 'video', VIDEO_DRONE('Mar_Del_Plata.mov'), {en:'Mar del Plata',es:'Mar del Plata',it:'Mar del Plata'}, 'cold', 'aerial', 2024),
     ]
   },
   {
@@ -268,9 +277,10 @@ const LOCATIONS_V2 = [
     description: {
       en: 'High Andes, Mendoza — vertical drop, blue shadows on white.',
       es: 'Alta cordillera, Mendoza — caída vertical, sombras azules sobre el blanco.',
+      it: 'Alta cordigliera, Mendoza — caduta verticale, ombre blu sul bianco.',
     },
     media: [
-      M('lln-v1', 'video', VIDEO_DRONE('Las_Leñas-9:16.mov'), {en:'Las Leñas Vertical',es:'Las Leñas vertical'}, 'cold', 'mountain', 2024),
+      M('lln-v1', 'video', VIDEO_DRONE('Las_Leñas-9:16.mov'), {en:'Las Leñas Vertical',es:'Las Leñas vertical',it:'Las Leñas verticale'}, 'cold', 'mountain', 2024),
     ]
   },
   // ===== MARRUECOS =====
@@ -286,19 +296,20 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Aghroud, Taghazout, Marrakech — Atlantic surf coast, dyers in the medina, motorcycle south.',
       es: 'Aghroud, Taghazout, Marrakech — costa de surf atlántica, tintoreros en la medina, moto al sur.',
+      it: 'Aghroud, Taghazout, Marrakech — costa atlantica del surf, tintori nella medina, moto verso sud.',
     },
     media: [
-      M('mar-1', 'photo', FOTO_DRONE('Aghroud_Marruecos.JPG'), {en:'Aghroud Coast',es:'Costa de Aghroud'}, 'warm', 'aerial', 2023),
-      M('mar-3', 'photo', FOTO_RB('Marruecos-Tintes_Marrakech.jpg'), {en:'Dyers, Marrakech',es:'Tintoreros, Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
-      M('mar-4', 'photo', FOTO_RB('Taghazout-Marruecos.jpg'), {en:'Taghazout',es:'Taghazout'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
-      M('mar-v1', 'video', VIDEO_DRONE('Aghroud_Marruecos.MP4'), {en:'Aghroud',es:'Aghroud'}, 'warm', 'aerial', 2023),
-      M('mar-v2', 'video', VIDEO_DRONE('Aghroud-panoramica.MP4'), {en:'Aghroud Panoramic',es:'Aghroud panorámica'}, 'warm', 'aerial', 2023),
-      M('mar-v3', 'video', VIDEO_DRONE('Taghazout_Marruecos.MP4'), {en:'Taghazout Surf',es:'Taghazout surf'}, 'oceanic', 'aerial', 2023),
-      M('mar-v4', 'pov', VIDEO_RB('Agadir_Marruecos-Moto.MOV'), {en:'Agadir on Motorcycle',es:'Agadir en moto'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
-      M('mar-v5', 'pov', VIDEO_RB('Marrakech_Centro-Callecitas.mov'), {en:'Marrakech Alleys',es:'Callecitas Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
-      M('mar-v6', 'pov', VIDEO_RB('Marrakech_Centro.MOV'), {en:'Marrakech Center',es:'Centro Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
-      M('mar-v7', 'pov', VIDEO_RB('Marrakech-Paseo-Centro.mov'), {en:'Marrakech Walk',es:'Paseo Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
-      M('mar-v8', 'pov', VIDEO_RB('Viaje-Moto_Sur_Marruecos.MOV'), {en:'South Morocco Ride',es:'Sur de Marruecos en moto'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-1', 'photo', FOTO_DRONE('Aghroud_Marruecos.JPG'), {en:'Aghroud Coast',es:'Costa de Aghroud',it:'Costa di Aghroud'}, 'warm', 'aerial', 2023),
+      M('mar-3', 'photo', FOTO_RB('Marruecos-Tintes_Marrakech.jpg'), {en:'Dyers, Marrakech',es:'Tintoreros, Marrakech',it:'Tintori, Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-4', 'photo', FOTO_RB('Taghazout-Marruecos.jpg'), {en:'Taghazout',es:'Taghazout',it:'Taghazout'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-v1', 'video', VIDEO_DRONE('Aghroud_Marruecos.MP4'), {en:'Aghroud',es:'Aghroud',it:'Aghroud'}, 'warm', 'aerial', 2023),
+      M('mar-v2', 'video', VIDEO_DRONE('Aghroud-panoramica.MP4'), {en:'Aghroud Panoramic',es:'Aghroud panorámica',it:'Aghroud panoramica'}, 'warm', 'aerial', 2023),
+      M('mar-v3', 'video', VIDEO_DRONE('Taghazout_Marruecos.MP4'), {en:'Taghazout Surf',es:'Taghazout surf',it:'Taghazout surf'}, 'oceanic', 'aerial', 2023),
+      M('mar-v4', 'pov', VIDEO_RB('Agadir_Marruecos-Moto.MOV'), {en:'Agadir on Motorcycle',es:'Agadir en moto',it:'Agadir in moto'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-v5', 'pov', VIDEO_RB('Marrakech_Centro-Callecitas.mov'), {en:'Marrakech Alleys',es:'Callecitas Marrakech',it:'Vicoli di Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-v6', 'pov', VIDEO_RB('Marrakech_Centro.MOV'), {en:'Marrakech Center',es:'Centro Marrakech',it:'Centro Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-v7', 'pov', VIDEO_RB('Marrakech-Paseo-Centro.mov'), {en:'Marrakech Walk',es:'Paseo Marrakech',it:'Passeggiata Marrakech'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
+      M('mar-v8', 'pov', VIDEO_RB('Viaje-Moto_Sur_Marruecos.MOV'), {en:'South Morocco Ride',es:'Sur de Marruecos en moto',it:'Sud del Marocco in moto'}, 'warm', 'street', 2023, {camera:'Ray-Ban Meta'}),
     ]
   },
   // ===== PAÍSES BAJOS =====
@@ -314,20 +325,21 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Canals, bicycles, Zaandam, the Rijksmuseum — Dutch light and quiet repetition.',
       es: 'Canales, bicicletas, Zaandam, el Rijksmuseum — luz holandesa y repetición tranquila.',
+      it: 'Canali, biciclette, Zaandam, il Rijksmuseum — luce olandese e quieta ripetizione.',
     },
     media: [
-      M('ams-v1', 'video', VIDEO_DRONE('Amsterdam.mov'), {en:'Amsterdam',es:'Ámsterdam'}, 'cold', 'aerial', 2024),
-      M('ams-v2', 'video', VIDEO_DRONE('Amsterdam_Parque-Zaandam.MP4'), {en:'Zaandam Park',es:'Parque Zaandam'}, 'green', 'aerial', 2024),
-      M('ams-v3', 'video', VIDEO_DRONE('Zaanse Schans_Amsterdam.MP4'), {en:'Zaanse Schans',es:'Zaanse Schans'}, 'cold', 'aerial', 2024),
-      M('ams-v4', 'pov', VIDEO_RB('Amsterdam_Centro-Bici.mov'), {en:'Bike Through Center',es:'Centro en bici'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v5', 'pov', VIDEO_RB('Amsterdam-Centro.mov'), {en:'Center Walk',es:'Paseo centro'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v6', 'pov', VIDEO_RB('Albert-Cuyp-Market_Amsterdam.mov'), {en:'Albert Cuyp Market',es:'Mercado Albert Cuyp'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v7', 'pov', VIDEO_RB('Palacio-Real_Amsterdam.mov'), {en:'Royal Palace',es:'Palacio Real'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v8', 'pov', VIDEO_RB('Paseo-Amsterdam-Centro.mov'), {en:'Center Walk',es:'Paseo centro'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v9', 'pov', VIDEO_RB('Rijksmuseum_Amsterdam.mov'), {en:'Rijksmuseum',es:'Rijksmuseum'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v10', 'pov', VIDEO_RB('Torre-de-la-Moneda_Amsterdam-Paseo.mov'), {en:'Mint Tower',es:'Torre de la Moneda'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v11', 'pov', VIDEO_RB('Zaandam-Centro.mov'), {en:'Zaandam',es:'Zaandam'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('ams-v12', 'pov', VIDEO_RB('Zaandam-Paseo.mov'), {en:'Zaandam Walk',es:'Paseo Zaandam'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v1', 'video', VIDEO_DRONE('Amsterdam.mov'), {en:'Amsterdam',es:'Ámsterdam',it:'Amsterdam'}, 'cold', 'aerial', 2024),
+      M('ams-v2', 'video', VIDEO_DRONE('Amsterdam_Parque-Zaandam.MP4'), {en:'Zaandam Park',es:'Parque Zaandam',it:'Parco Zaandam'}, 'green', 'aerial', 2024),
+      M('ams-v3', 'video', VIDEO_DRONE('Zaanse Schans_Amsterdam.MP4'), {en:'Zaanse Schans',es:'Zaanse Schans',it:'Zaanse Schans'}, 'cold', 'aerial', 2024),
+      M('ams-v4', 'pov', VIDEO_RB('Amsterdam_Centro-Bici.mov'), {en:'Bike Through Center',es:'Centro en bici',it:'Centro in bici'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v5', 'pov', VIDEO_RB('Amsterdam-Centro.mov'), {en:'Center Walk',es:'Paseo centro',it:'Passeggiata centro'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v6', 'pov', VIDEO_RB('Albert-Cuyp-Market_Amsterdam.mov'), {en:'Albert Cuyp Market',es:'Mercado Albert Cuyp',it:'Mercato Albert Cuyp'}, 'warm', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v7', 'pov', VIDEO_RB('Palacio-Real_Amsterdam.mov'), {en:'Royal Palace',es:'Palacio Real',it:'Palazzo Reale'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v8', 'pov', VIDEO_RB('Paseo-Amsterdam-Centro.mov'), {en:'Center Walk',es:'Paseo centro',it:'Passeggiata centro'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v9', 'pov', VIDEO_RB('Rijksmuseum_Amsterdam.mov'), {en:'Rijksmuseum',es:'Rijksmuseum',it:'Rijksmuseum'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v10', 'pov', VIDEO_RB('Torre-de-la-Moneda_Amsterdam-Paseo.mov'), {en:'Mint Tower',es:'Torre de la Moneda',it:'Torre della Moneta'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v11', 'pov', VIDEO_RB('Zaandam-Centro.mov'), {en:'Zaandam',es:'Zaandam',it:'Zaandam'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('ams-v12', 'pov', VIDEO_RB('Zaandam-Paseo.mov'), {en:'Zaandam Walk',es:'Paseo Zaandam',it:'Passeggiata Zaandam'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   // ===== ALEMANIA =====
@@ -343,14 +355,15 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Marienplatz at dusk, bikes through the old town, Bavarian sunsets.',
       es: 'Marienplatz al ocaso, bicis por el casco histórico, atardeceres bávaros.',
+      it: 'Marienplatz al tramonto, bici nel centro storico, tramonti bavaresi.',
     },
     media: [
-      M('mun-1', 'photo', FOTO_RB('Marienplatz-Munich.jpg'), {en:'Marienplatz',es:'Marienplatz'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('mun-v1', 'video', VIDEO_DRONE('Munich_Atardecer.MP4'), {en:'Munich Sunset',es:'Atardecer Múnich'}, 'golden', 'aerial', 2024),
-      M('mun-v2', 'pov', VIDEO_RB('Marienplatz-Munich.MOV'), {en:'Marienplatz POV',es:'Marienplatz POV'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('mun-v3', 'pov', VIDEO_RB('Munich_Bici-Paseo.MOV'), {en:'Munich Bike Ride',es:'Múnich en bici'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('mun-v4', 'pov', VIDEO_RB('Munich-Giro-Bici.MOV'), {en:'Munich by Bike',es:'Vuelta en bici'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
-      M('mun-v5', 'pov', VIDEO_RB('Paseo_Munich.mov'), {en:'Munich Walk',es:'Paseo Múnich'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('mun-1', 'photo', FOTO_RB('Marienplatz-Munich.jpg'), {en:'Marienplatz',es:'Marienplatz',it:'Marienplatz'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('mun-v1', 'video', VIDEO_DRONE('Munich_Atardecer.MP4'), {en:'Munich Sunset',es:'Atardecer Múnich',it:'Tramonto Monaco'}, 'golden', 'aerial', 2024),
+      M('mun-v2', 'pov', VIDEO_RB('Marienplatz-Munich.MOV'), {en:'Marienplatz POV',es:'Marienplatz POV',it:'Marienplatz POV'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('mun-v3', 'pov', VIDEO_RB('Munich_Bici-Paseo.MOV'), {en:'Munich Bike Ride',es:'Múnich en bici',it:'Monaco in bici'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('mun-v4', 'pov', VIDEO_RB('Munich-Giro-Bici.MOV'), {en:'Munich by Bike',es:'Vuelta en bici',it:'Giro in bici'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
+      M('mun-v5', 'pov', VIDEO_RB('Paseo_Munich.mov'), {en:'Munich Walk',es:'Paseo Múnich',it:'Passeggiata Monaco'}, 'cold', 'street', 2024, {camera:'Ray-Ban Meta'}),
     ]
   },
   // ===== TAILANDIA =====
@@ -366,19 +379,20 @@ const LOCATIONS_V2 = [
     description: {
       en: 'Bangkok, Chiang Mai, Phuket, Ko Yao Noi — temples, rice fields, motorcycles, elephants.',
       es: 'Bangkok, Chiang Mai, Phuket, Ko Yao Noi — templos, arrozales, motos, elefantes.',
+      it: 'Bangkok, Chiang Mai, Phuket, Ko Yao Noi — templi, risaie, moto, elefanti.',
     },
     media: [
-      M('tha-1', 'photo', FOTO_RB('Bangkok-Thai.jpeg'), {en:'Bangkok',es:'Bangkok'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-2', 'photo', FOTO_RB('Templo_Wat-Phra-Kaew-Thai.jpeg'), {en:'Wat Phra Kaew',es:'Wat Phra Kaew'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v1', 'pov', VIDEO_RB('7-Eleven_Thailandia-Chiang_Mai.mov'), {en:'7-Eleven, Chiang Mai',es:'7-Eleven Chiang Mai'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v2', 'pov', VIDEO_RB('Bangkok_Viaje-Moto.mov'), {en:'Bangkok by Motorcycle',es:'Bangkok en moto'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v3', 'pov', VIDEO_RB('Elefantes-Thailandia.mov'), {en:'Elephants',es:'Elefantes'}, 'green', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v4', 'pov', VIDEO_RB('Infierno-Cielo_Templo-Blanco-Thai.mov'), {en:'White Temple, Inner View',es:'Templo Blanco, vista interior'}, 'cold', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v5', 'pov', VIDEO_RB('Ko-Yao-Noi_Campos-Arroz-Thai.mp4'), {en:'Rice Fields, Ko Yao Noi',es:'Arrozales, Ko Yao Noi'}, 'green', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v6', 'pov', VIDEO_RB('Panwa-Beach_Phuket_Thai.mov'), {en:'Panwa Beach, Phuket',es:'Playa Panwa, Phuket'}, 'oceanic', 'water', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v7', 'pov', VIDEO_RB('Templo_Buda-Acostado_Thai.mov'), {en:'Reclining Buddha',es:'Buda Reclinado'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v8', 'pov', VIDEO_RB('Templo_Wat-Pho_Thai.mov'), {en:'Wat Pho',es:'Wat Pho'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
-      M('tha-v9', 'pov', VIDEO_RB('Templo-Blanco_Thailandia.mov'), {en:'White Temple',es:'Templo Blanco'}, 'cold', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-1', 'photo', FOTO_RB('Bangkok-Thai.jpeg'), {en:'Bangkok',es:'Bangkok',it:'Bangkok'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-2', 'photo', FOTO_RB('Templo_Wat-Phra-Kaew-Thai.jpeg'), {en:'Wat Phra Kaew',es:'Wat Phra Kaew',it:'Wat Phra Kaew'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v1', 'pov', VIDEO_RB('7-Eleven_Thailandia-Chiang_Mai.mov'), {en:'7-Eleven, Chiang Mai',es:'7-Eleven Chiang Mai',it:'7-Eleven, Chiang Mai'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v2', 'pov', VIDEO_RB('Bangkok_Viaje-Moto.mov'), {en:'Bangkok by Motorcycle',es:'Bangkok en moto',it:'Bangkok in moto'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v3', 'pov', VIDEO_RB('Elefantes-Thailandia.mov'), {en:'Elephants',es:'Elefantes',it:'Elefanti'}, 'green', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v4', 'pov', VIDEO_RB('Infierno-Cielo_Templo-Blanco-Thai.mov'), {en:'White Temple, Inner View',es:'Templo Blanco, vista interior',it:'Tempio Bianco, vista interna'}, 'cold', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v5', 'pov', VIDEO_RB('Ko-Yao-Noi_Campos-Arroz-Thai.mp4'), {en:'Rice Fields, Ko Yao Noi',es:'Arrozales, Ko Yao Noi',it:'Risaie, Ko Yao Noi'}, 'green', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v6', 'pov', VIDEO_RB('Panwa-Beach_Phuket_Thai.mov'), {en:'Panwa Beach, Phuket',es:'Playa Panwa, Phuket',it:'Spiaggia Panwa, Phuket'}, 'oceanic', 'water', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v7', 'pov', VIDEO_RB('Templo_Buda-Acostado_Thai.mov'), {en:'Reclining Buddha',es:'Buda Reclinado',it:'Buddha Sdraiato'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v8', 'pov', VIDEO_RB('Templo_Wat-Pho_Thai.mov'), {en:'Wat Pho',es:'Wat Pho',it:'Wat Pho'}, 'warm', 'street', 2025, {camera:'Ray-Ban Meta'}),
+      M('tha-v9', 'pov', VIDEO_RB('Templo-Blanco_Thailandia.mov'), {en:'White Temple',es:'Templo Blanco',it:'Tempio Bianco'}, 'cold', 'street', 2025, {camera:'Ray-Ban Meta'}),
     ]
   },
 ];
@@ -555,36 +569,36 @@ const STATS_V2 = (() => {
 // FAQ
 const FAQ_V2 = [
   {
-    q: { en: 'What is your typical turnaround?', es: '¿Cuál es el tiempo de entrega típico?' },
-    a: { en: 'Drafts within 5 working days, finals in 10–14 depending on scope.', es: 'Avances en 5 días hábiles, finales entre 10 y 14 según el alcance.' },
+    q: { en: 'What is your typical turnaround?', es: '¿Cuál es el tiempo de entrega típico?', it: 'Qual è il tempo di consegna tipico?' },
+    a: { en: 'Drafts within 5 working days, finals in 10–14 depending on scope.', es: 'Avances en 5 días hábiles, finales entre 10 y 14 según el alcance.', it: 'Bozze entro 5 giorni lavorativi, finali in 10–14 a seconda della portata.' },
   },
   {
-    q: { en: 'What do I receive at delivery?', es: '¿Qué recibo en la entrega?' },
-    a: { en: 'Color-graded master, 1080p web cuts, vertical 9:16, and originals on request.', es: 'Master con color, cortes 1080p para web, verticales 9:16 y originales bajo pedido.' },
+    q: { en: 'What do I receive at delivery?', es: '¿Qué recibo en la entrega?', it: 'Cosa ricevo alla consegna?' },
+    a: { en: 'Color-graded master, 1080p web cuts, vertical 9:16, and originals on request.', es: 'Master con color, cortes 1080p para web, verticales 9:16 y originales bajo pedido.', it: 'Master con color, tagli 1080p per il web, verticali 9:16 e originali su richiesta.' },
   },
   {
-    q: { en: 'Do you travel for shoots?', es: '¿Viajás para los rodajes?' },
-    a: { en: 'Yes — based in Mar del Plata, available worldwide. Travel quoted separately.', es: 'Sí — base en Mar del Plata, disponible mundialmente. Viajes se cotizan aparte.' },
+    q: { en: 'Do you travel for shoots?', es: '¿Viajás para los rodajes?', it: 'Viaggi per le riprese?' },
+    a: { en: 'Yes — based in Mar del Plata, available worldwide. Travel quoted separately.', es: 'Sí — base en Mar del Plata, disponible mundialmente. Viajes se cotizan aparte.', it: 'Sì — base a Mar del Plata, disponibile ovunque. Viaggi quotati a parte.' },
   },
   {
-    q: { en: 'How does licensing work?', es: '¿Cómo funciona la licencia?' },
-    a: { en: 'Standard usage included. Broadcast, paid media, and exclusivity quoted on top.', es: 'Uso estándar incluido. Broadcast, medios pagos y exclusividad se cotizan aparte.' },
+    q: { en: 'How does licensing work?', es: '¿Cómo funciona la licencia?', it: 'Come funziona la licenza?' },
+    a: { en: 'Standard usage included. Broadcast, paid media, and exclusivity quoted on top.', es: 'Uso estándar incluido. Broadcast, medios pagos y exclusividad se cotizan aparte.', it: 'Uso standard incluso. Broadcast, media a pagamento ed esclusività quotati a parte.' },
   },
   {
-    q: { en: 'Are you certified to fly drones?', es: '¿Estás certificado para volar drones?' },
-    a: { en: 'Yes. ANAC-certified in Argentina. EU A1/A3 compliant. Insured equipment.', es: 'Sí. Certificación ANAC Argentina. Cumple EU A1/A3. Equipo asegurado.' },
+    q: { en: 'Are you certified to fly drones?', es: '¿Estás certificado para volar drones?', it: 'Sei certificato per volare con i droni?' },
+    a: { en: 'Yes. ANAC-certified in Argentina. EU A1/A3 compliant. Insured equipment.', es: 'Sí. Certificación ANAC Argentina. Cumple EU A1/A3. Equipo asegurado.', it: 'Sì. Certificato ANAC Argentina. Conforme EU A1/A3. Attrezzatura assicurata.' },
   },
   {
-    q: { en: 'What gear do you fly?', es: '¿Con qué equipo volás?' },
-    a: { en: 'DJI Mini 4 Pro for travel, Air 3 for higher payloads. Ray-Ban Meta for POV.', es: 'DJI Mini 4 Pro para viaje, Air 3 para carga útil. Ray-Ban Meta para POV.' },
+    q: { en: 'What gear do you fly?', es: '¿Con qué equipo volás?', it: 'Che attrezzatura usi?' },
+    a: { en: 'DJI Mini 4 Pro for travel, Air 3 for higher payloads. Ray-Ban Meta for POV.', es: 'DJI Mini 4 Pro para viaje, Air 3 para carga útil. Ray-Ban Meta para POV.', it: 'DJI Mini 4 Pro per i viaggi, Air 3 per carichi maggiori. Ray-Ban Meta per il POV.' },
   },
   {
-    q: { en: 'Can you work to a creative brief?', es: '¿Trabajás con un brief creativo?' },
-    a: { en: 'Yes — bring storyboards, shot lists, mood references. I deliver to brief or co-create from scratch.', es: 'Sí — trae storyboards, shot lists, referencias. Entrego según brief o co-creo desde cero.' },
+    q: { en: 'Can you work to a creative brief?', es: '¿Trabajás con un brief creativo?', it: 'Lavori su brief creativo?' },
+    a: { en: 'Yes — bring storyboards, shot lists, mood references. I deliver to brief or co-create from scratch.', es: 'Sí — trae storyboards, shot lists, referencias. Entrego según brief o co-creo desde cero.', it: 'Sì — porta storyboard, shot list, riferimenti. Consegno su brief o co-creo da zero.' },
   },
   {
-    q: { en: 'Deposit and payment terms?', es: '¿Anticipo y términos de pago?' },
-    a: { en: '50% to lock dates, 50% on delivery. USD or EUR via wire or Wise.', es: '50% para fijar fechas, 50% al entregar. USD o EUR por transferencia o Wise.' },
+    q: { en: 'Deposit and payment terms?', es: '¿Anticipo y términos de pago?', it: 'Anticipo e termini di pagamento?' },
+    a: { en: '50% to lock dates, 50% on delivery. USD or EUR via wire or Wise.', es: '50% para fijar fechas, 50% al entregar. USD o EUR por transferencia o Wise.', it: '50% per fissare le date, 50% alla consegna. USD o EUR tramite bonifico o Wise.' },
   },
 ];
 
@@ -592,23 +606,23 @@ const FAQ_V2 = [
 const PROCESS_V2 = [
   {
     n: '01',
-    title: { en: 'Brief', es: 'Brief' },
-    body: { en: 'A 30-min call. Goals, locations, audiences. We define the success picture together.', es: 'Una llamada de 30 min. Objetivos, ubicaciones, audiencias. Definimos juntos cómo se ve el éxito.' },
+    title: { en: 'Brief', es: 'Brief', it: 'Brief' },
+    body: { en: 'A 30-min call. Goals, locations, audiences. We define the success picture together.', es: 'Una llamada de 30 min. Objetivos, ubicaciones, audiencias. Definimos juntos cómo se ve el éxito.', it: 'Una chiamata di 30 min. Obiettivi, location, audience. Definiamo insieme il quadro del successo.' },
   },
   {
     n: '02',
-    title: { en: 'Plan', es: 'Plan' },
-    body: { en: 'Shot list, weather windows, permits, gear. Every flight scouted before takeoff.', es: 'Shot list, ventanas de clima, permisos, equipo. Cada vuelo se scoutea antes del despegue.' },
+    title: { en: 'Plan', es: 'Plan', it: 'Piano' },
+    body: { en: 'Shot list, weather windows, permits, gear. Every flight scouted before takeoff.', es: 'Shot list, ventanas de clima, permisos, equipo. Cada vuelo se scoutea antes del despegue.', it: 'Shot list, finestre meteo, permessi, attrezzatura. Ogni volo viene esplorato prima del decollo.' },
   },
   {
     n: '03',
-    title: { en: 'Capture', es: 'Captura' },
-    body: { en: 'On location with redundant batteries, ND filters, Ray-Ban Meta for the in-between moments.', es: 'En ubicación con baterías redundantes, filtros ND, Ray-Ban Meta para los momentos intermedios.' },
+    title: { en: 'Capture', es: 'Captura', it: 'Cattura' },
+    body: { en: 'On location with redundant batteries, ND filters, Ray-Ban Meta for the in-between moments.', es: 'En ubicación con baterías redundantes, filtros ND, Ray-Ban Meta para los momentos intermedios.', it: 'In location con batterie ridondanti, filtri ND, Ray-Ban Meta per i momenti intermedi.' },
   },
   {
     n: '04',
-    title: { en: 'Deliver', es: 'Entrega' },
-    body: { en: 'Color-graded edit, vertical cuts, masters and source files. Two revision rounds included.', es: 'Edit con color, cortes verticales, masters y fuentes. Dos rondas de revisión incluidas.' },
+    title: { en: 'Deliver', es: 'Entrega', it: 'Consegna' },
+    body: { en: 'Color-graded edit, vertical cuts, masters and source files. Two revision rounds included.', es: 'Edit con color, cortes verticales, masters y fuentes. Dos rondas de revisión incluidas.', it: 'Edit con color, tagli verticali, master e file sorgente. Due round di revisione inclusi.' },
   },
 ];
 
