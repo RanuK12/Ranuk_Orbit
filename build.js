@@ -1,19 +1,53 @@
 #!/usr/bin/env node
 // build.js — Ranuk Orbit bundle builder
 //
-// Bundles ranuk-app.jsx + all its imports into a single minified IIFE.
-// The JSX files register their exports on `window` directly via
-// `Object.assign(window, …)`, so we do NOT use --global-name (that would
-// shadow `window` itself on the top level).
+// Bundles ranuk-app.jsx + all its imports into a single minified IIFE,
+// then content-hashes every critical JS/CSS asset and rewrites the
+// <script>/<link> tags in index.html to append ?v=<hash>. Finally
+// re-runs build-locales.py so /en/, /es/ and /it/ inherit the same
+// versioned URLs.
 //
-// Run:   node build.js
-// Output: ranuk-app.min.js
+// Why: browsers cache /ranuk-app.min.js, /ranuk-data.js, etc. for an
+// hour (see _headers). Without cache-busting, users stay on the stale
+// bundle until their cache expires. Content-hashed query strings force
+// a fresh fetch whenever the file's content changes, while leaving the
+// cache intact across deploys that didn't touch a particular file.
+//
+// Run:    node build.js
+// Output: ranuk-app.min.js (minified bundle)
+//         index.html, en/index.html, es/index.html, it/index.html
+//           (with ?v=<hash> suffixed on every versioned asset)
 const { execSync } = require('child_process');
-const { resolve } = require('path');
+const { readFileSync, writeFileSync, existsSync } = require('fs');
+const { createHash } = require('crypto');
+const { resolve, join } = require('path');
+const ROOT = resolve(__dirname);
 
-console.log('Building ranuk-app.min.js...');
+// Assets that should be cache-busted. Anything the user might see break
+// when cached: the JSX bundle, the data layer, the asset manifest, and
+// the marketing CSS. Fonts/images are hashed in their filenames already
+// via the slug helper, so they don't need versioning.
+const VERSIONED_ASSETS = [
+  'ranuk-app.min.js',
+  'ranuk-data.js',
+  'ranuk-manifest.js',
+  'MARKETING_CSS.css',
+];
 
-try {
+function step(label, fn) {
+  process.stdout.write(`→ ${label}…`);
+  try {
+    const result = fn();
+    process.stdout.write(' ok\n');
+    return result;
+  } catch (e) {
+    process.stdout.write(' FAILED\n');
+    throw e;
+  }
+}
+
+// 1) Bundle the JSX
+step('bundle ranuk-app.min.js', () => {
   execSync(
     [
       'npx esbuild ranuk-app.jsx',
@@ -26,10 +60,63 @@ try {
       '--jsx-factory=React.createElement',
       '--jsx-fragment=React.Fragment',
     ].join(' '),
-    { stdio: 'inherit', cwd: resolve(__dirname) }
+    { stdio: 'inherit', cwd: ROOT }
   );
-  console.log('✓ Build complete');
-} catch (e) {
-  console.error('Build failed:', e.message);
-  process.exit(1);
+});
+
+// 2) Compute short content hashes for every versioned asset
+const hashes = step('hash versioned assets', () => {
+  const out = {};
+  for (const name of VERSIONED_ASSETS) {
+    const p = join(ROOT, name);
+    if (!existsSync(p)) {
+      throw new Error(`missing asset: ${name}`);
+    }
+    const buf = readFileSync(p);
+    // 8 hex chars is plenty — collision odds are astronomically low for
+    // a 4-asset set and it keeps the URL readable.
+    out[name] = createHash('sha256').update(buf).digest('hex').slice(0, 8);
+  }
+  return out;
+});
+
+// 3) Rewrite the canonical index.html so every `<script src="/<asset>">`
+// and `<link href="/<asset>">` carries the current content hash. If the
+// tag already has ?v=<something> we replace it; otherwise we append.
+step('stamp index.html', () => {
+  const indexPath = join(ROOT, 'index.html');
+  let html = readFileSync(indexPath, 'utf-8');
+
+  for (const [name, hash] of Object.entries(hashes)) {
+    // Match  src="/<name>"  or  src="/<name>?v=XXXX"  (and href variant).
+    // Escapes keep the regex stable across OSes.
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(
+      `((?:src|href)=["'])\\/${escaped}(?:\\?v=[^"']*)?(["'])`,
+      'g',
+    );
+    let matchCount = 0;
+    html = html.replace(pattern, (_m, a, b) => {
+      matchCount++;
+      return `${a}/${name}?v=${hash}${b}`;
+    });
+    if (matchCount === 0) {
+      throw new Error(
+        `could not find reference to /${name} in index.html — is the tag missing or oddly formatted?`,
+      );
+    }
+  }
+
+  writeFileSync(indexPath, html, 'utf-8');
+});
+
+// 4) Regenerate /en/, /es/, /it/ from the freshly-stamped index.html so
+// every locale gets the same cache-busting URLs.
+step('regenerate locale HTMLs', () => {
+  execSync('python3 build-locales.py', { stdio: 'inherit', cwd: ROOT });
+});
+
+console.log('\n✓ Build complete. Asset versions:');
+for (const [name, hash] of Object.entries(hashes)) {
+  console.log(`  /${name}?v=${hash}`);
 }
