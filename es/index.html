@@ -3,6 +3,53 @@
 <head>
 <script>window.RANUK_LANG="es"</script>
 <meta charset="utf-8" />
+
+<!-- Cache busting: evitar que el navegador cachee HTML agresivamente -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<!-- Version check: fuerza recarga si hay nueva version en server -->
+<script>
+(function() {
+  var VERSION_URL = '/version.json';
+  var STORAGE_KEY = 'ranuk-version';
+  var CHECK_INTERVAL_MINUTES = 2;
+
+  function checkVersion() {
+    fetch(VERSION_URL, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var serverVersion = data.version;
+      var localVersion = sessionStorage.getItem(STORAGE_KEY);
+
+      if (!localVersion) {
+        sessionStorage.setItem(STORAGE_KEY, serverVersion);
+        return;
+      }
+
+      if (localVersion !== serverVersion) {
+        sessionStorage.setItem(STORAGE_KEY, serverVersion);
+        window.location.reload(true);
+      }
+    })
+    .catch(function(e) {
+      console.warn('[Ranuk] Version check failed:', e);
+    });
+  }
+
+  checkVersion();
+  setInterval(checkVersion, CHECK_INTERVAL_MINUTES * 60 * 1000);
+
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) checkVersion();
+  });
+})();
+</script>
+
 <title>Ranuk Orbit — Earth, from another angle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="description" content="Ranuk Orbit — cinematic aerial photography & travel storytelling by Emilio Ranucoli. Drone, Ray-Ban Meta POV, editorial." />
@@ -2572,6 +2619,31 @@ body.konami { animation: rainbow 6s linear; }
 <script>
   var root = ReactDOM.createRoot(document.getElementById('app'));
   root.render(React.createElement(window.App));
+</script>
+
+<!-- Service Worker: control total del cache, network-first -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js')
+      .then(function(registration) {
+        console.log('[Ranuk] SW registered:', registration.scope);
+
+        registration.addEventListener('updatefound', function() {
+          var newWorker = registration.installing;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[Ranuk] New version available, reloading...');
+              window.location.reload();
+            }
+          });
+        });
+      })
+      .catch(function(error) {
+        console.warn('[Ranuk] SW registration failed:', error);
+      });
+  });
+}
 </script>
 
 </body>
