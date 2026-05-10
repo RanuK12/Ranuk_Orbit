@@ -427,6 +427,14 @@ function LangProvider({ children }) {
 }
 function useLang() { return useContext(LangContext); }
 
-const pick = (v, lang) => (v && typeof v === 'object' && v[lang]) ? v[lang] : (typeof v === 'string' ? v : '');
+const pick = (v, lang) => {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') {
+    if (v[lang]) return v[lang];
+    if (v.en) return v.en;  // fallback to English
+  }
+  return '';
+};
 
 Object.assign(window, { LangProvider, useLang, pick, COPY });
