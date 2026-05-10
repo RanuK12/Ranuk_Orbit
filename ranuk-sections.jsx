@@ -135,13 +135,27 @@ function ReelModal({ open, onClose }) {
   const dialogRef = useRef(null);
   const reelUrl = typeof window !== 'undefined' ? window.RANUK_REEL_URL : null;
 
+  // Stable close ref so the keydown listener installed below always
+  // reads the latest onClose without re-subscribing on every render.
+  // Same pattern as Lightbox v6 — fixes the ESC-key race condition.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
-    window.addEventListener('keydown', onKey);
+    const onKey = (e) => {
+      const isEsc = e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27;
+      if (isEsc) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeRef.current();
+      }
+    };
+    // document + capture phase so a focused <video> can't swallow ESC.
+    document.addEventListener('keydown', onKey, true);
     try { document.body.style.overflow = 'hidden'; } catch (_) {}
     return () => {
-      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
       try { document.body.style.overflow = ''; } catch (_) {}
       try {
         const v = videoRef.current;
@@ -149,7 +163,7 @@ function ReelModal({ open, onClose }) {
       } catch (_) {}
       try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -204,7 +218,8 @@ function ReelModal({ open, onClose }) {
           <button
             type="button"
             className="reel-modal-close"
-            onClick={onClose}
+            onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
             aria-label={copy.close}
           >
             <span aria-hidden="true">×</span>
