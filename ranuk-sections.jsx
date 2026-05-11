@@ -208,18 +208,21 @@ function ReelModal({ open, onClose }) {
       aria-modal="true"
       aria-label={copy.title}
     >
-      <div className="reel-modal-inner">
+      <div className="reel-modal-inner" onClick={(e) => e.stopPropagation()}>
         <header className="reel-modal-head">
           <div>
             <span className="reel-modal-kicker">Ranuk Orbit</span>
             <h2 className="reel-modal-title">{copy.title}</h2>
             <p className="reel-modal-sub">{copy.sub}</p>
           </div>
+          {/* Close: single onClick handler (no onPointerDown duplicate).
+              Previously both fired on touch devices, each calling onClose
+              — the first closed the modal, the second could re-open it
+              because the click bubbled to the parent a tick later. */}
           <button
             type="button"
             className="reel-modal-close"
-            onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
+            onClick={onClose}
             aria-label={copy.close}
           >
             <span aria-hidden="true">×</span>
