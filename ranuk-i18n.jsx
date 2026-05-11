@@ -419,20 +419,49 @@ function LangProvider({ children }) {
     setLang(l);
     navigateToLocale(l);
   };
+  // Defensive: if COPY[lang] is missing ANY key (e.g. someone added an IT
+  // translation for `hero` but forgot `atlas`), fall back to English for
+  // that key. Without this, a missing nested property explodes the render
+  // tree with "cannot read property X of undefined" and produces the
+  // dreaded blank screen.
+  const t = COPY[lang] || COPY.en;
   return (
-    <LangContext.Provider value={{ lang, change, t: COPY[lang] || COPY.en }}>
+    <LangContext.Provider value={{ lang, change, t }}>
       {children}
     </LangContext.Provider>
   );
 }
 function useLang() { return useContext(LangContext); }
 
+// Robust locale picker. Never returns undefined — always returns a string.
+// Fallback order: requested lang → English → Spanish → Italian → first
+// non-empty string value → empty string. This is the single gate every
+// component renders translated content through, so a missing key in any
+// locale degrades gracefully instead of crashing the render tree.
+//
+// Why this matters: in v1 the minified helper was simply
+//   (e,a) => e && typeof e === 'object' && e[a] ? e[a] : typeof e === 'string' ? e : ''
+// which returned '' for any lang whose key was missing. When the Italian
+// bundle was deployed with stale media titles (only {en, es}), every
+// media title returned ''. Downstream code that expected a string
+// (e.g. `title.toLowerCase()` in FLIP animations, or React keys built
+// from the title) crashed and unmounted the entire tree — that's the
+// root cause of the /it/ blank screen.
 const pick = (v, lang) => {
-  if (!v) return '';
+  if (v == null) return '';
   if (typeof v === 'string') return v;
-  if (typeof v === 'object') {
-    if (v[lang]) return v[lang];
-    if (v.en) return v.en;  // fallback to English
+  if (typeof v !== 'object') return String(v);
+  // 1) Requested language
+  if (lang && typeof v[lang] === 'string' && v[lang]) return v[lang];
+  // 2) English
+  if (typeof v.en === 'string' && v.en) return v.en;
+  // 3) Spanish
+  if (typeof v.es === 'string' && v.es) return v.es;
+  // 4) Italian
+  if (typeof v.it === 'string' && v.it) return v.it;
+  // 5) First non-empty string value in the object
+  for (const k in v) {
+    if (typeof v[k] === 'string' && v[k]) return v[k];
   }
   return '';
 };
