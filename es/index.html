@@ -1311,6 +1311,31 @@ input, textarea, select { font: inherit; color: inherit; }
   to   { opacity: 1; backdrop-filter: blur(28px) saturate(1.15); -webkit-backdrop-filter: blur(28px) saturate(1.15); }
 }
 
+/* Dedicated backdrop — sits below .lb-stage and absorbs every click that
+   isn't on the content. Having this as its own element (rather than
+   comparing event.target === root) is the single most important fix
+   for the "click outside doesn't close" bug: there is literally no DOM
+   path between a click on the backdrop and the onClose handler. */
+.lb-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  cursor: zoom-out;
+}
+
+/* Body scroll lock that actually works on iOS Safari. `overflow: hidden`
+   alone is not enough — Safari ignores it once a touch gesture is in
+   flight. The `position: fixed` + negative `top` trick freezes the
+   viewport reliably; LightboxProvider restores scroll position on unlock. */
+body.body-scroll-locked {
+  position: fixed;
+  left: 0; right: 0;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
 /* Stage: column layout so media + caption + strip stack cleanly. */
 .lb-stage {
   position: relative;
@@ -2610,10 +2635,10 @@ body.konami { animation: rainbow 6s linear; }
 </script>
 
 <!-- Data -->
-<script src="/ranuk-data.js?v=b73c0b9a"></script>
+<script src="/ranuk-data.js?v=1ea409cb"></script>
 
 <!-- App bundle (esbuild-compiled) -->
-<script src="/ranuk-app.min.js?v=fb0f2e7d"></script>
+<script src="/ranuk-app.min.js?v=8d21b41d"></script>
 
 <!-- Mount -->
 <script>

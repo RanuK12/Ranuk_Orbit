@@ -1,45 +1,85 @@
-// Ranuk Orbit — Lightbox v6: Apple-inspired premium viewer with
-// bulletproof close handling.
+// Ranuk Orbit — Lightbox v7: bulletproof close, dedicated backdrop,
+// focus trap, iOS-safe scroll lock.
 //
-// Design goals:
-//   • Media is protagonist — chrome is transparent until the user looks
-//     for it (hover on pointer devices, always visible on touch).
-//   • Close is bulletproof: X button, click on backdrop, AND ESC key
-//     all route through hardClose(). Event listeners are attached once
-//     on mount (not on every render) and use capture-phase + document
-//     so they can't be swallowed by a focused <video> element on iOS.
-//   • We also listen for fullscreenchange — if iOS Safari pushes the
-//     <video> into native fullscreen and the user presses ESC to exit
-//     fullscreen, we use that signal to close the lightbox cleanly.
-//   • No native <video controls>. iOS Safari's native chrome was the
-//     root cause of the "can't close" bug (it captures pointer events
-//     at a z-index that shadows the overlay). We render our own thin
-//     custom controls that behave consistently everywhere.
-//
-// Why v5 still looked broken in the wild: the ESC-key useEffect depended
-// on hardClose, which in turn depended on the unstable `lb` context
-// value. On every render the effect tore down and re-registered the
-// listener, creating tiny windows where the key event could land on no
-// handler at all. v6 uses a ref so the listener is installed ONCE per
-// mount and always reads the latest handler via the ref.
+// Changes from v6:
+//   • Close button uses ONLY onClick (no onPointerDown duplicate).
+//     In v6, pressing the X on a touch device fired BOTH onPointerDown
+//     and onClick, each calling hardClose(). The first fire closed the
+//     lightbox; the second fire ran after React had already unmounted
+//     the component, which could race with state-restoration logic and
+//     (more importantly) on some Android builds caused the backdrop to
+//     receive a stray tap that re-opened the modal.
+//   • Backdrop click uses a dedicated <div className="lb-backdrop"> that
+//     sits BELOW the content. Clicking it calls onClose directly. v6
+//     relied on `e.target === rootRef.current` which is fragile: any
+//     layout mutation (nav arrows, captions, pseudo-elements) could
+//     land the click on a child and the close wouldn't fire.
+//   • Exiting native fullscreen no longer auto-closes the lightbox.
+//     Users often want to exit fullscreen and keep browsing. v6's
+//     fullscreenchange listener + 20ms setTimeout was a hack that
+//     conflated two distinct intents.
+//   • Focus trap: on open, focus moves to the close button; Tab/Shift-Tab
+//     cycles within the lightbox; on close, focus is restored to the
+//     element that opened the lightbox (usually the archive tile).
+//   • Scroll lock uses a `.body-scroll-locked` CSS class so iOS Safari
+//     actually honours it. Plain `overflow: hidden` on <body> is
+//     ignored by mobile Safari when a touch gesture is already in
+//     flight.
 const { createContext, useContext, useState, useCallback, useEffect, useRef } = React;
 
 const LightboxContext = createContext(null);
 
+// Helper: lock/unlock body scroll in a way iOS Safari respects.
+// A CSS class is preferred over inline styles because we can set
+// `position: fixed; top: -<scrollY>px` and restore it on unlock —
+// the only reliable way to prevent rubber-band scroll on iOS.
+let _savedScrollY = 0;
+function lockBodyScroll() {
+  try {
+    _savedScrollY = window.scrollY || 0;
+    document.body.style.top = `-${_savedScrollY}px`;
+    document.body.classList.add('body-scroll-locked');
+  } catch (_) {}
+}
+function unlockBodyScroll() {
+  try {
+    document.body.classList.remove('body-scroll-locked');
+    document.body.style.top = '';
+    // Restore the pre-lock scroll position so the page doesn't jump.
+    window.scrollTo(0, _savedScrollY);
+  } catch (_) {}
+}
+
 function LightboxProvider({ children }) {
   const [state, setState] = useState({ items: [], index: 0, open: false });
+  // Remember the element that opened the lightbox so we can restore
+  // focus to it on close. This is important for keyboard users —
+  // without it, Tab after closing lands on <body> and they lose place.
+  const openerRef = useRef(null);
+
   const open = useCallback((items, index = 0) => {
+    try { openerRef.current = document.activeElement; } catch (_) { openerRef.current = null; }
     setState({ items, index, open: true });
-    try { document.body.style.overflow = 'hidden'; } catch (_) {}
+    lockBodyScroll();
   }, []);
   const close = useCallback(() => {
     setState(s => ({ ...s, open: false }));
-    try { document.body.style.overflow = ''; } catch (_) {}
+    unlockBodyScroll();
+    // Exit native fullscreen if we happen to be in it (the user shouldn't
+    // normally be — we hide the native FS button — but iOS Safari can
+    // still slip into it via pinch gestures on some builds).
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
-    // If the lightbox was opened from a globe pin, ease the camera back
-    // to its default orbit distance so the user sees the reverse of the
-    // cinematic zoom-in instead of a cold cut back to the atlas view.
+    try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
+    // Globe reverse-zoom hook (defined in ranuk-globe.jsx).
     try { if (typeof window.__ranukGlobeResetZoom === 'function') window.__ranukGlobeResetZoom(); } catch (_) {}
+    // Restore focus on the next tick so React has finished unmounting
+    // the lightbox DOM before we focus the opener.
+    try {
+      const el = openerRef.current;
+      if (el && typeof el.focus === 'function') {
+        setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (_) {} }, 0);
+      }
+    } catch (_) {}
   }, []);
   const prev = useCallback(() => setState(s => s.items.length ? ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length }) : s), []);
   const next = useCallback(() => setState(s => s.items.length ? ({ ...s, index: (s.index + 1) % s.items.length }) : s), []);
@@ -118,12 +158,23 @@ const Icon = {
   ),
 };
 
+// Find all focusable elements inside a container — used for focus trap.
+const FOCUSABLE_SEL = [
+  'button:not([disabled])',
+  '[href]',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 function Lightbox() {
   const lb = useLightbox();
   const { lang } = useLang();
   const stripRef = useRef(null);
   const rootRef = useRef(null);
   const videoRef = useRef(null);
+  const closeBtnRef = useRef(null);
 
   // Custom video controls state. We deliberately do NOT use the browser's
   // native <video controls> chrome — on iOS Safari the native controls
@@ -142,34 +193,21 @@ function Lightbox() {
     setDuration(0);
   }, [lb.index]);
 
-  // ────────────────────────────────────────────────────────────────────
-  // Bulletproof close handling.
-  //
-  // Design: we keep a ref to the current `close everything` function so
-  // the global keydown listener can call the LATEST version without ever
-  // tearing down and re-registering. That closes the race window where
-  // v5 could miss a keystroke during a re-render.
-  // ────────────────────────────────────────────────────────────────────
-  const hardCloseRef = useRef(() => {});
-  hardCloseRef.current = () => {
+  // Stable close handler. Note: NO preventDefault/stopPropagation and
+  // NO setTimeout. The element is a <button>, the event is onClick —
+  // calling lb.close() directly is the simplest, most reliable thing.
+  const onClose = useCallback(() => {
     try {
       const v = videoRef.current;
       if (v) { v.pause(); v.removeAttribute('controls'); v.currentTime = 0; }
     } catch (_) {}
-    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
-    try { if (document.webkitFullscreenElement) document.webkitExitFullscreen(); } catch (_) {}
     lb.close();
-  };
+  }, [lb]);
 
-  // Stable wrapper that event handlers can call. This is also what the
-  // X button's onClick/onPointerDown invoke.
-  const hardClose = useCallback((e) => {
-    if (e) {
-      try { e.preventDefault(); } catch (_) {}
-      try { e.stopPropagation(); } catch (_) {}
-    }
-    hardCloseRef.current();
-  }, []);
+  // Ref so the global keydown listener can always reach the latest
+  // onClose without re-registering on every render.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const togglePlay = useCallback((e) => {
     if (e) e.stopPropagation();
@@ -179,21 +217,18 @@ function Lightbox() {
     else { v.pause(); setPlaying(false); }
   }, []);
 
-  // Global keyboard + fullscreen listeners. Installed ONCE when the
-  // lightbox opens, removed when it closes. Uses document + capture
-  // phase so no nested element (including a focused <video>) can
-  // swallow the event before we see it.
+  // Global keyboard listener. Installed ONCE when the lightbox opens,
+  // removed when it closes. Uses document + capture phase so no nested
+  // element (including a focused <video>) can swallow the event.
   useEffect(() => {
     if (!lb.open) return;
 
     const onKey = (e) => {
-      // Some browsers still report `keyCode` (27 for ESC) — we check
-      // both to cover every vendor. Also accept 'Esc' (legacy IE).
       const isEsc = e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27;
       if (isEsc) {
         e.preventDefault();
         e.stopPropagation();
-        hardCloseRef.current();
+        onCloseRef.current();
         return;
       }
       if (e.key === 'ArrowLeft') { lb.prev(); return; }
@@ -201,35 +236,49 @@ function Lightbox() {
       if (e.key === ' ' || e.key === 'k') {
         e.preventDefault();
         togglePlay();
+        return;
       }
-    };
-
-    // If the native <video> element happens to enter fullscreen on iOS
-    // Safari (some gestures can still trigger it despite playsInline),
-    // the subsequent ESC press is consumed by the fullscreen layer. We
-    // detect the exit and close the lightbox so the user isn't left
-    // staring at a persistent viewer after dismissing fullscreen.
-    const onFsChange = () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        // Small delay so Safari finishes tearing down the fullscreen UI.
-        setTimeout(() => {
-          try { hardCloseRef.current(); } catch (_) {}
-        }, 20);
+      // Focus trap: cycle Tab/Shift-Tab inside the lightbox so keyboard
+      // users can't accidentally land on elements behind the modal.
+      if (e.key === 'Tab' && rootRef.current) {
+        const focusable = Array.from(rootRef.current.querySelectorAll(FOCUSABLE_SEL))
+          .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey) {
+          if (active === first || !rootRef.current.contains(active)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     };
 
     document.addEventListener('keydown', onKey, true);
-    document.addEventListener('fullscreenchange', onFsChange);
-    document.addEventListener('webkitfullscreenchange', onFsChange);
     return () => {
       document.removeEventListener('keydown', onKey, true);
-      document.removeEventListener('fullscreenchange', onFsChange);
-      document.removeEventListener('webkitfullscreenchange', onFsChange);
     };
   }, [lb.open, lb.prev, lb.next, togglePlay]);
 
-  // Failsafe: restore body scroll if the component unmounts while open
-  useEffect(() => () => { try { document.body.style.overflow = ''; } catch (_) {} }, []);
+  // On open: focus the close button so keyboard/screen reader users
+  // immediately know they're inside a dialog.
+  useEffect(() => {
+    if (!lb.open) return;
+    const id = setTimeout(() => {
+      try { closeBtnRef.current && closeBtnRef.current.focus({ preventScroll: true }); } catch (_) {}
+    }, 30);
+    return () => clearTimeout(id);
+  }, [lb.open]);
+
+  // Failsafe: unlock body scroll if the component unmounts while open.
+  useEffect(() => () => { unlockBodyScroll(); }, []);
 
   // Scroll active thumb into view
   useEffect(() => {
@@ -237,12 +286,6 @@ function Lightbox() {
     const el = stripRef.current.querySelector(`[data-i="${lb.index}"]`);
     if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [lb.index, lb.open]);
-
-  // Backdrop click: close only when the target is the root element itself,
-  // not when the user clicked a child (stage, caption, strip, etc.)
-  const handleBackdrop = useCallback((e) => {
-    if (e.target === rootRef.current) hardClose(e);
-  }, [hardClose]);
 
   const toggleMute = useCallback((e) => {
     if (e) e.stopPropagation();
@@ -297,18 +340,23 @@ function Lightbox() {
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      onClick={handleBackdrop}
     >
-      {/* Floating close — always on top, always clickable. We bind to
-          onPointerDown so the close happens on press (before the
-          corresponding click event has a chance to be swallowed by a
-          focused <video>), and to onClick as a fallback for keyboard /
-          assistive-tech activation. */}
+      {/* Dedicated backdrop overlay. Sits BELOW content; clicking it
+          closes the lightbox. No target-comparison fragility. */}
+      <div
+        className="lb-backdrop"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Floating close — always on top, always clickable. Single
+          onClick handler; <button> + click is the most reliable way
+          to activate across mouse, touch, keyboard and AT. */}
       <button
+        ref={closeBtnRef}
         type="button"
         className="lb-close"
-        onPointerDown={hardClose}
-        onClick={hardClose}
+        onClick={onClose}
         aria-label={closeLabel}
         title={closeLabel}
       >
@@ -320,20 +368,21 @@ function Lightbox() {
           <button
             type="button"
             className="lb-nav lb-nav-prev"
-            onClick={(e) => { e.stopPropagation(); lb.prev(); }}
+            onClick={lb.prev}
             aria-label={prevLabel}
             title={prevLabel}
           ><Icon.prev /></button>
           <button
             type="button"
             className="lb-nav lb-nav-next"
-            onClick={(e) => { e.stopPropagation(); lb.next(); }}
+            onClick={lb.next}
             aria-label={nextLabel}
             title={nextLabel}
           ><Icon.next /></button>
         </>
       )}
 
+      {/* Content — clicks here NEVER reach the backdrop. */}
       <div className="lb-stage" onClick={(e) => e.stopPropagation()}>
         {isVideo ? (
           <div className="lb-media-wrap lb-media-wrap--video">
@@ -439,7 +488,7 @@ function Lightbox() {
                   key={it.id}
                   data-i={i}
                   className={`lb-thumb${isActive ? ' is-active' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); lb.goto(i); }}
+                  onClick={() => lb.goto(i)}
                   aria-label={`Item ${i+1}`}
                 >
                   {it.type === 'photo' ? (
