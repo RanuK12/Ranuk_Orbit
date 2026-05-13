@@ -51,7 +51,14 @@ function unlockBodyScroll() {
 }
 
 function LightboxProvider({ children }) {
-  const [state, setState] = useState({ items: [], index: 0, open: false });
+  // CRITICAL FIX: the state field was previously named `open` which
+  // collided with the `open()` function when spread into the context
+  // value. The spread `{ ...state, open, close, ... }` meant the
+  // function always overwrote the boolean, so the Lightbox component's
+  // guard `if (!lb.open)` NEVER saw `false` — the lightbox stayed
+  // rendered forever after its first use. Renamed to `isOpen` so there
+  // is zero ambiguity.
+  const [state, setState] = useState({ items: [], index: 0, isOpen: false });
   // Remember the element that opened the lightbox so we can restore
   // focus to it on close. This is important for keyboard users —
   // without it, Tab after closing lands on <body> and they lose place.
@@ -59,11 +66,15 @@ function LightboxProvider({ children }) {
 
   const open = useCallback((items, index = 0) => {
     try { openerRef.current = document.activeElement; } catch (_) { openerRef.current = null; }
-    setState({ items, index, open: true });
+    setState({ items, index, isOpen: true });
     lockBodyScroll();
   }, []);
   const close = useCallback(() => {
-    setState(s => ({ ...s, open: false }));
+    // Clear items AND set isOpen to false — belt AND suspenders.
+    // Even if something downstream only checks items.length, the
+    // lightbox will unmount. Even if something only checks isOpen,
+    // same result. Both paths lead to the lightbox disappearing.
+    setState({ items: [], index: 0, isOpen: false });
     unlockBodyScroll();
     // Exit native fullscreen if we happen to be in it (the user shouldn't
     // normally be — we hide the native FS button — but iOS Safari can
@@ -221,7 +232,7 @@ function Lightbox() {
   // removed when it closes. Uses document + capture phase so no nested
   // element (including a focused <video>) can swallow the event.
   useEffect(() => {
-    if (!lb.open) return;
+    if (!lb.isOpen) return;
 
     const onKey = (e) => {
       const isEsc = e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27;
@@ -265,27 +276,27 @@ function Lightbox() {
     return () => {
       document.removeEventListener('keydown', onKey, true);
     };
-  }, [lb.open, lb.prev, lb.next, togglePlay]);
+  }, [lb.isOpen, lb.prev, lb.next, togglePlay]);
 
   // On open: focus the close button so keyboard/screen reader users
   // immediately know they're inside a dialog.
   useEffect(() => {
-    if (!lb.open) return;
+    if (!lb.isOpen) return;
     const id = setTimeout(() => {
       try { closeBtnRef.current && closeBtnRef.current.focus({ preventScroll: true }); } catch (_) {}
     }, 30);
     return () => clearTimeout(id);
-  }, [lb.open]);
+  }, [lb.isOpen]);
 
   // Failsafe: unlock body scroll if the component unmounts while open.
   useEffect(() => () => { unlockBodyScroll(); }, []);
 
   // Scroll active thumb into view
   useEffect(() => {
-    if (!lb.open || !stripRef.current) return;
+    if (!lb.isOpen || !stripRef.current) return;
     const el = stripRef.current.querySelector(`[data-i="${lb.index}"]`);
     if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }, [lb.index, lb.open]);
+  }, [lb.index, lb.isOpen]);
 
   const toggleMute = useCallback((e) => {
     if (e) e.stopPropagation();
@@ -306,7 +317,7 @@ function Lightbox() {
     setProgress(pct);
   }, [duration]);
 
-  if (!lb.open || !lb.items.length) return null;
+  if (!lb.isOpen || !lb.items.length) return null;
   const item = lb.items[lb.index];
   const title = item._displayTitle || pick(item.title, lang) || '';
   const isVideo = item.type === 'video' || item.type === 'pov';
