@@ -1630,14 +1630,25 @@ function App() {
     const tt = setTimeout(() => setLoaded(true), 1200);
     return () => clearTimeout(tt);
   }, []);
-  // Global reel trigger: any anchor pointing to #reel (or calling
-  // window.openReel()) opens the modal. Keeps the CTA in hero-jsx decoupled
-  // from the reel implementation here.
+  // Global reel trigger: any element with [data-reel] (or `window.openReel()`)
+  // opens the modal. Notes:
+  //  - We deliberately drop the legacy `a[href="#reel"]` selector. It made
+  //    every anchor whose href landed on `#reel` open the modal — including
+  //    leftover anchors in old cached pages, sibling iframes, and any link
+  //    that ended up with `#reel` after the browser preserved the hash on
+  //    locale navigation. The hero CTA is now a real <button data-reel>.
+  //  - We only trip on the user's primary mouse/touch click. `button !== 0`
+  //    skips middle/right-click and keyboard-synthesized clicks; metaKey/
+  //    ctrlKey/shiftKey/altKey skip "open in new tab" intent. Touch events
+  //    arrive as button=0 with no modifiers, so this is safe on mobile.
   useEffect(() => {
     window.openReel = () => setReelOpen(true);
     const onClick = (e) => {
-      const a = e.target.closest && e.target.closest('a[href="#reel"], [data-reel]');
-      if (a) { e.preventDefault(); setReelOpen(true); }
+      if (e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (e.defaultPrevented) return;
+      const trigger = e.target.closest && e.target.closest('[data-reel]');
+      if (trigger) { e.preventDefault(); setReelOpen(true); }
     };
     document.addEventListener('click', onClick);
     return () => { document.removeEventListener('click', onClick); delete window.openReel; };
