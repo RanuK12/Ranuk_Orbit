@@ -2,18 +2,32 @@
 const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
 // ─── Headline variants — toggle via window.RANUK_HEADLINE = 'A' | 'B' | 'C' (default C)
+//
+// Every variant MUST cover every supported locale (en/es/it). Missing a
+// locale causes `HEADLINE_VARIANTS[variant][lang]` to return `undefined`
+// — and then `data.lines` blows up with a TypeError that React cannot
+// recover from (no Error Boundary above the hero), unmounting the
+// whole tree. That was the root cause of the /it/ blank screen in
+// the v8d21b41d bundle: variants A/B/C only had {en, es}.
 const HEADLINE_VARIANTS = {
   A: {
     en: { lines: [['Ground was', 'never the'], ['limit']], emIndex: { line: 1, word: 0 } },
     es: { lines: [['El suelo nunca', 'fue el'], ['límite']], emIndex: { line: 1, word: 0 } },
+    it: { lines: [['Il terreno', 'non fu mai'], ['il limite']], emIndex: { line: 1, word: 0 } },
   },
   B: {
     en: { lines: [['Stories the'], ['sky', 'tells']], emIndex: { line: 1, word: 0 } },
     es: { lines: [['Historias que'], ['el cielo', 'cuenta']], emIndex: { line: 1, word: 1 } },
+    it: { lines: [['Storie che'], ['il cielo', 'racconta']], emIndex: { line: 1, word: 1 } },
   },
   C: {
     en: { lines: [['Earth, from'], ['another', 'angle']], emIndex: { line: 1, word: 0 } },
     es: { lines: [['La Tierra,', 'desde otro'], ['ángulo']], emIndex: { line: 1, word: 0 } },
+    // Two-line layout: "La Terra," / "da un altro angolo". Putting "da
+    // un altro angolo" on one line keeps the visual balance close to ES,
+    // while splitting it across three lines made the hero look top-heavy
+    // on desktop (tested at 1440px with the Italiana 132px setting).
+    it: { lines: [['La Terra,'], ['da un altro', 'angolo']], emIndex: { line: 1, word: 1 } },
   },
 };
 
@@ -22,7 +36,15 @@ const HEADLINE_VARIANTS = {
 // 'curtain':           each letter slides up from below a fixed baseline
 // 'blur':              each letter eases from blurred to focused
 function HeroHeadline({ variant, anim, lang, parallax }) {
-  const data = HEADLINE_VARIANTS[variant]?.[lang] || HEADLINE_VARIANTS.C[lang];
+  // Defensive lookup: if a translator forgets a locale (or `variant` is
+  // unknown), walk down to a guaranteed-non-null entry instead of
+  // letting `data.lines` throw and unmount the whole app.
+  //   1. requested variant + requested lang   (happy path)
+  //   2. requested variant + en               (variant exists, locale missing)
+  //   3. C + requested lang                   (variant unknown, locale OK)
+  //   4. C + en                               (last-resort safety net)
+  const v = HEADLINE_VARIANTS[variant] || HEADLINE_VARIANTS.C;
+  const data = v[lang] || v.en || HEADLINE_VARIANTS.C[lang] || HEADLINE_VARIANTS.C.en;
   const lines = data.lines;
   const emIdx = data.emIndex;
   let charDelay = 0;
@@ -156,7 +178,24 @@ function HeroSection() {
         <p className="hero-sub" style={{ animationDelay: '1.4s' }}>{t.hero.sub}</p>
         <div className="hero-cta-row" style={{ animationDelay: '1.6s' }}>
           <a href="#explore" className="btn-ghost">{t.hero.cta} <span className="btn-arrow">→</span></a>
-          <a href="#reel" className="btn-link-light" data-reel>{t.hero.cta_secondary}</a>
+          {/* Reel CTA: button (not anchor). Earlier versions used
+              <a href="#reel" data-reel>, which had two side effects:
+              (1) clicking it pushed `#reel` into the URL, and
+              (2) when the user later switched languages, navigateToLocale
+                  preserved the hash, the new page loaded with #reel still
+                  in the URL, the global `[data-reel]` click listener
+                  fired on any in-flight click during the transition,
+                  and the reel modal opened on its own. Using a real
+                  <button> sidesteps both: no URL pollution, no anchor
+                  navigation, just a deliberate user action. */}
+          <button
+            type="button"
+            className="btn-link-light"
+            data-reel
+            onClick={() => { try { window.openReel && window.openReel(); } catch (_) {} }}
+          >
+            {t.hero.cta_secondary}
+          </button>
         </div>
       </div>
 
