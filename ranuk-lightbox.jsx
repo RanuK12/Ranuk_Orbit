@@ -204,19 +204,43 @@ function Lightbox() {
     setDuration(0);
   }, [lb.index]);
 
-  // Stable close handler. Note: NO preventDefault/stopPropagation and
-  // NO setTimeout. The element is a <button>, the event is onClick —
-  // calling lb.close() directly is the simplest, most reliable thing.
-  const onClose = useCallback(() => {
+  // Nuclear video kill: destroys the video element's connection to the
+  // media pipeline. Called both by the explicit close handler AND by the
+  // useEffect cleanup (unmount). This guarantees that even if React's
+  // state update batches oddly or the close handler throws, the video
+  // WILL stop playing and release its decoder.
+  const killVideo = useCallback(() => {
     try {
       const v = videoRef.current;
-      if (v) { v.pause(); v.removeAttribute('controls'); v.currentTime = 0; }
+      if (!v) return;
+      v.pause();
+      v.removeAttribute('src');   // disconnect from network
+      v.load();                    // force the browser to release the decoder
+      v.removeAttribute('controls');
     } catch (_) {}
-    lb.close();
-  }, [lb]);
+  }, []);
 
-  // Ref so the global keydown listener can always reach the latest
-  // onClose without re-registering on every render.
+  // Cleanup on unmount: if React unmounts this component (because
+  // isOpen became false), we MUST kill the video. Without this, some
+  // browsers (Safari, Samsung Internet) keep the video decoder alive
+  // in a detached DOM node, and the user sees the video "floating"
+  // behind the page.
+  useEffect(() => {
+    return () => {
+      killVideo();
+      unlockBodyScroll();
+    };
+  }, [killVideo]);
+
+  // Stable close handler. Calls killVideo synchronously, then asks
+  // the context to flip isOpen → false (which triggers unmount above).
+  // Uses a ref so the ESC keydown listener always has the latest
+  // version without re-subscribing on every render.
+  const onClose = useCallback(() => {
+    killVideo();
+    lb.close();
+  }, [killVideo, lb]);
+
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -288,8 +312,7 @@ function Lightbox() {
     return () => clearTimeout(id);
   }, [lb.isOpen]);
 
-  // Failsafe: unlock body scroll if the component unmounts while open.
-  useEffect(() => () => { unlockBodyScroll(); }, []);
+  // (Failsafe unlockBodyScroll is now inside the killVideo useEffect cleanup above.)
 
   // Scroll active thumb into view
   useEffect(() => {
