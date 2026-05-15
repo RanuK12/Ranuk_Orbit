@@ -984,7 +984,7 @@
 }
 
 .lightbox-close {
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: rgba(247, 247, 245, 0.06);
   border: 1px solid rgba(247, 247, 245, 0.08);
   display: flex; align-items: center; justify-content: center;
@@ -999,6 +999,28 @@
 .lightbox-close:focus-visible {
   outline: 2px solid var(--celestial, #1E6FA4);
   outline-offset: 3px;
+}
+@media (max-width: 768px) {
+  .lightbox-close {
+    width: 52px;
+    height: 52px;
+    top: 12px;
+    right: 12px;
+  }
+  .lightbox-close svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+@media (max-width: 480px) {
+  .lightbox-close {
+    width: 56px;
+    height: 56px;
+  }
+  .lightbox-close svg {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 /* ── Navigation buttons — Ranuk Orbit style ── */

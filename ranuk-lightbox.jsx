@@ -116,6 +116,7 @@ function Lightbox() {
   const [progress, setProgress] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipTime, setTooltipTime] = useState('0:00');
   const [tooltipX, setTooltipX] = useState(0);
@@ -127,9 +128,47 @@ function Lightbox() {
     setProgress(0);
     setBuffered(0);
     setDuration(0);
+    setIsVideoReady(false);
     // Clear nav direction after animation
     const id = setTimeout(() => setNavDirection(null), 400);
     return () => clearTimeout(id);
+  }, [lb.index]);
+
+  // Video duration & time tracking via addEventListener
+  // (fixes "0:00 / 0:00" when loadedmetadata fires before React attaches inline handlers)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    function onLoaded() {
+      if (video.duration && isFinite(video.duration)) {
+        setDuration(video.duration);
+        setIsVideoReady(true);
+      }
+    }
+
+    function onTimeUpdate() {
+      setProgress(video.currentTime);
+    }
+
+    function onEnded() {
+      setPlaying(false);
+    }
+
+    video.addEventListener('loadedmetadata', onLoaded);
+    video.addEventListener('durationchange', onLoaded);
+    video.addEventListener('timeupdate', onTimeUpdate);
+    video.addEventListener('ended', onEnded);
+
+    // If the video already has metadata (browser cache)
+    if (video.readyState >= 1) onLoaded();
+
+    return () => {
+      video.removeEventListener('loadedmetadata', onLoaded);
+      video.removeEventListener('durationchange', onLoaded);
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      video.removeEventListener('ended', onEnded);
+    };
   }, [lb.index]);
 
   // Phase animation: opening → open after mount
@@ -204,7 +243,6 @@ function Lightbox() {
     const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
     const pct = Math.max(0, Math.min(1, x / rect.width));
     v.currentTime = pct * duration;
-    setProgress(pct);
   }, [duration]);
 
   const onTimelineHover = useCallback((e) => {
@@ -405,18 +443,12 @@ function Lightbox() {
                 onClick={togglePlay}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
-                onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
-                onTimeUpdate={(e) => {
-                  const d = e.currentTarget.duration;
-                  if (d) setProgress(e.currentTarget.currentTime / d);
-                }}
                 onProgress={(e) => {
                   const v = e.currentTarget;
                   if (v.buffered.length > 0 && v.duration) {
                     setBuffered(v.buffered.end(v.buffered.length - 1) / v.duration);
                   }
                 }}
-                onEnded={() => setPlaying(false)}
               />
               {/* Play overlay (visible when paused) */}
               <div className={`video-play-overlay${!playing ? ' visible' : ''}`} onClick={togglePlay}>
@@ -435,18 +467,18 @@ function Lightbox() {
                   onMouseLeave={() => setShowTooltip(false)}
                   role="slider"
                   aria-label="Seek"
-                  aria-valuenow={Math.round(progress * 100)}
+                  aria-valuenow={Math.round(duration > 0 ? (progress / duration) * 100 : 0)}
                 >
                   <div className="video-timeline__buffer" style={{ width: `${buffered * 100}%` }} />
-                  <div className="video-timeline__progress" style={{ width: `${progress * 100}%` }} />
+                  <div className="video-timeline__progress" style={{ width: duration > 0 ? `${(progress / duration) * 100}%` : '0%' }} />
                   {showTooltip && (
                     <div className="video-timeline__tooltip" style={{ left: `${tooltipX}px` }}>{tooltipTime}</div>
                   )}
                 </div>
                 <span className="video-time">
-                  <span className="video-time__current">{fmtTime(videoRef.current?.currentTime || 0)}</span>
+                  <span className="video-time__current">{fmtTime(progress)}</span>
                   <span className="video-time__separator">/</span>
-                  {fmtTime(duration)}
+                  {fmtTime(duration || 0)}
                 </span>
                 <button type="button" className="video-btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
                   {muted ? <Icon.speakerOff /> : <Icon.speakerOn />}
