@@ -183,7 +183,7 @@ const LOCATIONS_V2 = [
       M('pat-v1', 'video', VIDEO_DRONE('Bosque_Patagonia-Argentina.MP4'), {en:'Patagonian Forest',es:'Bosque patagónico',it:'Foresta patagonica'}, 'cold', 'aerial', 2024),
       M('pat-v2', 'video', VIDEO_DRONE('Rio_Limay_Patagonia.MP4'), {en:'Río Limay',es:'Río Limay',it:'Río Limay'}, 'cold', 'aerial', 2024),
       M('pat-v3', 'video', VIDEO_DRONE('Valle_Encantado_rio-Limay.MP4'), {en:'Enchanted Valley',es:'Valle Encantado',it:'Valle Incantata'}, 'cold', 'aerial', 2024),
-      M('pat-v4', 'video', VIDEO_DRONE('Valle_Encantado-Rio_Limay.MP4'), {en:'Limay Valley',es:'Valle del Limay',it:'Valle del Limay'}, 'cold', 'aerial', 2024),
+      { ...M('pat-v4', 'video', VIDEO_DRONE('Valle_Encantado-Rio_Limay.MP4'), {en:'Limay Valley',es:'Valle del Limay',it:'Valle del Limay'}, 'cold', 'aerial', 2024), poster: FOTO_DRONE('Valle_Encantado-Patagonia.JPG') },
       M('pat-v5', 'video', VIDEO_DRONE('Villa-Pehuenia_Neuquen.MP4'), {en:'Villa Pehuenia',es:'Villa Pehuenia',it:'Villa Pehuenia'}, 'cold', 'mountain', 2024),
       M('pat-v6', 'video', VIDEO_DRONE('Villa_Pehuenia-Patagonia-9:16.mov'), {en:'Pehuenia Vertical',es:'Pehuenia vertical',it:'Pehuenia verticale'}, 'cold', 'mountain', 2024),
       M('pat-v7', 'pov', VIDEO_RB('Bariloche_Mirador-Circuito-Chico.MOV'), {en:'Circuito Chico Vista',es:'Mirador Circuito Chico',it:'Belvedere Circuito Chico'}, 'cold', 'mountain', 2024, {camera:'Ray-Ban Meta'}),

@@ -189,13 +189,21 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       );
       grp.add(halo);
 
-      // Core ball
+      // Core ball (visual)
       const ball = new THREE.Mesh(
         new THREE.SphereGeometry(0.028, 20, 20),
         new THREE.MeshBasicMaterial({ color })
       );
       ball.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
       grp.add(ball);
+
+      // Invisible hit area (larger, easier to click)
+      const hitMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 12, 12),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      hitMesh.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
+      grp.add(hitMesh);
 
       // Inner solid ring
       const innerRing = new THREE.Mesh(
@@ -215,7 +223,7 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       grp.add(ring);
 
       pinGroup.add(grp);
-      stateRef.current.pinMeshes.push(ball);
+      stateRef.current.pinMeshes.push(hitMesh);
       stateRef.current.locById[loc.id] = { idx: i, group: grp, ring };
       stateRef.current.pinByIdx[i] = grp;
     });
@@ -293,8 +301,8 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
           hoveredIdx = idx;
           setHovered(idx);
           if (hoveredVisitedIdx !== null) { hoveredVisitedIdx = null; setHoveredVisited(null); }
-          document.body.style.cursor = 'pointer';
         }
+        if (!isDown) renderer.domElement.style.cursor = 'pointer';
         setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
         return;
       }
@@ -305,17 +313,19 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
           hoveredVisitedIdx = vIdx;
           setHoveredVisited(vIdx);
           if (hoveredIdx !== null) { hoveredIdx = null; setHovered(null); }
-          document.body.style.cursor = 'help';
         }
+        if (!isDown) renderer.domElement.style.cursor = 'help';
         setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
         return;
       }
       // No hit
       if (hoveredIdx !== null) { hoveredIdx = null; setHovered(null); }
       if (hoveredVisitedIdx !== null) { hoveredVisitedIdx = null; setHoveredVisited(null); }
-      document.body.style.cursor = 'default';
+      if (!isDown) renderer.domElement.style.cursor = 'grab';
     };
     const onClick = (e) => {
+      // Only process click if the user didn't drag
+      if (hasDragged) return;
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -323,12 +333,7 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       const hits = raycaster.intersectObjects(stateRef.current.pinMeshes);
       if (hits.length > 0) {
         const locId = hits[0].object.userData.locId;
-        // Cinematic zoom — rotate AND push camera in for an Apple/A24
-        // style reveal before the lightbox opens.
         if (stateRef.current.highlight) stateRef.current.highlight(locId, { zoom: true });
-        // Delay lightbox open so the zoom plays visibly; the user sees
-        // the planet swing and push in, then the place's media takes
-        // over the screen.
         setTimeout(() => onLocationClick(locId), 700);
       }
     };
@@ -339,6 +344,13 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     // Drag rotation
     let isDown = false, lastX = 0, lastY = 0, autoRotate = true;
     let rotX = 0, rotY = 0;
+    let hasDragged = false;
+    let resumeTimeout = null;
+    // Inertia: velocity that decays when user releases
+    let velX = 0, velY = 0;
+    const DRAG_SENSITIVITY = 0.004;
+    const DAMPING = 0.92;
+    const DRAG_THRESHOLD = 4; // pixels before a drag is registered
     // `_dist` is mutable so the cinematic zoom can animate it in and out.
     let _dist = 5.5;
     const updateCam = () => {
@@ -348,25 +360,46 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       camera.lookAt(0, 0, 0);
     };
     const onDown = (e) => {
-      isDown = true; autoRotate = false;
+      isDown = true; hasDragged = false;
+      velX = 0; velY = 0;
+      autoRotate = false;
+      if (resumeTimeout) { clearTimeout(resumeTimeout); resumeTimeout = null; }
       // User took manual control — cancel any ongoing cinematic zoom
       // and snap back to default distance smoothly.
       if (stateRef.current.zoomRaf) { cancelAnimationFrame(stateRef.current.zoomRaf); stateRef.current.zoomRaf = null; }
       if (stateRef.current.resetZoom) stateRef.current.resetZoom();
       lastX = e.clientX; lastY = e.clientY;
+      renderer.domElement.style.cursor = 'grabbing';
     };
-    const onUp = () => { isDown = false; };
+    const onUp = () => {
+      isDown = false;
+      renderer.domElement.style.cursor = 'grab';
+      // Resume auto-rotate after 4s of no interaction
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      resumeTimeout = setTimeout(() => { autoRotate = true; }, 4000);
+    };
     const onDrag = (e) => {
       if (!isDown) return;
-      // Drag horizontal: arrastrar a la izquierda → globo gira a la derecha (estilo Google Earth)
-      rotY -= (e.clientX - lastX) * 0.005;
-      rotX = Math.max(-1.2, Math.min(1.2, rotX - (e.clientY - lastY) * 0.005));
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      // Only register as drag if past threshold
+      if (!hasDragged && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+        hasDragged = true;
+      }
+      if (hasDragged) {
+        velY = -dx * DRAG_SENSITIVITY;
+        velX = -dy * DRAG_SENSITIVITY;
+        rotY += velY;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX + velX));
+        updateCam();
+      }
       lastX = e.clientX; lastY = e.clientY;
-      updateCam();
     };
     renderer.domElement.addEventListener('pointerdown', onDown);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointermove', onDrag);
+    // Set initial cursor
+    renderer.domElement.style.cursor = 'grab';
 
     // Animate with viewport-gating: when the canvas container scrolls out of
     // sight or the tab loses visibility, pause the RAF loop entirely. A dead
@@ -378,9 +411,17 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       rafId = requestAnimationFrame(animate);
       if (paused) return;
       t += 0.016;
+      // Apply inertia damping when user releases drag
+      if (!isDown && !autoRotate && (Math.abs(velX) > 0.0001 || Math.abs(velY) > 0.0001)) {
+        velX *= DAMPING;
+        velY *= DAMPING;
+        rotY += velY;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX + velX));
+        updateCam();
+      }
       if (autoRotate) {
-        earth.rotation.y += 0.0015;
-        clouds.rotation.y += 0.002;
+        earth.rotation.y += 0.0012;
+        clouds.rotation.y += 0.0016;
         pinGroup.rotation.y = earth.rotation.y;
       }
       // Pulse rings (solo en pins principales — filtrar arcGroup y visitedGroup)
@@ -512,6 +553,7 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
 
     return () => {
       cancelAnimationFrame(rafId);
+      if (resumeTimeout) clearTimeout(resumeTimeout);
       try { if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf); } catch (_) {}
       try { delete window.__ranukGlobeResetZoom; } catch (_) {}
       try { vpObs.disconnect(); } catch (_) {}

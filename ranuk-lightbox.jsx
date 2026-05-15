@@ -24,18 +24,14 @@ function lockBodyScroll() {
 }
 function unlockBodyScroll() {
   try {
+    const y = _savedScrollY;
+    // Restore scroll position BEFORE removing fixed positioning.
+    // This eliminates the visible flash/jump to top that occurred
+    // when position:fixed was removed and the browser rendered one
+    // frame at scroll=0 before the scrollTo fired.
     document.body.classList.remove('body-scroll-locked');
     document.body.style.top = '';
-    // Double-raf ensures the browser has reflowed the page (removed
-    // position:fixed) before we restore scroll. Without this, some
-    // browsers (Safari, Chrome on iOS) ignore the scrollTo because
-    // the document is still in the fixed layout frame.
-    const y = _savedScrollY;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, y);
-      });
-    });
+    window.scrollTo(0, y);
   } catch (_) {}
 }
 

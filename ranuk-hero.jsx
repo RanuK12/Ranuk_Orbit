@@ -163,7 +163,7 @@ function HeroSection() {
         <HeroHeadline variant={variant} anim={anim} lang={lang} parallax={parallax} />
         <p className="hero-sub" style={{ animationDelay: '1.4s' }}>{t.hero.sub}</p>
         <div className="hero-cta-row" style={{ animationDelay: '1.6s' }}>
-          <a href="#explore" className="btn-ghost">{t.hero.cta} <span className="btn-arrow">→</span></a>
+          <a href="#explore" className="hero-cta hero-cta--primary">{t.hero.cta} <span className="btn-arrow">→</span></a>
           {/* Reel CTA: button (not anchor). Earlier versions used
               <a href="#reel" data-reel>, which had two side effects:
               (1) clicking it pushed `#reel` into the URL, and
@@ -176,7 +176,7 @@ function HeroSection() {
                   navigation, just a deliberate user action. */}
           <button
             type="button"
-            className="btn-link-light"
+            className="hero-cta hero-cta--secondary"
             data-reel
             onClick={() => { try { window.openReel && window.openReel(); } catch (_) {} }}
           >
