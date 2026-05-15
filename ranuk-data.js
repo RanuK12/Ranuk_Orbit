@@ -556,10 +556,20 @@ const YEARS_V2 = [...new Set(LOCATIONS_V2.map(l => l.year))].sort((a,b)=>b-a);
 
 // ─── STATS — single source of truth ─────────────────────────────────────
 // Atlas StatsBand y Story StorySection LEEN de aquí. No hardcodear en JSX.
-// `countries` = locations con material + países visitados en el globo.
+// `countries` = unique countries across LOCATIONS_V2 + VISITED_DOTS_V2.
 // `flights` ≈ hours × 2 (batería DJI Mini 4 Pro ~30 min).
 const STATS_V2 = (() => {
-  const countries = LOCATIONS_V2.length + VISITED_DOTS_V2.length;
+  // Count UNIQUE countries (not total places)
+  const countrySet = new Set();
+  LOCATIONS_V2.forEach(loc => {
+    const c = typeof loc.country === 'object' ? loc.country.en : loc.country;
+    countrySet.add(c);
+  });
+  VISITED_DOTS_V2.forEach(dot => {
+    const c = typeof dot.country === 'object' ? dot.country.en : dot.country;
+    countrySet.add(c);
+  });
+  const countries = countrySet.size; // Real unique countries (~25)
   const hours_flown = 640;
   const flights = hours_flown * 2; // 1 batería = ~30 min
   const projects = 24;
