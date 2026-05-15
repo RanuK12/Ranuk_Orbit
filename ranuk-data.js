@@ -25,9 +25,21 @@ const FOTO_RB     = (n) => `/media/optimized/fotos-rayban/${_slug(n)}.jpg`;
 const VIDEO_RB    = (n) => `/media/optimized/videos-rayban/${_slug(n)}.mp4`;
 const POSTER      = (n) => `/media/optimized/posters/${n}`;
 
-const M = (id, type, src, title, mood, altitude, year, exif) => ({
-  id, type, src, title, mood, altitude, year, exif: exif || null
-});
+const M = (id, type, src, title, mood, altitude, year, exif) => {
+  // Auto-generate poster path for video/pov items based on the video filename.
+  // The gen-all-posters.sh script creates a JPG with the same base name as the
+  // video file. This ensures each video has a UNIQUE poster, solving the
+  // duplicate preview issue (especially in Patagonia where all clips start
+  // with a similar first frame).
+  let poster = null;
+  if (type === 'video' || type === 'pov') {
+    const match = src.match(/\/([^/]+)\.(mp4|mov)$/i);
+    if (match) {
+      poster = POSTER(match[1] + '.jpg');
+    }
+  }
+  return { id, type, src, poster, title, mood, altitude, year, exif: exif || null };
+};
 
 // Cinematic 3-clip hero sequence — sea → river → snow
 const HERO_SEQUENCE = [
