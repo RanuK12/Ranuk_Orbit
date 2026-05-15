@@ -153,10 +153,12 @@ function ReelModal({ open, onClose }) {
     };
     // document + capture phase so a focused <video> can't swallow ESC.
     document.addEventListener('keydown', onKey, true);
-    try { document.body.style.overflow = 'hidden'; } catch (_) {}
+    // Use the same scroll lock as the main Lightbox for consistent behavior.
+    // This prevents the scroll-to-top bug when closing the reel modal.
+    lockBodyScroll();
     return () => {
       document.removeEventListener('keydown', onKey, true);
-      try { document.body.style.overflow = ''; } catch (_) {}
+      unlockBodyScroll();
       try {
         const v = videoRef.current;
         if (v) { v.pause(); v.currentTime = 0; }
@@ -811,9 +813,9 @@ function StorySection() {
   // for fixed totals, mirroring StatsBand exactly.
   const storyLabels = (t.story && t.story.stat_labels) || {};
   const bandLabels = {
-    es: { countries: 'países', places: 'lugares', flights: 'vuelos', hours: 'horas capturando', brands: 'marcas' },
-    en: { countries: 'countries', places: 'places', flights: 'flights', hours: 'hours capturing', brands: 'brands' },
-    it: { countries: 'paesi', places: 'luoghi', flights: 'voli', hours: 'ore di ripresa', brands: 'brand' },
+    es: { countries: 'territorios', places: 'lugares', flights: 'vuelos', hours: 'horas en vuelo', brands: 'misiones' },
+    en: { countries: 'territories', places: 'places', flights: 'sorties', hours: 'hours aloft', brands: 'missions' },
+    it: { countries: 'territori', places: 'luoghi', flights: 'voli', hours: 'ore in volo', brands: 'missioni' },
   };
   const L = bandLabels[lang] || bandLabels.es;
   // Prefer the short story label if defined, otherwise the StatsBand label.
@@ -1205,27 +1207,30 @@ function ProcessSection() {
 function StatsBand() {
   const { lang } = useChangeLang();
   const labels = {
-    es: { kicker: 'Tres años, una órbita', countries: 'países', places: 'lugares', flights: 'vuelos', hours: 'horas capturando', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
-    en: { kicker: 'Three years, one orbit', countries: 'countries', places: 'places', flights: 'flights', hours: 'hours capturing', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
-    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', places: 'luoghi', flights: 'voli', hours: 'ore di ripresa', brands: 'brand', footer: 'Numeri ad oggi. L\'orbita continua.' },
+    es: { kicker: 'Tres años, una órbita', countries: 'territorios', places: 'lugares', flights: 'vuelos', hours: 'horas', brands: 'misiones', footer: 'Cifras al día de hoy. La órbita sigue.' },
+    en: { kicker: 'Three years, one orbit', countries: 'territories', places: 'places', flights: 'sorties', hours: 'hours aloft', brands: 'missions', footer: 'Numbers as of today. The orbit continues.' },
+    it: { kicker: 'Tre anni, un\'orbita', countries: 'territori', places: 'luoghi', flights: 'voli', hours: 'ore in volo', brands: 'missioni', footer: 'Numeri ad oggi. L\'orbita continua.' },
   };
   const L = labels[lang] || labels.es;
   const s = window.STATS_V2 || { countries: 0, places: 0, flights: 0, hours_flown: 0, projects: 0 };
   const STATS = [
-    { value: String(s.countries), label: L.countries },
-    { value: String(s.places), label: L.places },
-    { value: String(s.flights) + '+', label: L.flights },
-    { value: String(s.hours_flown) + '+', label: L.hours },
+    { value: s.countries, suffix: '', label: L.countries },
+    { value: s.places, suffix: '', label: L.places },
+    { value: s.flights, suffix: '+', label: L.flights },
+    { value: s.hours_flown, suffix: '+', label: L.hours },
   ];
   return (
     <section className="stats-band" aria-labelledby="stats-kicker">
       <div className="container">
         <p className="stats-kicker" id="stats-kicker" data-reveal>{L.kicker}</p>
         <div className="stats-grid">
-          {STATS.map((s, i) => (
+          {STATS.map((st, i) => (
             <div className="stat-cell" key={i} data-reveal style={{ transitionDelay: `${i * 0.08}s` }}>
-              <span className="stat-value">{s.value}</span>
-              <span className="stat-label">{s.label}</span>
+              <span className="stat-label">{st.label}</span>
+              <span className="stat-value">
+                <CountUp to={st.value} duration={1600} />
+                {st.suffix && <span className="stat-suffix">{st.suffix}</span>}
+              </span>
             </div>
           ))}
         </div>
@@ -1559,6 +1564,9 @@ function useKonami() {
 
 function useScrollReveal() {
   useEffect(() => {
+    const reducedMotion = _prefersReducedMotion();
+    if (reducedMotion) return () => {};
+
     // 1. Standard reveal for [data-reveal] elements
     const els = document.querySelectorAll('[data-reveal]');
     if (els.length) {
@@ -1574,7 +1582,7 @@ function useScrollReveal() {
     }
 
     // 2. Section headings — fade+slide on scroll
-    const headings = document.querySelectorAll('.section-title, .section-overline, .section-sub, .archive-head, .rayban-head, .testimonials-head');
+    const headings = document.querySelectorAll('.section-title, .section-overline, .section-sub, .archive-head, .rayban-head, .testimonials-head, .story-quote, .story-p');
     if (headings.length) {
       const headObs = new IntersectionObserver(entries => {
         entries.forEach(e => {
@@ -1609,7 +1617,48 @@ function useScrollReveal() {
       groups.forEach(g => gridObs.observe(g));
     }
 
-    return () => {}; // Observers self-clean via unobserve
+    // 4. Subtle parallax on .story-portrait, .archive-group, .hero-bg
+    const parallaxEls = document.querySelectorAll('.story-portrait, .globe-wrap, .rayban-spectacle');
+    let rafId = null;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        parallaxEls.forEach(el => {
+          const rect = el.getBoundingClientRect();
+          const inView = rect.top < window.innerHeight && rect.bottom > 0;
+          if (!inView) return;
+          const centerOffset = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+          const offset = centerOffset * -20; // subtle 20px max parallax
+          el.style.transform = `translateY(${offset}px)`;
+        });
+        rafId = null;
+      });
+    };
+    if (parallaxEls.length) {
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+
+    // 5. Stagger for service cards and faq items
+    const serviceGrid = document.querySelectorAll('.services-grid');
+    if (serviceGrid.length) {
+      const svcObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            const cards = e.target.querySelectorAll('.service-card');
+            cards.forEach((card, i) => {
+              setTimeout(() => card.classList.add('is-stagger-visible'), i * 80);
+            });
+            svcObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px -5% 0px' });
+      serviceGrid.forEach(g => svcObs.observe(g));
+    }
+
+    return () => {
+      if (parallaxEls.length) window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 }
 

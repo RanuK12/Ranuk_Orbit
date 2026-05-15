@@ -52,7 +52,7 @@
 <title>Ranuk Orbit — Earth, from another angle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="description" content="Ranuk Orbit — cinematic aerial photography & travel storytelling by Emilio Ranucoli. Drone, Ray-Ban Meta POV, editorial." />
-<meta name="theme-color" content="#0A0A0A" />
+<meta name="theme-color" content="#0D0D0F" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
@@ -391,7 +391,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(10,10,10,0.18) 0%, rgba(10,10,10,0.35) 50%, rgba(10,10,10,0.85) 100%);
+  background: linear-gradient(to bottom, rgba(10,10,10,0.12) 0%, rgba(10,10,10,0.25) 40%, rgba(10,10,10,0.55) 75%, rgba(10,10,10,0.8) 100%);
 }
 .hero-overlay-top {
   position: absolute; top: 0; left: 0; right: 0; height: 140px;
@@ -411,6 +411,7 @@ input, textarea, select { font: inherit; color: inherit; }
   margin-bottom: 24px;
   opacity: 0;
   animation: fadeIn 1s ease 0.2s forwards;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
 }
 .hero-headline {
   font-family: 'Italiana', serif;
@@ -420,6 +421,7 @@ input, textarea, select { font: inherit; color: inherit; }
   color: var(--celestial);
   margin-bottom: 28px;
   transition: transform 0.6s var(--ease);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8), 0 0 60px rgba(0, 0, 0, 0.5);
 }
 .hero-line { display: block; }
 .hero-word { display: inline-block; }
@@ -445,6 +447,7 @@ input, textarea, select { font: inherit; color: inherit; }
   margin-bottom: 36px;
   opacity: 0;
   animation: fadeIn 1s ease 1.4s forwards;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 0, 0, 0.4);
 }
 .hero-cta-row {
   display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
@@ -591,7 +594,7 @@ input, textarea, select { font: inherit; color: inherit; }
   max-width: 640px;
 }
 
-[data-reveal] { opacity: 0; transform: translateY(20px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+[data-reveal] { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 [data-reveal].is-revealed { opacity: 1; transform: translateY(0); }
 
 </style>
