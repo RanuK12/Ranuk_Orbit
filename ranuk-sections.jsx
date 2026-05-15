@@ -88,6 +88,7 @@ function Nav() {
         <a href="#home" className="nav-brand" aria-label="Ranuk Orbit">
           <span className="nav-mark">⊕</span>
           <span className="nav-wordmark">Ranuk Orbit</span>
+          <a href="https://ranuk.dev" target="_blank" rel="noopener noreferrer" className="nav-dev-pill" aria-label="Developer portfolio">dev</a>
         </a>
         <div className="nav-links">
           {links.map(l => <a key={l.href} href={l.href} className="nav-link">{l.label}</a>)}
@@ -654,6 +655,7 @@ function ArchiveGallery({ filtered, filterActive, onOpen, lang, containerRef, lo
 
 function ArchiveGroup({ loc, items, onOpen, lang }) {
   const [expanded, setExpanded] = useState(false);
+  const gridRef = useRef(null);
   if (!loc) return null;
 
   const copy = {
@@ -665,6 +667,17 @@ function ArchiveGroup({ loc, items, onOpen, lang }) {
   const over = items.length > INITIAL_PER_GROUP;
   const visible = expanded ? items : items.slice(0, INITIAL_PER_GROUP);
   const hiddenCount = items.length - INITIAL_PER_GROUP;
+
+  // When group expands, newly rendered cards start with opacity:0 because
+  // the IntersectionObserver in useScrollReveal already fired and unobserved
+  // this grid. We stagger-reveal the new cards manually after expand.
+  useEffect(() => {
+    if (!expanded || !gridRef.current) return;
+    const cards = gridRef.current.querySelectorAll('.media-card:not(.is-stagger-visible)');
+    cards.forEach((card, i) => {
+      setTimeout(() => card.classList.add('is-stagger-visible'), i * 60);
+    });
+  }, [expanded]);
 
   return (
     <div className="location-group" style={{ ['--accent']: loc.accentColor }}>
@@ -678,7 +691,7 @@ function ArchiveGroup({ loc, items, onOpen, lang }) {
         </div>
       </div>
 
-      <div className="location-group__grid">
+      <div className="location-group__grid" ref={gridRef}>
         {visible.map((it, i) => (
           <MediaCard
             key={it.id}
@@ -1436,6 +1449,33 @@ function ContactSection() {
 }
 
 // ─── FOOTER ───────────────────────────────────────────────────────────────
+function DevSignature() {
+  const { lang } = useChangeLang();
+  const copy = {
+    en: { label: 'Also built by Emilio', text: 'Explore the engineering side', cta: 'ranuk.dev' },
+    es: { label: 'También creado por Emilio', text: 'Explorá el lado de la ingeniería', cta: 'ranuk.dev' },
+    it: { label: 'Creato anche da Emilio', text: 'Esplora il lato ingegneristico', cta: 'ranuk.dev' },
+  };
+  const txt = copy[lang] || copy.en;
+  return (
+    <div className="dev-signature">
+      <div className="dev-signature__content">
+        <div className="dev-signature__label">{txt.label}</div>
+        <div className="dev-signature__text">{txt.text}</div>
+      </div>
+      <div className="dev-signature__divider" />
+      <a href="https://ranuk.dev" target="_blank" rel="noopener noreferrer" className="dev-signature__link">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+        {txt.cta}
+        <span>→</span>
+      </a>
+    </div>
+  );
+}
+
 function Footer() {
   const { t } = useChangeLang();
   return (
@@ -1467,6 +1507,7 @@ function Footer() {
           </div>
         </div>
       </div>
+      <DevSignature />
       <div className="footer-base">
         <span>© {new Date().getFullYear()} Emilio Ranucoli · {t.footer.copyright}</span>
         <span>Mar del Plata · Worldwide</span>
