@@ -17,7 +17,7 @@ const LightboxContext = createContext(null);
 let _savedScrollY = 0;
 function lockBodyScroll() {
   try {
-    _savedScrollY = window.scrollY || 0;
+    _savedScrollY = window.scrollY || window.pageYOffset || 0;
     document.body.style.top = `-${_savedScrollY}px`;
     document.body.classList.add('body-scroll-locked');
   } catch (_) {}
@@ -26,7 +26,16 @@ function unlockBodyScroll() {
   try {
     document.body.classList.remove('body-scroll-locked');
     document.body.style.top = '';
-    window.scrollTo(0, _savedScrollY);
+    // Double-raf ensures the browser has reflowed the page (removed
+    // position:fixed) before we restore scroll. Without this, some
+    // browsers (Safari, Chrome on iOS) ignore the scrollTo because
+    // the document is still in the fixed layout frame.
+    const y = _savedScrollY;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+      });
+    });
   } catch (_) {}
 }
 
@@ -404,4 +413,4 @@ function Lightbox() {
   );
 }
 
-Object.assign(window, { LightboxProvider, useLightbox, Lightbox });
+Object.assign(window, { LightboxProvider, useLightbox, Lightbox, lockBodyScroll, unlockBodyScroll });
