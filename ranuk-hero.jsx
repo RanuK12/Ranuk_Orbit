@@ -49,7 +49,7 @@ function HeroHeadline({ variant, anim, lang, parallax }) {
   const emIdx = data.emIndex;
   let charDelay = 0;
   const baseDelay = 0.45;
-  const step = 0.038; // 38ms per letter — tuned tighter than 80ms because 80ms feels heavy on long titles
+  const step = 0.015; // 15ms per letter — fast, punchy reveal (~500ms total)
 
   const renderWord = (word, lineI, wordI) => {
     const isEm = emIdx.line === lineI && emIdx.word === wordI;

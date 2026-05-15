@@ -96,8 +96,8 @@
   backdrop-filter: blur(2px);
 }
 .atlas-sidebar-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 500;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
   font-size: 11px;
   letter-spacing: 0.32em; text-transform: uppercase;
   color: rgba(247,247,245,0.55);
@@ -106,8 +106,8 @@
   display: flex; align-items: center; justify-content: space-between;
 }
 .atlas-sidebar-count {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 600;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
   font-size: 10px;
   letter-spacing: 0.1em;
   color: var(--celestial);
@@ -153,15 +153,15 @@
 .atlas-list-flag { font-size: 22px; flex-shrink: 0; line-height: 1; }
 .atlas-list-text { flex: 1; min-width: 0; }
 .atlas-list-name {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 500;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
   font-size: 15px;
-  letter-spacing: -0.005em;
+  letter-spacing: 0.01em;
   color: var(--paper);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .atlas-list-country {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   font-size: 11.5px;
   color: rgba(247,247,245,0.5);
@@ -184,6 +184,98 @@
   display: none;
   flex-direction: column;
   gap: 0;
+}
+
+/* ─── CSS GLOBE FALLBACK (lightweight, no WebGL) ────────────────── */
+.css-globe-container {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  background: radial-gradient(circle at 30% 30%, #0d1828, #050810);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.css-globe {
+  position: relative;
+  width: min(420px, 80%);
+  aspect-ratio: 1;
+}
+.css-globe-sphere {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(30, 111, 164, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 65% 70%, rgba(10, 20, 40, 0.9) 0%, transparent 60%),
+    radial-gradient(circle at 50% 50%, #0a1628 0%, #050810 100%);
+  box-shadow:
+    inset -20px -20px 60px rgba(0, 0, 0, 0.8),
+    inset 10px 10px 30px rgba(30, 111, 164, 0.1),
+    0 0 40px rgba(30, 111, 164, 0.15),
+    0 0 80px rgba(30, 111, 164, 0.05);
+  animation: css-globe-breathe 8s ease-in-out infinite;
+}
+@keyframes css-globe-breathe {
+  0%, 100% { box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), inset 10px 10px 30px rgba(30,111,164,0.1), 0 0 40px rgba(30,111,164,0.15), 0 0 80px rgba(30,111,164,0.05); }
+  50% { box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), inset 10px 10px 30px rgba(30,111,164,0.15), 0 0 50px rgba(30,111,164,0.2), 0 0 100px rgba(30,111,164,0.08); }
+}
+.css-globe-grid {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  opacity: 0.15;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 18%, rgba(30,111,164,0.3) 18%, rgba(30,111,164,0.3) 18.5%, transparent 18.5%),
+    repeating-linear-gradient(90deg, transparent, transparent 18%, rgba(30,111,164,0.3) 18%, rgba(30,111,164,0.3) 18.5%, transparent 18.5%);
+  animation: css-globe-rotate 40s linear infinite;
+}
+@keyframes css-globe-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.css-globe-sphere::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.08) 0%, transparent 45%);
+}
+.css-globe-sphere::after {
+  content: '';
+  position: absolute; inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(30,111,164,0.25) 0%, transparent 65%);
+  filter: blur(16px);
+  z-index: -1;
+}
+.css-globe-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  cursor: pointer;
+  background: none; border: none; padding: 8px;
+}
+.css-globe-pin-dot {
+  display: block;
+  width: 8px; height: 8px;
+  background: var(--pin-color, #C9A227);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--pin-color, #C9A227);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.css-globe-pin:hover .css-globe-pin-dot {
+  transform: scale(1.5);
+  box-shadow: 0 0 16px var(--pin-color, #C9A227), 0 0 32px rgba(201,162,39,0.3);
+}
+.css-globe-pin-pulse {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px solid var(--pin-color, #C9A227);
+  opacity: 0;
+  animation: css-pin-pulse 2.5s ease-in-out infinite;
+}
+@keyframes css-pin-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(3); opacity: 0; }
 }
 .timeline-item {
   display: flex; gap: 14px; align-items: stretch;
@@ -489,8 +581,8 @@
   transform: translateY(-1px);
 }
 .archive-group-toggle b {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 600;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
   letter-spacing: 0.05em;
   color: var(--accent, var(--celestial));
 }
@@ -1533,18 +1625,12 @@ body.body-scroll-locked {
 }
 .story-stat { text-align: center; position: relative; }
 .story-stat-num {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 300;
+  font-family: 'Italiana', serif;
+  font-weight: 400;
   font-size: clamp(52px, 6.4vw, 88px);
   line-height: 0.95;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.02em;
   color: var(--ink);
-  background: linear-gradient(135deg, #0A0A0A 0%, #4a5568 50%, #0A0A0A 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientShimmer 6s ease-in-out infinite;
   display: inline-block;
   font-variant-numeric: tabular-nums;
 }
@@ -1565,8 +1651,8 @@ body.body-scroll-locked {
 }
 .story-stat:hover .story-stat-num::after { opacity: 1; width: 40px; }
 .story-stat-label {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 500;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
   font-size: 11px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
