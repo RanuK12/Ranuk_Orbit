@@ -451,6 +451,7 @@ input, textarea, select { font: inherit; color: inherit; }
   opacity: 0;
   animation: fadeIn 1s ease 1.6s forwards;
 }
+/* CTA frosted glass for legibility over bright video frames */
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 12px;
   padding: 16px 28px;
@@ -464,6 +465,9 @@ input, textarea, select { font: inherit; color: inherit; }
   text-transform: uppercase;
   color: var(--celestial);
   transition: all 0.3s var(--ease);
+  background: rgba(10, 10, 10, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .btn-ghost:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
 .btn-ghost:hover .btn-arrow { transform: translateX(4px); }
@@ -539,7 +543,31 @@ input, textarea, select { font: inherit; color: inherit; }
   color: rgba(247,247,245,0.5);
 }
 
-/* ─── COMMON SECTION ──────────────────────────────────────────────── */
+/* Hero → next section soft fade transition */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent, var(--ink));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* CTA frosted glass for legibility over bright video frames */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px;
+  border: 1px solid rgba(247,247,245,0.4);
+  border-radius: 999px;
+  font-family: 'Marcellus', serif;
+  font-size: 12px; letter-spacing: 0.3em;
+  text-transform: uppercase;
+  transition: all 0.3s var(--ease);
+  background: rgba(10, 10, 10, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
 .section-overline {
   display: inline-block;
   font-family: 'Marcellus', serif;
@@ -573,7 +601,7 @@ input, textarea, select { font: inherit; color: inherit; }
 <noscript><link rel="stylesheet" href="/styles.css?v=2286b0c8"></noscript>
 
 <!-- Marketing components CSS (StatsBand, Process/HowIWork, social, WhatsApp, etc.) -->
-<link rel="stylesheet" href="/MARKETING_CSS.css?v=6dea1938" />
+<link rel="stylesheet" href="/MARKETING_CSS.css?v=10b1fb55" />
 
 <!-- Google Analytics 4 — propiedad de ranukorbit.com -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PQHE07PV1"></script>
@@ -633,10 +661,10 @@ input, textarea, select { font: inherit; color: inherit; }
 </script>
 
 <!-- Data -->
-<script src="/ranuk-data.js?v=1ea409cb"></script>
+<script src="/ranuk-data.js?v=85ff13e5"></script>
 
 <!-- App bundle (esbuild-compiled) -->
-<script src="/ranuk-app.min.js?v=d6f027b8"></script>
+<script src="/ranuk-app.min.js?v=92c3d86b"></script>
 
 <!-- Mount -->
 <script>
