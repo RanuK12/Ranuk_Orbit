@@ -53,6 +53,10 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     let cancelled = false;
 
     // Carga Three.js de forma diferida; solo arma el globo cuando el lib esté listo
+    // Mobile/tablet guard: don't load Three.js if globe is hidden (saves 600KB)
+    const isHidden = window.matchMedia('(max-width: 1180px)').matches;
+    if (isHidden) return;
+
     const loadAndInit = async () => {
       if (window.__loadThree) await window.__loadThree();
       if (cancelled || !mountRef.current) return;
