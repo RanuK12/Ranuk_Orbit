@@ -277,15 +277,22 @@ function MediaCard({ item, onOpen, featured = false, lang }) {
   const thumb = item.type === 'photo' ? item.src : (item.poster || item.src);
   const displayName = item.location ? pick(item.location.name, lang) : '';
   const typeLabel = item.type === 'pov' ? 'POV' : isVideo ? 'Video' : 'Photo';
+  const [imgError, setImgError] = useState(false);
 
   return (
     <article
-      className={`media-card${featured ? ' media-card--featured' : ''}`}
+      className={`media-card${featured ? ' media-card--featured' : ''}${imgError ? ' media-card--no-img' : ''}`}
       data-type={item.type}
       onClick={onOpen}
     >
       <div className="media-card__visual">
-        <img src={thumb} alt={item._displayTitle} loading="lazy" decoding="async" />
+        {!imgError ? (
+          <img src={thumb} alt={item._displayTitle} loading="lazy" decoding="async" onError={() => setImgError(true)} />
+        ) : (
+          <div className="media-card__placeholder">
+            <span className="media-card__placeholder-icon">⊕</span>
+          </div>
+        )}
         <div className="media-card__overlay" />
 
         {/* Type badge (top-left) */}
@@ -804,16 +811,16 @@ function StorySection() {
   // for fixed totals, mirroring StatsBand exactly.
   const storyLabels = (t.story && t.story.stat_labels) || {};
   const bandLabels = {
-    es: { countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas' },
-    en: { countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands' },
-    it: { countries: 'paesi', flights: 'voli', hours: 'ore in volo', brands: 'brand' },
+    es: { countries: 'países', places: 'lugares', flights: 'vuelos', hours: 'horas capturando', brands: 'marcas' },
+    en: { countries: 'countries', places: 'places', flights: 'flights', hours: 'hours capturing', brands: 'brands' },
+    it: { countries: 'paesi', places: 'luoghi', flights: 'voli', hours: 'ore di ripresa', brands: 'brand' },
   };
   const L = bandLabels[lang] || bandLabels.es;
   // Prefer the short story label if defined, otherwise the StatsBand label.
   const labelFor = (key, fallback) => (storyLabels[key] || fallback);
   const stats = [
     { value: s.countries || 0, suffix: '',  label: labelFor('countries', L.countries) },
-    { value: s.flights   || 0, suffix: '+', label: L.flights },
+    { value: s.places   || 0, suffix: '',  label: labelFor('places', L.places) },
     { value: s.hours_flown || 0, suffix: '+', label: labelFor('hours', L.hours) },
     { value: s.projects  || 0, suffix: '',  label: labelFor('projects', L.brands) },
   ];
@@ -856,6 +863,9 @@ function ServicesSection() {
   const { t, lang } = useChangeLang();
   const [openFaq, setOpenFaq] = useState(null);
   const packages = t.services.packages || [];
+
+  // Don't render an empty section — avoids black void
+  if (packages.length === 0 && (!window.FAQ_V2 || window.FAQ_V2.length === 0)) return null;
 
   return (
     <section className="services" id="services">
@@ -1195,17 +1205,17 @@ function ProcessSection() {
 function StatsBand() {
   const { lang } = useChangeLang();
   const labels = {
-    es: { kicker: 'Tres años, una órbita', countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
-    en: { kicker: 'Three years, one orbit', countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
-    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', flights: 'voli', hours: 'ore in volo', brands: 'brand', footer: 'Numeri ad oggi. L\'orbita continua.' },
+    es: { kicker: 'Tres años, una órbita', countries: 'países', places: 'lugares', flights: 'vuelos', hours: 'horas capturando', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
+    en: { kicker: 'Three years, one orbit', countries: 'countries', places: 'places', flights: 'flights', hours: 'hours capturing', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
+    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', places: 'luoghi', flights: 'voli', hours: 'ore di ripresa', brands: 'brand', footer: 'Numeri ad oggi. L\'orbita continua.' },
   };
   const L = labels[lang] || labels.es;
-  const s = window.STATS_V2 || { countries: 0, flights: 0, hours_flown: 0, projects: 0 };
+  const s = window.STATS_V2 || { countries: 0, places: 0, flights: 0, hours_flown: 0, projects: 0 };
   const STATS = [
     { value: String(s.countries), label: L.countries },
+    { value: String(s.places), label: L.places },
     { value: String(s.flights) + '+', label: L.flights },
     { value: String(s.hours_flown) + '+', label: L.hours },
-    { value: String(s.projects),   label: L.brands },
   ];
   return (
     <section className="stats-band" aria-labelledby="stats-kicker">
@@ -1549,18 +1559,57 @@ function useKonami() {
 
 function useScrollReveal() {
   useEffect(() => {
+    // 1. Standard reveal for [data-reveal] elements
     const els = document.querySelectorAll('[data-reveal]');
-    if (!els.length) return;
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('is-revealed');
-          obs.unobserve(e.target);
+    if (els.length) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-revealed');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+      els.forEach(el => obs.observe(el));
+    }
+
+    // 2. Section headings — fade+slide on scroll
+    const headings = document.querySelectorAll('.section-title, .section-overline, .section-sub, .archive-head, .rayban-head, .testimonials-head');
+    if (headings.length) {
+      const headObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-revealed');
+            headObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -8% 0px' });
+      headings.forEach(el => {
+        if (!el.hasAttribute('data-reveal')) {
+          el.classList.add('scroll-reveal');
+          headObs.observe(el);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
-    els.forEach(el => obs.observe(el));
-    return () => obs.disconnect();
+    }
+
+    // 3. Stagger cards in location groups when they enter viewport
+    const groups = document.querySelectorAll('.location-group__grid, .gallery-masonry');
+    if (groups.length) {
+      const gridObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            const cards = e.target.querySelectorAll('.media-card');
+            cards.forEach((card, i) => {
+              setTimeout(() => card.classList.add('is-stagger-visible'), i * 60);
+            });
+            gridObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px -5% 0px' });
+      groups.forEach(g => gridObs.observe(g));
+    }
+
+    return () => {}; // Observers self-clean via unobserve
   }, []);
 }
 
