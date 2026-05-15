@@ -804,16 +804,16 @@ function StorySection() {
   // for fixed totals, mirroring StatsBand exactly.
   const storyLabels = (t.story && t.story.stat_labels) || {};
   const bandLabels = {
-    es: { countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas' },
-    en: { countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands' },
-    it: { countries: 'paesi', flights: 'voli', hours: 'ore in volo', brands: 'brand' },
+    es: { countries: 'países', places: 'lugares', flights: 'vuelos', hours: 'horas capturando', brands: 'marcas' },
+    en: { countries: 'countries', places: 'places', flights: 'flights', hours: 'hours capturing', brands: 'brands' },
+    it: { countries: 'paesi', places: 'luoghi', flights: 'voli', hours: 'ore di ripresa', brands: 'brand' },
   };
   const L = bandLabels[lang] || bandLabels.es;
   // Prefer the short story label if defined, otherwise the StatsBand label.
   const labelFor = (key, fallback) => (storyLabels[key] || fallback);
   const stats = [
     { value: s.countries || 0, suffix: '',  label: labelFor('countries', L.countries) },
-    { value: s.flights   || 0, suffix: '+', label: L.flights },
+    { value: s.places   || 0, suffix: '',  label: labelFor('places', L.places) },
     { value: s.hours_flown || 0, suffix: '+', label: labelFor('hours', L.hours) },
     { value: s.projects  || 0, suffix: '',  label: labelFor('projects', L.brands) },
   ];
@@ -1195,17 +1195,17 @@ function ProcessSection() {
 function StatsBand() {
   const { lang } = useChangeLang();
   const labels = {
-    es: { kicker: 'Tres años, una órbita', countries: 'países', flights: 'vuelos', hours: 'horas en el aire', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
-    en: { kicker: 'Three years, one orbit', countries: 'countries', flights: 'flights', hours: 'hours airborne', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
-    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', flights: 'voli', hours: 'ore in volo', brands: 'brand', footer: 'Numeri ad oggi. L\'orbita continua.' },
+    es: { kicker: 'Tres años, una órbita', countries: 'países', places: 'lugares', flights: 'vuelos', hours: 'horas capturando', brands: 'marcas', footer: 'Cifras al día de hoy. La órbita sigue.' },
+    en: { kicker: 'Three years, one orbit', countries: 'countries', places: 'places', flights: 'flights', hours: 'hours capturing', brands: 'brands', footer: 'Numbers as of today. The orbit continues.' },
+    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', places: 'luoghi', flights: 'voli', hours: 'ore di ripresa', brands: 'brand', footer: 'Numeri ad oggi. L\'orbita continua.' },
   };
   const L = labels[lang] || labels.es;
-  const s = window.STATS_V2 || { countries: 0, flights: 0, hours_flown: 0, projects: 0 };
+  const s = window.STATS_V2 || { countries: 0, places: 0, flights: 0, hours_flown: 0, projects: 0 };
   const STATS = [
     { value: String(s.countries), label: L.countries },
+    { value: String(s.places), label: L.places },
     { value: String(s.flights) + '+', label: L.flights },
     { value: String(s.hours_flown) + '+', label: L.hours },
-    { value: String(s.projects),   label: L.brands },
   ];
   return (
     <section className="stats-band" aria-labelledby="stats-kicker">

@@ -182,32 +182,23 @@
   .stat-cell:not(:last-child)::after { display: none; }
 }
 .stat-value {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 300;
+  font-family: 'Italiana', serif;
+  font-weight: 400;
   font-size: clamp(56px, 8vw, 96px);
   line-height: 0.9;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, #F7F7F5 0%, #8FA8C0 50%, #F7F7F5 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: statShimmer 7s ease-in-out infinite;
+  color: var(--celestial);
   position: relative;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-@keyframes statShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 .stat-cell:hover .stat-value {
   transform: translateY(-2px);
 }
 .stat-label {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 10.5px;
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
+  font-size: 11px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: rgba(247, 247, 245, 0.55);
