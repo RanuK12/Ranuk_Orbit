@@ -1699,6 +1699,7 @@ body.body-scroll-locked {
 .services {
   padding: clamp(80px, 12vh, 160px) var(--gut);
   border-top: 1px solid var(--line);
+  min-height: 0;
   background:
     radial-gradient(ellipse 50% 40% at 50% 0%, rgba(201, 162, 39, 0.03), transparent 60%),
     linear-gradient(180deg, #0D0D0F 0%, #0f1016 50%, #0D0D0F 100%);
@@ -1710,6 +1711,7 @@ body.body-scroll-locked {
   min-height: 0; /* Collapse if empty */
 }
 .services-grid:empty { display: none; }
+.services-grid:not(:has(*)) { display: none; }
 .service-card {
   position: relative;
   padding: 36px 28px;
@@ -1749,9 +1751,10 @@ body.body-scroll-locked {
   margin-left: 4px;
 }
 .service-desc {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 300;
-  font-size: 14px; color: rgba(247,247,245,0.7);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 15px; color: rgba(247,247,245,0.7);
   line-height: 1.6;
   margin-bottom: 8px;
 }
