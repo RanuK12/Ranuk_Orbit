@@ -1,5 +1,48 @@
 // Ranuk Orbit — Photorealistic Globe v2 with arcs, sidebar, year filter, mobile timeline
+// HYBRID APPROACH: CSS globe renders instantly; Three.js upgrades only on capable devices
 const { useRef, useEffect, useState, useCallback, useMemo } = React;
+
+// ── CSS GLOBE FALLBACK ─────────────────────────────────────────────────────
+// Lightweight animated globe using CSS only (~2KB). Renders instantly without
+// WebGL, no GPU drain, no external textures. Shows rotating sphere with pins.
+function CSSGlobe({ locations, onLocationClick, lang }) {
+  // Place pins at approximate 2D positions based on lat/lng
+  // Simple equirectangular projection onto a circle
+  const pins = useMemo(() => {
+    return locations.map(loc => {
+      // Map lat/lng to x/y on circle (simplified Mercator-like projection)
+      const x = 50 + (loc.coords.lng / 180) * 40; // percentage
+      const y = 50 - (loc.coords.lat / 90) * 40;  // percentage
+      return { ...loc, px: x, py: y };
+    });
+  }, [locations]);
+
+  return (
+    <div className="css-globe-container">
+      <div className="css-globe">
+        <div className="css-globe-sphere" />
+        <div className="css-globe-grid" />
+        {pins.map(pin => (
+          <button
+            key={pin.id}
+            className="css-globe-pin"
+            style={{
+              left: `${pin.px}%`,
+              top: `${pin.py}%`,
+              '--pin-color': pin.accentColor || '#C9A227'
+            }}
+            onClick={() => onLocationClick(pin.id)}
+            aria-label={typeof pin.name === 'object' ? (pin.name[lang] || pin.name.en) : pin.name}
+            title={typeof pin.name === 'object' ? (pin.name[lang] || pin.name.en) : pin.name}
+          >
+            <span className="css-globe-pin-dot" />
+            <span className="css-globe-pin-pulse" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Texturas Tierra: NASA Blue Marble 8K via cdn.jsdelivr (mas nítido) con fallback a unpkg 4K
 const EARTH_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_atmos_2048.jpg';
@@ -519,12 +562,14 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
 }
 
 // ── AtlasSection: globe + sidebar + year filter chips, mobile = vertical timeline
+// HYBRID: CSS globe renders instantly → Three.js upgrades if device is capable
 function AtlasSection() {
   const { lang, t } = useLang();
   const { open } = useLightbox();
   const [year, setYear] = useState(null); // null = all
   const [highlightId, setHighlightId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [threeReady, setThreeReady] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.matchMedia('(max-width: 1180px)').matches);
@@ -532,6 +577,43 @@ function AtlasSection() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Capability detection: only upgrade to Three.js on non-mobile devices
+  // with good hardware (>= 4 cores, WebGL2 support)
+  useEffect(() => {
+    if (isMobile) return;
+    const isCapable = (() => {
+      try {
+        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) return false;
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (!gl) return false;
+        // Check for reasonable GPU — avoid integrated chips on old machines
+        const debugExt = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugExt) {
+          const renderer = gl.getParameter(debugExt.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          // Skip known weak GPUs
+          if (renderer.includes('swiftshader') || renderer.includes('llvmpipe')) return false;
+        }
+        return true;
+      } catch (_) { return false; }
+    })();
+    if (!isCapable) return;
+
+    // Use IntersectionObserver to only load Three.js when section is near viewport
+    const section = document.getElementById('explore');
+    if (!section) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        if (window.__loadThree) {
+          window.__loadThree().then(() => setThreeReady(true)).catch(() => {});
+        }
+        obs.disconnect();
+      }
+    }, { rootMargin: '200px' });
+    obs.observe(section);
+    return () => obs.disconnect();
+  }, [isMobile]);
 
   const locs = useMemo(() => {
     const all = window.LOCATIONS_V2 || [];
@@ -570,12 +652,20 @@ function AtlasSection() {
         {!isMobile ? (
           <div className="atlas-grid">
             <div className="globe-wrap">
-              <Globe
-                locations={locs.map(l => ({ ...l, name: pick(l.name, lang), country: pick(l.country, lang) }))}
-                visitedDots={(window.VISITED_DOTS_V2 || []).map(d => ({ ...d, name: pick(d.name, lang), country: pick(d.country, lang) }))}
-                onLocationClick={handleClick}
-                highlightId={highlightId}
-              />
+              {threeReady && window.THREE ? (
+                <Globe
+                  locations={locs.map(l => ({ ...l, name: pick(l.name, lang), country: pick(l.country, lang) }))}
+                  visitedDots={(window.VISITED_DOTS_V2 || []).map(d => ({ ...d, name: pick(d.name, lang), country: pick(d.country, lang) }))}
+                  onLocationClick={handleClick}
+                  highlightId={highlightId}
+                />
+              ) : (
+                <CSSGlobe
+                  locations={locs}
+                  onLocationClick={handleClick}
+                  lang={lang}
+                />
+              )}
               <div className="globe-hint">{t.atlas.hint}</div>
             </div>
             <aside className="atlas-sidebar">
@@ -633,4 +723,4 @@ function AtlasSection() {
   );
 }
 
-Object.assign(window, { Globe, AtlasSection });
+Object.assign(window, { Globe, CSSGlobe, AtlasSection });
