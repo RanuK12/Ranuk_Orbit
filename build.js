@@ -114,7 +114,19 @@ const hashes = step('hash versioned assets', () => {
   return out;
 });
 
-// 3) Rewrite the canonical index.html so every `<script src="/<asset>">`
+// 3) Compute a short "bundle hash" from the main JS for version.json + BUILD_HASH_PLACEHOLDER
+const bundleHash = step('compute bundle hash', () => {
+  const buf = readFileSync(join(ROOT, 'ranuk-app.min.js'));
+  return createHash('sha256').update(buf).digest('hex').slice(0, 7);
+});
+
+// 4) Write version.json (used by the inline cache-busting script)
+step('write version.json', () => {
+  const versionData = JSON.stringify({ version: bundleHash, buildTime: Date.now() });
+  writeFileSync(join(ROOT, 'version.json'), versionData, 'utf-8');
+});
+
+// 5) Rewrite the canonical index.html so every `<script src="/<asset>">`
 // and `<link href="/<asset>">` carries the current content hash. If the
 // tag already has ?v=<something> we replace it; otherwise we append.
 step('stamp index.html', () => {
@@ -141,16 +153,39 @@ step('stamp index.html', () => {
     }
   }
 
+  // Replace BUILD_HASH_PLACEHOLDER with the bundle hash
+  html = html.replace(/BUILD_HASH_PLACEHOLDER/g, bundleHash);
+
   writeFileSync(indexPath, html, 'utf-8');
 });
 
-// 4) Regenerate /en/, /es/, /it/ from the freshly-stamped index.html so
+// 6) Regenerate /en/, /es/, /it/ from the freshly-stamped index.html so
 // every locale gets the same cache-busting URLs.
 step('regenerate locale HTMLs', () => {
   execSync('python3 build-locales.py', { stdio: 'inherit', cwd: ROOT });
+});
+
+// 7) Inject bundle hash into locale HTMLs (in case build-locales doesn't
+// propagate the placeholder replacement)
+step('stamp locale HTMLs with bundle hash', () => {
+  const localeFiles = ['en/index.html', 'es/index.html', 'it/index.html'];
+  for (const relPath of localeFiles) {
+    const fullPath = join(ROOT, relPath);
+    if (!existsSync(fullPath)) continue;
+    let html = readFileSync(fullPath, 'utf-8');
+    html = html.replace(/BUILD_HASH_PLACEHOLDER/g, bundleHash);
+    html = html.replace(/ranuk-app\.min\.js\?v=[^"']*/g, `ranuk-app.min.js?v=${hashes['ranuk-app.min.js']}`);
+    html = html.replace(/ranuk-data\.js\?v=[^"']*/g, `ranuk-data.js?v=${hashes['ranuk-data.js']}`);
+    html = html.replace(/ranuk-manifest\.js\?v=[^"']*/g, `ranuk-manifest.js?v=${hashes['ranuk-manifest.js']}`);
+    html = html.replace(/styles\.css\?v=[^"']*/g, `styles.css?v=${hashes['styles.css'] || ''}`);
+    html = html.replace(/MARKETING_CSS\.css\?v=[^"']*/g, `MARKETING_CSS.css?v=${hashes['MARKETING_CSS.css']}`);
+    writeFileSync(fullPath, html, 'utf-8');
+  }
 });
 
 console.log('\n✓ Build complete. Asset versions:');
 for (const [name, hash] of Object.entries(hashes)) {
   console.log(`  /${name}?v=${hash}`);
 }
+console.log(`  version.json → ${bundleHash}`);
+console.log(`  BUILD_HASH_PLACEHOLDER → ${bundleHash}`);

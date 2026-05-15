@@ -8,44 +8,52 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="cache-version" content="1d6545f">
 
 <!-- Version check: fuerza recarga si hay nueva version en server -->
 <script>
 (function() {
-  var VERSION_URL = '/version.json';
-  var STORAGE_KEY = 'ranuk-version';
-  var CHECK_INTERVAL_MINUTES = 2;
+  'use strict';
+  var BUNDLED_VERSION = '1d6545f';
+  var STORAGE_KEY = 'ranuk-orbit-version';
+  var CHECK_INTERVAL = 30 * 1000;
+  var retries = 0;
+  var MAX_RETRIES = 3;
 
-  function checkVersion() {
-    fetch(VERSION_URL, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache' }
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var serverVersion = data.version;
-      var localVersion = sessionStorage.getItem(STORAGE_KEY);
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && saved !== BUNDLED_VERSION) {
+      localStorage.setItem(STORAGE_KEY, BUNDLED_VERSION);
+      window.location.reload(true);
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, BUNDLED_VERSION);
+  } catch(e) {}
 
-      if (!localVersion) {
-        sessionStorage.setItem(STORAGE_KEY, serverVersion);
-        return;
-      }
-
-      if (localVersion !== serverVersion) {
-        sessionStorage.setItem(STORAGE_KEY, serverVersion);
-        window.location.reload(true);
-      }
-    })
-    .catch(function(e) {
-      console.warn('[Ranuk] Version check failed:', e);
-    });
+  function checkForUpdate() {
+    if (retries >= MAX_RETRIES) return;
+    fetch('/version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data) {
+        retries = 0;
+        var serverVersion = data.version || data.v;
+        if (serverVersion && serverVersion !== BUNDLED_VERSION) {
+          console.log('[Ranuk Orbit] Nueva version:', serverVersion);
+          try { localStorage.setItem(STORAGE_KEY, serverVersion); } catch(e) {}
+          window.location.reload(true);
+        }
+      })
+      .catch(function(err) { retries++; });
   }
 
-  checkVersion();
-  setInterval(checkVersion, CHECK_INTERVAL_MINUTES * 60 * 1000);
-
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkForUpdate);
+  } else {
+    checkForUpdate();
+  }
+  setInterval(checkForUpdate, CHECK_INTERVAL);
   document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) checkVersion();
+    if (document.visibilityState === 'visible') checkForUpdate();
   });
 })();
 </script>
@@ -686,8 +694,8 @@ input, textarea, select { font: inherit; color: inherit; }
 </style>
 
 <!-- Non-critical CSS loaded async (archive, lightbox, story, services, etc.) -->
-<link rel="stylesheet" href="/styles.css?v=2286b0c8" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="/styles.css?v=2286b0c8"></noscript>
+<link rel="stylesheet" href="/styles.css?v=" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/styles.css?v="></noscript>
 
 <!-- Marketing components CSS (StatsBand, Process/HowIWork, social, WhatsApp, etc.) -->
 <link rel="stylesheet" href="/MARKETING_CSS.css?v=58bdaaf0" />
@@ -753,7 +761,7 @@ input, textarea, select { font: inherit; color: inherit; }
 <script src="/ranuk-data.js?v=494dc7f0"></script>
 
 <!-- App bundle (esbuild-compiled) -->
-<script src="/ranuk-app.min.js?v=55287b25"></script>
+<script src="/ranuk-app.min.js?v=1d6545fc"></script>
 
 <!-- Mount -->
 <script>
