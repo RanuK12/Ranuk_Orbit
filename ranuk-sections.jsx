@@ -277,15 +277,22 @@ function MediaCard({ item, onOpen, featured = false, lang }) {
   const thumb = item.type === 'photo' ? item.src : (item.poster || item.src);
   const displayName = item.location ? pick(item.location.name, lang) : '';
   const typeLabel = item.type === 'pov' ? 'POV' : isVideo ? 'Video' : 'Photo';
+  const [imgError, setImgError] = useState(false);
 
   return (
     <article
-      className={`media-card${featured ? ' media-card--featured' : ''}`}
+      className={`media-card${featured ? ' media-card--featured' : ''}${imgError ? ' media-card--no-img' : ''}`}
       data-type={item.type}
       onClick={onOpen}
     >
       <div className="media-card__visual">
-        <img src={thumb} alt={item._displayTitle} loading="lazy" decoding="async" />
+        {!imgError ? (
+          <img src={thumb} alt={item._displayTitle} loading="lazy" decoding="async" onError={() => setImgError(true)} />
+        ) : (
+          <div className="media-card__placeholder">
+            <span className="media-card__placeholder-icon">⊕</span>
+          </div>
+        )}
         <div className="media-card__overlay" />
 
         {/* Type badge (top-left) */}
@@ -856,6 +863,9 @@ function ServicesSection() {
   const { t, lang } = useChangeLang();
   const [openFaq, setOpenFaq] = useState(null);
   const packages = t.services.packages || [];
+
+  // Don't render an empty section — avoids black void
+  if (packages.length === 0 && (!window.FAQ_V2 || window.FAQ_V2.length === 0)) return null;
 
   return (
     <section className="services" id="services">
@@ -1549,18 +1559,57 @@ function useKonami() {
 
 function useScrollReveal() {
   useEffect(() => {
+    // 1. Standard reveal for [data-reveal] elements
     const els = document.querySelectorAll('[data-reveal]');
-    if (!els.length) return;
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('is-revealed');
-          obs.unobserve(e.target);
+    if (els.length) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-revealed');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+      els.forEach(el => obs.observe(el));
+    }
+
+    // 2. Section headings — fade+slide on scroll
+    const headings = document.querySelectorAll('.section-title, .section-overline, .section-sub, .archive-head, .rayban-head, .testimonials-head');
+    if (headings.length) {
+      const headObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-revealed');
+            headObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -8% 0px' });
+      headings.forEach(el => {
+        if (!el.hasAttribute('data-reveal')) {
+          el.classList.add('scroll-reveal');
+          headObs.observe(el);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
-    els.forEach(el => obs.observe(el));
-    return () => obs.disconnect();
+    }
+
+    // 3. Stagger cards in location groups when they enter viewport
+    const groups = document.querySelectorAll('.location-group__grid, .gallery-masonry');
+    if (groups.length) {
+      const gridObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            const cards = e.target.querySelectorAll('.media-card');
+            cards.forEach((card, i) => {
+              setTimeout(() => card.classList.add('is-stagger-visible'), i * 60);
+            });
+            gridObs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px -5% 0px' });
+      groups.forEach(g => gridObs.observe(g));
+    }
+
+    return () => {}; // Observers self-clean via unobserve
   }, []);
 }
 
