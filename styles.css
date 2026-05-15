@@ -1556,7 +1556,10 @@ body.body-scroll-locked {
 .story {
   position: relative;
   padding: clamp(80px, 12vh, 160px) var(--gut);
-  background: linear-gradient(180deg, #0D0D0F 0%, #111316 50%, #0D0D0F 100%);
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 20%, rgba(30, 111, 164, 0.04), transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(201, 162, 39, 0.03), transparent 60%),
+    linear-gradient(180deg, #0D0D0F 0%, #10121a 40%, #0f1118 70%, #0D0D0F 100%);
   color: var(--celestial);
   border-top: 1px solid var(--line);
 }
@@ -1634,24 +1637,41 @@ body.body-scroll-locked {
 .story-stats {
   position: relative;
   max-width: var(--max); margin: 80px auto 0;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
-  padding-top: 60px;
-  border-top: 1px solid rgba(247,247,245,0.12);
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: rgba(247, 247, 245, 0.06);
+  border-radius: 2px;
 }
-.story-stat { text-align: center; position: relative; }
+.story-stat {
+  text-align: center;
+  position: relative;
+  padding: 32px 16px;
+  background: linear-gradient(180deg, #10121a 0%, #0D0D0F 100%);
+}
+.story-stat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 28px; height: 1px;
+  background: var(--desert);
+  opacity: 0.4;
+}
+.story-stat::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 28px;
+  background: var(--desert);
+  opacity: 0.4;
+}
 .story-stat-num {
-  font-family: 'Italiana', serif;
+  font-family: 'Marcellus', serif;
   font-weight: 400;
-  font-size: clamp(52px, 6.4vw, 88px);
-  line-height: 0.95;
+  font-size: clamp(44px, 5.5vw, 72px);
+  line-height: 1;
   letter-spacing: -0.02em;
   color: var(--celestial);
   display: inline-block;
   font-variant-numeric: tabular-nums;
-}
-@keyframes gradientShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 .story-stat-num::after {
   content: '';
@@ -1666,19 +1686,22 @@ body.body-scroll-locked {
 }
 .story-stat:hover .story-stat-num::after { opacity: 1; width: 40px; }
 .story-stat-label {
-  font-family: 'Marcellus', serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 400;
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  font-size: 10px;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: rgba(247,247,245,0.5);
-  margin-top: 24px;
+  color: rgba(247,247,245,0.4);
+  margin-top: 16px;
 }
 
 /* ─── SERVICES ───────────────────────────────────────────────────── */
 .services {
   padding: clamp(80px, 12vh, 160px) var(--gut);
   border-top: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 0%, rgba(201, 162, 39, 0.03), transparent 60%),
+    linear-gradient(180deg, #0D0D0F 0%, #0f1016 50%, #0D0D0F 100%);
 }
 .services-head { max-width: var(--max); margin: 0 auto 60px; text-align: center; }
 .services-grid {
@@ -1709,10 +1732,12 @@ body.body-scroll-locked {
 .service-name {
   font-family: 'Italiana', serif; font-size: 28px;
   letter-spacing: -0.01em;
+  color: var(--celestial);
 }
 .service-price {
-  font-family: 'Marcellus', serif; font-size: 22px;
+  font-family: 'Marcellus', serif; font-size: 28px;
   color: var(--desert);
+  letter-spacing: -0.01em;
 }
 .service-tag, .service-tagline {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -1724,8 +1749,10 @@ body.body-scroll-locked {
   margin-left: 4px;
 }
 .service-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
   font-size: 14px; color: rgba(247,247,245,0.7);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 8px;
 }
 .service-features {
@@ -1733,6 +1760,8 @@ body.body-scroll-locked {
   flex: 1; padding-top: 12px; border-top: 1px solid var(--line);
 }
 .service-features li {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
   font-size: 13px; color: rgba(247,247,245,0.85);
   padding-left: 18px; position: relative;
 }
@@ -1743,12 +1772,15 @@ body.body-scroll-locked {
 .service-cta {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: 'Marcellus', serif; font-size: 11px;
-  letter-spacing: 0.3em; text-transform: uppercase;
+  letter-spacing: 0.2em; text-transform: uppercase;
   margin-top: 12px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--celestial);
   align-self: flex-start;
+  color: var(--celestial);
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
+.service-cta:hover { color: var(--desert); border-color: var(--desert); }
 .service-cta span { transition: transform 0.3s var(--ease); }
 .service-cta:hover span { transform: translateX(4px); }
 
@@ -2147,6 +2179,9 @@ body.body-scroll-locked {
   padding: clamp(80px, 12vh, 160px) var(--gut);
   border-top: 1px solid var(--line);
   text-align: center;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(143, 168, 192, 0.03), transparent 65%),
+    var(--ink);
 }
 .testimonials-head { max-width: var(--max); margin: 0 auto 60px; }
 .testimonials-stage {
@@ -2162,20 +2197,28 @@ body.body-scroll-locked {
 }
 .testimonial.is-active { opacity: 1; pointer-events: auto; }
 .testimonial p {
-  font-family: 'Italiana', serif;
-  font-size: clamp(24px, 2.6vw, 36px);
-  line-height: 1.4;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.5;
+  color: rgba(247,247,245,0.85);
   margin-bottom: 32px;
 }
 .testimonial footer {
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; gap: 6px;
   font-family: 'Marcellus', serif;
 }
-.testimonial footer strong { font-size: 14px; letter-spacing: 0.1em; }
+.testimonial footer strong {
+  font-family: 'Marcellus', serif;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: var(--celestial);
+}
 .testimonial footer span {
-  font-size: 11px; letter-spacing: 0.3em;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(247,247,245,0.5);
+  color: rgba(247,247,245,0.4);
 }
 .testimonials-dots {
   display: flex; justify-content: center; gap: 10px;
@@ -2359,7 +2402,7 @@ body.konami { animation: rainbow 6s linear; }
   .archive-controls { flex-direction: column; }
   .services-grid { grid-template-columns: 1fr; }
   .rayban-grid { grid-template-columns: 1fr; }
-  .story-stats { grid-template-columns: repeat(2, 1fr); gap: 30px; }
+  .story-stats { grid-template-columns: repeat(2, 1fr); gap: 1px; }
   .footer-cols { grid-template-columns: 1fr 1fr; }
   .contact-row { grid-template-columns: 1fr; }
   .lb-meta { grid-template-columns: 1fr; gap: 12px; }
@@ -2470,16 +2513,16 @@ body.konami { animation: rainbow 6s linear; }
   .nav { animation: none; opacity: 1; }
   .scroll-progress { display: none; }
   .skeleton { animation: none; }
-  .scroll-reveal, .media-card.is-stagger-visible { opacity: 1; transform: none; transition: none; }
+  .scroll-reveal, .media-card.is-stagger-visible, .service-card.is-stagger-visible { opacity: 1; transform: none; transition: none; }
 }
 
 /* ─── SCROLL-TRIGGERED REVEALS ────────────────────────────────────── */
 /* Section headings: fade + rise on viewport entry */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .scroll-reveal.is-revealed {
   opacity: 1;
@@ -2498,4 +2541,26 @@ body.konami { animation: rainbow 6s linear; }
 .gallery-masonry .media-card.is-stagger-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Service card stagger */
+.service-card {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              background 0.3s ease;
+}
+.service-card.is-stagger-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Parallax elements — will-change for GPU compositing */
+.story-portrait,
+.globe-wrap,
+.rayban-spectacle {
+  will-change: transform;
+  transition: transform 0.1s linear;
 }
