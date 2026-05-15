@@ -36,34 +36,20 @@ const HEADLINE_VARIANTS = {
 // 'curtain':           each letter slides up from below a fixed baseline
 // 'blur':              each letter eases from blurred to focused
 function HeroHeadline({ variant, anim, lang, parallax }) {
-  // Defensive lookup: if a translator forgets a locale (or `variant` is
-  // unknown), walk down to a guaranteed-non-null entry instead of
-  // letting `data.lines` throw and unmount the whole app.
-  //   1. requested variant + requested lang   (happy path)
-  //   2. requested variant + en               (variant exists, locale missing)
-  //   3. C + requested lang                   (variant unknown, locale OK)
-  //   4. C + en                               (last-resort safety net)
   const v = HEADLINE_VARIANTS[variant] || HEADLINE_VARIANTS.C;
   const data = v[lang] || v.en || HEADLINE_VARIANTS.C[lang] || HEADLINE_VARIANTS.C.en;
   const lines = data.lines;
   const emIdx = data.emIndex;
-  let charDelay = 0;
   const baseDelay = 0.45;
-  const step = 0.015; // 15ms per letter — fast, punchy reveal (~500ms total)
+  let wordCount = 0;
 
   const renderWord = (word, lineI, wordI) => {
     const isEm = emIdx.line === lineI && emIdx.word === wordI;
+    const d = baseDelay + wordCount * 0.15;
+    wordCount += 1;
     return (
-      <span key={`${lineI}-${wordI}`} className={`hero-word${isEm ? ' is-em' : ''}`}>
-        {[...word].map((ch, ci) => {
-          const d = baseDelay + charDelay * step;
-          charDelay += 1;
-          return (
-            <span key={ci} className={`hero-char hero-char--${anim}`} style={{ animationDelay: `${d}s` }}>
-              {ch === ' ' ? '\u00A0' : ch}
-            </span>
-          );
-        })}
+      <span key={`${lineI}-${wordI}`} className={`hero-word${isEm ? ' is-em' : ''} hero-word-anim`} style={{ animationDelay: `${d}s` }}>
+        {word}
         <span className="hero-char-spacer">{'\u00A0'}</span>
       </span>
     );
