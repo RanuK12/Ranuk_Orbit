@@ -26,7 +26,7 @@ This is intentionally a **zero-dependency, deploy-anywhere** static site. Drop t
 
 ```
 Ranuk_Orbit_Project/
-├── Ranuk Orbit.html       # entrypoint principal
+├── index.html             # entrypoint principal
 ├── ranuk-data.js          # data layer (locations, services, copy IDs)
 ├── ranuk-i18n.jsx         # i18n provider (ES/EN)
 ├── ranuk-hero.jsx         # hero section + nav
@@ -80,7 +80,7 @@ brew install ffmpeg webp libavif
 ./compress-videos.sh Videos/Drone/Hero.MP4 hero
 ```
 
-Ver `MEDIA_PLAN.md` para la estrategia completa.
+Ver `compress-photos.sh` y `compress-videos.sh` para los comandos de compresión.
 
 ---
 
