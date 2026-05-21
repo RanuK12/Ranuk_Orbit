@@ -32,6 +32,7 @@ const VERSIONED_ASSETS = [
   'ranuk-data.js',
   'ranuk-manifest.js',
   'MARKETING_CSS.css',
+  'styles.css',
 ];
 
 function step(label, fn) {
