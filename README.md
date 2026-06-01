@@ -100,3 +100,8 @@ Ver `DEPLOY_GUIDE.md`. Resumen:
 © 2026 Emilio Ranucoli. Todos los derechos reservados. Ver `LICENSE` para términos completos.
 
 Las fotos, videos, código y diseño de este repositorio son obra original de Emilio Ranucoli. No se permite reproducción, redistribución, ni uso para entrenar modelos de IA sin permiso escrito previo.
+
+
+## Licencia
+
+MIT — © 2026 Ranuk IT Solutions | [ranuk.dev](https://ranuk.dev)
