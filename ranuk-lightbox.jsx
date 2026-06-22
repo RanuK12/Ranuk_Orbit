@@ -120,8 +120,22 @@ function Lightbox() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipTime, setTooltipTime] = useState('0:00');
   const [tooltipX, setTooltipX] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [buffering, setBuffering] = useState(false);
+  const [seekFlash, setSeekFlash] = useState(null); // 'fwd' | 'back'
 
-  // Reset state on item change
+  // Refs that mirror state so stable (deps-free) callbacks & event
+  // listeners always read the latest value without re-subscribing.
+  const scrubbingRef = useRef(false);
+  const durRef = useRef(0);
+  const volRef = useRef(1);
+  const videoActiveRef = useRef(false);
+  // Ambient-mode glow element + sampling loop handle.
+  const glowRef = useRef(null);
+  const ambientRef = useRef({ timer: 0, canvas: null, ctx: null });
+  const videoTapRef = useRef({ t: 0 });
+
+  // Reset state on item change (volume persists across items)
   useEffect(() => {
     setPlaying(true);
     setMuted(true);
@@ -129,6 +143,8 @@ function Lightbox() {
     setBuffered(0);
     setDuration(0);
     setIsVideoReady(false);
+    setBuffering(false);
+    setSeekFlash(null);
     // Clear nav direction after animation
     const id = setTimeout(() => setNavDirection(null), 400);
     return () => clearTimeout(id);
@@ -145,20 +161,32 @@ function Lightbox() {
         setDuration(video.duration);
         setIsVideoReady(true);
       }
+      // Re-apply the volume the user picked on the previous clip.
+      try { video.volume = volRef.current; } catch (_) {}
     }
 
     function onTimeUpdate() {
-      setProgress(video.currentTime);
+      // While the user drags the playhead we drive currentTime ourselves;
+      // ignore the browser's timeupdate so the thumb doesn't fight back.
+      if (!scrubbingRef.current) setProgress(video.currentTime);
     }
 
     function onEnded() {
       setPlaying(false);
     }
 
+    // Buffering spinner: 'waiting' fires when playback stalls for data,
+    // 'playing'/'canplay' when it resumes.
+    const onWaiting = () => setBuffering(true);
+    const onResume = () => setBuffering(false);
+
     video.addEventListener('loadedmetadata', onLoaded);
     video.addEventListener('durationchange', onLoaded);
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('ended', onEnded);
+    video.addEventListener('waiting', onWaiting);
+    video.addEventListener('playing', onResume);
+    video.addEventListener('canplay', onResume);
 
     // If the video already has metadata (browser cache)
     if (video.readyState >= 1) onLoaded();
@@ -168,8 +196,43 @@ function Lightbox() {
       video.removeEventListener('durationchange', onLoaded);
       video.removeEventListener('timeupdate', onTimeUpdate);
       video.removeEventListener('ended', onEnded);
+      video.removeEventListener('waiting', onWaiting);
+      video.removeEventListener('playing', onResume);
+      video.removeEventListener('canplay', onResume);
     };
   }, [lb.index]);
+
+  // ─── Ambient Mode ──────────────────────────────────────────────────
+  // Sample the average colour of the current video frame a few times a
+  // second and bleed it as a soft glow behind the player — YouTube's
+  // ambient mode, tuned for cinematic aerial footage. Writes straight to
+  // the glow node's style (no React re-render churn) and only runs while
+  // a video is actually playing and the tab is visible.
+  useEffect(() => {
+    if (!lb.isOpen) return;
+    const a = ambientRef.current;
+    if (!a.canvas) {
+      a.canvas = document.createElement('canvas');
+      a.canvas.width = 16; a.canvas.height = 9;
+      a.ctx = a.canvas.getContext('2d', { willReadFrequently: true });
+    }
+    const sample = () => {
+      const v = videoRef.current, glow = glowRef.current;
+      if (!v || !glow || v.paused || v.readyState < 2 || document.hidden) return;
+      try {
+        a.ctx.drawImage(v, 0, 0, 16, 9);
+        const d = a.ctx.getImageData(0, 0, 16, 9).data;
+        let r = 0, g = 0, b = 0, n = d.length / 4;
+        for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+        r = Math.round(r / n); g = Math.round(g / n); b = Math.round(b / n);
+        glow.style.background =
+          `radial-gradient(ellipse 70% 60% at 50% 50%, rgba(${r},${g},${b},0.55) 0%, rgba(${r},${g},${b},0.22) 45%, transparent 75%)`;
+        glow.style.opacity = '1';
+      } catch (_) { /* tainted frame (shouldn't happen, same-origin) */ }
+    };
+    a.timer = setInterval(sample, 220);
+    return () => { clearInterval(a.timer); };
+  }, [lb.index, lb.isOpen]);
 
   // Phase animation: opening → open after mount
   useEffect(() => {
@@ -235,26 +298,78 @@ function Lightbox() {
     setMuted(v.muted);
   }, []);
 
-  const onSeek = useCallback((e) => {
+  // ─── Scrubbing (click + drag) ──────────────────────────────────────
+  const seekToClientX = useCallback((clientX) => {
+    const v = videoRef.current, tl = timelineRef.current, d = durRef.current;
+    if (!v || !d || !tl || clientX == null) return;
+    const rect = tl.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    v.currentTime = pct * d;
+    setProgress(pct * d);
+  }, []);
+
+  const onScrubMove = useCallback((e) => {
+    if (!scrubbingRef.current) return;
+    const x = e.clientX ?? e.touches?.[0]?.clientX;
+    seekToClientX(x);
+    const tl = timelineRef.current, d = durRef.current;
+    if (tl && d && x != null) {
+      const rect = tl.getBoundingClientRect();
+      const lx = Math.max(0, Math.min(rect.width, x - rect.left));
+      setTooltipX(lx);
+      setTooltipTime(fmtTime((lx / rect.width) * d));
+      setShowTooltip(true);
+    }
+  }, [seekToClientX]);
+
+  const onScrubEnd = useCallback(() => {
+    scrubbingRef.current = false;
+    setShowTooltip(false);
+    window.removeEventListener('pointermove', onScrubMove);
+    window.removeEventListener('pointerup', onScrubEnd);
+  }, [onScrubMove]);
+
+  const onScrubStart = useCallback((e) => {
     e.stopPropagation();
-    const v = videoRef.current;
-    if (!v || !duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
-    const pct = Math.max(0, Math.min(1, x / rect.width));
-    v.currentTime = pct * duration;
-  }, [duration]);
+    scrubbingRef.current = true;
+    seekToClientX(e.clientX ?? e.touches?.[0]?.clientX);
+    window.addEventListener('pointermove', onScrubMove);
+    window.addEventListener('pointerup', onScrubEnd);
+  }, [seekToClientX, onScrubMove, onScrubEnd]);
 
   const onTimelineHover = useCallback((e) => {
-    if (!duration || !timelineRef.current) return;
+    const d = durRef.current;
+    if (!d || !timelineRef.current || scrubbingRef.current) return;
     const rect = timelineRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const pct = Math.max(0, Math.min(1, x / rect.width));
-    const time = pct * duration;
     setTooltipX(x);
-    setTooltipTime(fmtTime(time));
+    setTooltipTime(fmtTime(pct * d));
     setShowTooltip(true);
-  }, [duration]);
+  }, []);
+
+  // Relative seek (arrow keys / double-tap) with a brief visual flash.
+  const seekBy = useCallback((delta) => {
+    const v = videoRef.current, d = durRef.current;
+    if (!v || !d) return;
+    v.currentTime = Math.max(0, Math.min(d, v.currentTime + delta));
+    setProgress(v.currentTime);
+    setSeekFlash(delta > 0 ? 'fwd' : 'back');
+    setTimeout(() => setSeekFlash(null), 450);
+  }, []);
+
+  // Volume: setting a level above 0 also unmutes.
+  const setVol = useCallback((val) => {
+    const v = videoRef.current;
+    const clamped = Math.max(0, Math.min(1, val));
+    volRef.current = clamped;
+    setVolume(clamped);
+    if (v) {
+      v.volume = clamped;
+      v.muted = clamped === 0;
+    }
+    setMuted(clamped === 0);
+  }, []);
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(() => {
@@ -288,8 +403,24 @@ function Lightbox() {
       if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
         e.preventDefault(); e.stopPropagation(); onCloseRef.current(); return;
       }
-      if (e.key === 'ArrowLeft') { setNavDirection('left'); lb.prev(); return; }
-      if (e.key === 'ArrowRight') { setNavDirection('right'); lb.next(); return; }
+      // With a video open, ←/→ scrub the clip (±5s) — item navigation
+      // stays on the on-screen arrows + thumbnail strip. For photos they
+      // page through the gallery as before.
+      if (e.key === 'ArrowLeft') {
+        if (videoActiveRef.current) { e.preventDefault(); seekBy(-5); }
+        else { setNavDirection('left'); lb.prev(); }
+        return;
+      }
+      if (e.key === 'ArrowRight') {
+        if (videoActiveRef.current) { e.preventDefault(); seekBy(5); }
+        else { setNavDirection('right'); lb.next(); }
+        return;
+      }
+      if (e.key === 'j' || e.key === 'J') { e.preventDefault(); seekBy(-10); return; }
+      if (e.key === 'l' || e.key === 'L') { e.preventDefault(); seekBy(10); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setVol(volRef.current + 0.1); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setVol(volRef.current - 0.1); return; }
+      if (e.key === 'm' || e.key === 'M') { e.preventDefault(); toggleMute(); return; }
       if (e.key === ' ' || e.key === 'k') { e.preventDefault(); togglePlay(); return; }
       if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); return; }
       if (e.key === 'd' || e.key === 'D') { e.preventDefault(); triggerDownload(); return; }
@@ -305,7 +436,7 @@ function Lightbox() {
     };
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
-  }, [lb.isOpen, lb.prev, lb.next, togglePlay, toggleFullscreen, triggerDownload]);
+  }, [lb.isOpen, lb.prev, lb.next, togglePlay, toggleFullscreen, triggerDownload, seekBy, setVol, toggleMute]);
 
   // Focus close button on open
   useEffect(() => {
@@ -345,6 +476,26 @@ function Lightbox() {
   const isVideo = item.type === 'video' || item.type === 'pov';
   const locName = item.location ? (typeof pick === 'function' ? pick(item.location.name, lang) : '') : '';
   const modeClass = isVideo ? 'lightbox--video' : 'lightbox--photo';
+
+  // Keep refs in sync so deps-free callbacks/listeners read fresh values.
+  videoActiveRef.current = isVideo;
+  durRef.current = duration;
+
+  // Double-tap on a video's left/right half seeks ∓10s (mobile gesture).
+  // Falls through to the single-tap play toggle when it's not a double tap.
+  const onVideoTouchEnd = (e) => {
+    const now = Date.now();
+    const t = e.changedTouches[0];
+    if (now - videoTapRef.current.t < 300) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const left = (t.clientX - rect.left) < rect.width / 2;
+      seekBy(left ? -10 : 10);
+      videoTapRef.current.t = 0;
+      e.stopPropagation();
+    } else {
+      videoTapRef.current.t = now;
+    }
+  };
 
   // Metadata
   const cameraName = item.exif?.camera || (item.type === 'pov' ? 'Ray-Ban Meta' : 'DJI Mini 4 Pro');
@@ -429,18 +580,25 @@ function Lightbox() {
         {/* MEDIA STAGE */}
         <div className={`lightbox-media${mediaAnimClass}`} key={item.id}>
           {isVideo ? (
+            <>
+            {/* Ambient Mode glow — averaged frame colour bled behind the video.
+                Sits outside the (overflow:hidden) wrap so it can spill past edges. */}
+            <div className="lb-ambient-glow" ref={glowRef} aria-hidden="true" />
             <div className="lb-media-wrap lb-media-wrap--video">
               <video
                 ref={videoRef}
                 className="lb-media"
                 src={item.src}
                 poster={item.poster || undefined}
+                crossOrigin="anonymous"
                 disablePictureInPicture
                 controlsList="nodownload nofullscreen noplaybackrate"
                 autoPlay
                 playsInline
                 muted={muted}
                 onClick={togglePlay}
+                onDoubleClick={toggleFullscreen}
+                onTouchEnd={onVideoTouchEnd}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
                 onProgress={(e) => {
@@ -450,8 +608,16 @@ function Lightbox() {
                   }
                 }}
               />
-              {/* Play overlay (visible when paused) */}
-              <div className={`video-play-overlay${!playing ? ' visible' : ''}`} onClick={togglePlay}>
+              {/* Buffering spinner */}
+              {buffering && <div className="lb-spinner" aria-hidden="true"><span /></div>}
+              {/* Seek flash (±10s) */}
+              {seekFlash && (
+                <div className={`lb-seek-flash lb-seek-flash--${seekFlash}`} aria-hidden="true">
+                  {seekFlash === 'fwd' ? '10s »' : '« 10s'}
+                </div>
+              )}
+              {/* Play overlay (visible when paused, hidden while buffering) */}
+              <div className={`video-play-overlay${!playing && !buffering ? ' visible' : ''}`} onClick={togglePlay}>
                 <Icon.playLarge />
               </div>
               {/* Premium video controls */}
@@ -462,11 +628,13 @@ function Lightbox() {
                 <div
                   className="video-timeline"
                   ref={timelineRef}
-                  onClick={onSeek}
+                  onPointerDown={onScrubStart}
                   onMouseMove={onTimelineHover}
-                  onMouseLeave={() => setShowTooltip(false)}
+                  onMouseLeave={() => { if (!scrubbingRef.current) setShowTooltip(false); }}
                   role="slider"
                   aria-label="Seek"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
                   aria-valuenow={Math.round(duration > 0 ? (progress / duration) * 100 : 0)}
                 >
                   <div className="video-timeline__buffer" style={{ width: `${buffered * 100}%` }} />
@@ -480,14 +648,26 @@ function Lightbox() {
                   <span className="video-time__separator">/</span>
                   {fmtTime(duration || 0)}
                 </span>
-                <button type="button" className="video-btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
-                  {muted ? <Icon.speakerOff /> : <Icon.speakerOn />}
-                </button>
+                {/* Volume: mute toggle + slider that expands on hover/focus */}
+                <div className="video-volume">
+                  <button type="button" className="video-btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
+                    {muted ? <Icon.speakerOff /> : <Icon.speakerOn />}
+                  </button>
+                  <input
+                    type="range"
+                    className="video-volume__slider"
+                    min={0} max={1} step={0.05}
+                    value={muted ? 0 : volume}
+                    onChange={(e) => setVol(parseFloat(e.target.value))}
+                    aria-label="Volume"
+                  />
+                </div>
                 <button type="button" className="video-btn" onClick={toggleFullscreen} aria-label="Fullscreen">
                   <Icon.fullscreen />
                 </button>
               </div>
             </div>
+            </>
           ) : (
             <div className="lb-media-wrap">
               <img className="lb-media" src={item.src} alt={title} />
@@ -547,7 +727,15 @@ function Lightbox() {
       </div>
 
       {/* Keyboard hints */}
-      <div className="lb-hint lb-hint-esc">{lang === 'es' ? 'ESC cerrar · ← → navegar · F pantalla completa' : lang === 'it' ? 'ESC chiudi · ← → naviga · F schermo intero' : 'ESC close · ← → navigate · F fullscreen'}</div>
+      <div className="lb-hint lb-hint-esc">{
+        isVideo
+          ? (lang === 'es' ? 'ESC cerrar · espacio play · ← → ±5s · M silenciar · F pantalla completa'
+            : lang === 'it' ? 'ESC chiudi · spazio play · ← → ±5s · M muto · F schermo intero'
+            : 'ESC close · space play · ← → ±5s · M mute · F fullscreen')
+          : (lang === 'es' ? 'ESC cerrar · ← → navegar · F pantalla completa'
+            : lang === 'it' ? 'ESC chiudi · ← → naviga · F schermo intero'
+            : 'ESC close · ← → navigate · F fullscreen')
+      }</div>
     </div>
   );
 }

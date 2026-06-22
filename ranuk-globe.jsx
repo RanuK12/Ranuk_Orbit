@@ -44,12 +44,15 @@ function CSSGlobe({ locations, onLocationClick, lang }) {
   );
 }
 
-// Texturas Tierra: NASA Blue Marble 8K via cdn.jsdelivr (mas nítido) con fallback a unpkg 4K
+// Texturas Tierra: NASA Blue Marble 2K (day/normal/specular) via cdn.jsdelivr.
 const EARTH_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_atmos_2048.jpg';
 const EARTH_BUMP = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_normal_2048.jpg';
 const EARTH_SPEC = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_specular_2048.jpg';
 const CLOUDS_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_clouds_1024.png';
 const STARS_TEX  = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/2294472375_24a3b8ef46_o.jpg';
+// NASA Black Marble city lights — self-hosted (same-origin, no CDN single point
+// of failure) for the day/night terminator shader.
+const NIGHT_TEX  = '/vendor/textures/earth_night.jpg';
 
 function latLngToVec3(lat, lng, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -131,13 +134,80 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     loader.crossOrigin = 'anonymous';
 
     const earthGeo = new THREE.SphereGeometry(2, 96, 96);
-    const earthMat = new THREE.MeshPhongMaterial({
-      map: loader.load(EARTH_TEX),
-      bumpMap: loader.load(EARTH_BUMP),
-      bumpScale: 0.04,
-      specularMap: loader.load(EARTH_SPEC),
-      specular: new THREE.Color(0x1a3a5f),
-      shininess: 18,
+    // ── Day/Night Earth shader ────────────────────────────────────────────
+    // The lit hemisphere shows the Blue Marble day map; the dark hemisphere
+    // fades to faint moonlit continents with warm NASA Black Marble city
+    // lights. A soft terminator (smoothstep on N·sun) plus a sunset band and
+    // an ocean sun-glint sell the "real planet" feel. Sun is fixed in world
+    // space and aligned with the cloud light, so the globe's own rotation
+    // sweeps the terminator across geography.
+    // Colours composite the same way the previous MeshPhong earth did
+    // (undecoded sRGB texels), then go through the standard tonemapping +
+    // colorspace chunks so it stays consistent with the rest of the scene.
+    const sunDir = new THREE.Vector3(5, 3, 5).normalize();
+    const earthMat = new THREE.ShaderMaterial({
+      uniforms: {
+        dayTex:   { value: loader.load(EARTH_TEX) },
+        nightTex: { value: loader.load(NIGHT_TEX) },
+        specTex:  { value: loader.load(EARTH_SPEC) },
+        sunDir:   { value: sunDir },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vWNormal;
+        varying vec3 vWPos;
+        void main() {
+          vUv = uv;
+          vWNormal = normalize(mat3(modelMatrix) * normal);
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWPos = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D dayTex;
+        uniform sampler2D nightTex;
+        uniform sampler2D specTex;
+        uniform vec3 sunDir;
+        varying vec2 vUv;
+        varying vec3 vWNormal;
+        varying vec3 vWPos;
+        void main() {
+          vec3 N = normalize(vWNormal);
+          vec3 L = normalize(sunDir);
+          float lambert = dot(N, L);
+          float dayAmt = smoothstep(-0.12, 0.20, lambert);
+          float nightAmt = 1.0 - dayAmt;
+
+          vec3 dayCol = texture2D(dayTex, vUv).rgb;
+          vec3 nightTexel = texture2D(nightTex, vUv).rgb;
+
+          // Lit hemisphere with soft directional depth.
+          vec3 dayShaded = dayCol * (0.45 + 0.75 * clamp(lambert, 0.0, 1.0));
+          // Dark hemisphere: continents barely visible under moonlight.
+          vec3 nightBase = dayCol * 0.05;
+          vec3 col = mix(nightBase, dayShaded, dayAmt);
+
+          // Warm city lights, night side only, contrast-boosted.
+          float lights = pow(clamp(max(nightTexel.r, max(nightTexel.g, nightTexel.b)), 0.0, 1.0), 1.3);
+          col += vec3(1.0, 0.82, 0.50) * lights * nightAmt * 1.6;
+
+          // Ocean sun-glint (specular map red ~ water), day side only.
+          vec3 V = normalize(cameraPosition - vWPos);
+          vec3 H = normalize(L + V);
+          float water = texture2D(specTex, vUv).r;
+          float glint = pow(max(dot(N, H), 0.0), 30.0) * water * clamp(dayAmt, 0.0, 1.0);
+          col += vec3(1.0, 0.96, 0.85) * glint * 0.5;
+
+          // Warm sunset band straddling the terminator.
+          float band = smoothstep(0.0, 0.18, dayAmt) * (1.0 - smoothstep(0.18, 0.55, dayAmt));
+          col += vec3(1.0, 0.45, 0.18) * band * 0.22;
+
+          gl_FragColor = vec4(col, 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `,
     });
     const earth = new THREE.Mesh(earthGeo, earthMat);
     scene.add(earth);
@@ -157,6 +227,71 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
     });
     const atmo = new THREE.Mesh(new THREE.SphereGeometry(2.16, 64, 64), atmoMat);
     scene.add(atmo);
+
+    // ── Shooting stars ────────────────────────────────────────────────────
+    // A tiny pool of additive streaks that occasionally arc across the far
+    // sky behind the globe. Each is a 2-vertex line (head → tail) we move and
+    // fade in the RAF loop. Deliberately rare and faint — atmosphere, not
+    // fireworks. Disabled for prefers-reduced-motion.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shootingStars = new THREE.Group();
+    scene.add(shootingStars);
+    const starStreaks = [];
+    if (!reduceMotion) {
+      for (let i = 0; i < 3; i++) {
+        const positions = new Float32Array(6); // 2 verts × xyz
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const mat = new THREE.LineBasicMaterial({
+          color: 0xfff2d8, transparent: true, opacity: 0,
+          depthWrite: false, blending: THREE.AdditiveBlending,
+        });
+        const line = new THREE.Line(geo, mat);
+        line.visible = false;
+        line.frustumCulled = false;
+        shootingStars.add(line);
+        starStreaks.push({
+          line, geo, positions,
+          head: new THREE.Vector3(), dir: new THREE.Vector3(),
+          speed: 0, length: 0, life: 0, ttl: 0, active: false,
+        });
+      }
+    }
+    const spawnStreak = (s) => {
+      const R = 7;
+      const ang = Math.random() * Math.PI * 2;
+      const elev = 0.3 + Math.random() * 0.9;
+      // Start out in the upper sky, slightly toward the camera so it reads.
+      s.head.set(Math.cos(ang) * R * 0.9, R * elev, 2 + Math.random() * 3);
+      // Diagonal travel, mostly across + downward.
+      s.dir.set(
+        -(0.6 + Math.random() * 0.8) * Math.sign(s.head.x || 1),
+        -(0.3 + Math.random() * 0.5),
+        (Math.random() - 0.5) * 0.3,
+      ).normalize();
+      s.speed = 6 + Math.random() * 6;
+      s.length = 0.5 + Math.random() * 0.8;
+      s.ttl = 0.7 + Math.random() * 0.5;
+      s.life = 0;
+      s.active = true;
+      s.line.visible = true;
+    };
+    const updateStreak = (s, dt) => {
+      if (!s.active) return;
+      s.life += dt;
+      if (s.life >= s.ttl) { s.active = false; s.line.visible = false; s.line.material.opacity = 0; return; }
+      s.head.addScaledVector(s.dir, s.speed * dt);
+      const p = s.positions;
+      p[0] = s.head.x; p[1] = s.head.y; p[2] = s.head.z;
+      p[3] = s.head.x - s.dir.x * s.length;
+      p[4] = s.head.y - s.dir.y * s.length;
+      p[5] = s.head.z - s.dir.z * s.length;
+      s.geo.attributes.position.needsUpdate = true;
+      // Fade in over the first 20%, out over the last 40%.
+      const k = s.life / s.ttl;
+      const env = Math.min(k / 0.2, 1) * Math.max(0, 1 - Math.max(0, k - 0.6) / 0.4);
+      s.line.material.opacity = 0.7 * env;
+    };
 
     // Pins group
     const pinGroup = new THREE.Group();
@@ -455,6 +590,14 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
           line.geometry.setDrawRange(0, total);
         }
       });
+      // Shooting stars — rare spawn, then advance any in flight.
+      if (starStreaks.length) {
+        if (Math.random() < 0.004) {
+          const free = starStreaks.find(s => !s.active);
+          if (free) spawnStreak(free);
+        }
+        for (let i = 0; i < starStreaks.length; i++) updateStreak(starStreaks[i], 0.016);
+      }
       renderer.render(scene, camera);
     };
     animate();

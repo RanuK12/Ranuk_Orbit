@@ -7,13 +7,13 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="cache-version" content="1d6545f">
+<meta name="cache-version" content="bfd61db">
 
 <!-- Version check: fuerza recarga si hay nueva version en server -->
 <script>
 (function() {
   'use strict';
-  var BUNDLED_VERSION = '1d6545f';
+  var BUNDLED_VERSION = 'bfd61db';
   var STORAGE_KEY = 'ranuk-orbit-version';
   var CHECK_INTERVAL = 30 * 1000;
   var retries = 0;
@@ -696,11 +696,21 @@ input, textarea, select { font: inherit; color: inherit; }
 .skip-link { position: absolute; top: -100%; left: 50%; transform: translateX(-50%); background: var(--celestial); color: var(--ink); padding: 0.75rem 1.5rem; z-index: 99999; border-radius: 4px; font-weight: 500; }
 .skip-link:focus { top: 1rem; }
 
+/* ─── A11Y: visible keyboard focus ───────────────────────────────────
+   Show a focus ring for keyboard navigation only (never on mouse click)
+   so keyboard users can always see where they are — across nav, CTAs,
+   chips, thumbnails and the video player controls. */
+:focus-visible {
+  outline: 2px solid var(--desert);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 </style>
 
 <!-- Non-critical CSS loaded async (archive, lightbox, story, services, etc.) -->
-<link rel="stylesheet" href="/styles.css?v=2286b0c8" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="/styles.css?v=2286b0c8"></noscript>
+<link rel="stylesheet" href="/styles.css?v=dfd8dac4" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/styles.css?v=dfd8dac4"></noscript>
 
 <!-- Marketing components CSS (StatsBand, Process/HowIWork, social, WhatsApp, etc.) -->
 <link rel="stylesheet" href="/MARKETING_CSS.css?v=58bdaaf0" />
@@ -769,7 +779,7 @@ input, textarea, select { font: inherit; color: inherit; }
 <script src="/ranuk-data.js?v=494dc7f0"></script>
 
 <!-- App bundle (esbuild-compiled) -->
-<script src="/ranuk-app.min.js?v=1d6545fc"></script>
+<script src="/ranuk-app.min.js?v=bfd61dbf"></script>
 
 <!-- Mount -->
 <script>

@@ -902,7 +902,27 @@
 
 /* ── Transitions between items ── */
 .lightbox-media {
+  position: relative;
   transition: opacity 300ms ease, transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Ambient Mode glow ── */
+/* Soft bloom of the current frame's average colour, blurred and bled
+   behind the player. The colour is written from JS on a 220ms cadence;
+   here we only define the geometry, blur and fade-in. */
+.lb-ambient-glow {
+  position: absolute;
+  inset: -16% -10%;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0;
+  pointer-events: none;
+  transition: background 0.5s ease, opacity 0.6s ease;
+  will-change: background;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-ambient-glow { transition: opacity 0.6s ease; }
 }
 .lightbox-media--entering-right {
   animation: enterFromRight 350ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -1264,6 +1284,75 @@
 }
 .video-time__current { color: #F7F7F5; }
 .video-time__separator { color: rgba(247, 247, 245, 0.2); margin: 0 4px; }
+
+/* ── Volume: mute button + slider that expands on hover/focus ── */
+.video-volume {
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.video-volume__slider {
+  width: 0; opacity: 0;
+  height: 4px; margin: 0;
+  -webkit-appearance: none; appearance: none;
+  background: rgba(247, 247, 245, 0.18);
+  border-radius: 2px; cursor: pointer; outline: none;
+  transition: width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease, margin 220ms ease;
+}
+.video-volume:hover .video-volume__slider,
+.video-volume:focus-within .video-volume__slider {
+  width: 72px; opacity: 1; margin-left: 4px;
+}
+.video-volume__slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--desert, #C9A227);
+  box-shadow: 0 0 8px rgba(201,162,39,0.5); cursor: pointer;
+}
+.video-volume__slider::-moz-range-thumb {
+  width: 12px; height: 12px; border: none; border-radius: 50%;
+  background: var(--desert, #C9A227); cursor: pointer;
+}
+@media (hover: none) {
+  .video-volume__slider { width: 56px; opacity: 1; margin-left: 4px; }
+}
+
+/* ── Buffering spinner ── */
+.lb-spinner {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); z-index: 4;
+  pointer-events: none;
+}
+.lb-spinner span {
+  display: block; width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 2px solid rgba(247, 247, 245, 0.18);
+  border-top-color: var(--desert, #C9A227);
+  animation: lbSpin 0.8s linear infinite;
+}
+@keyframes lbSpin { to { transform: rotate(360deg); } }
+
+/* ── Seek flash (±10s double-tap / J·L) ── */
+.lb-seek-flash {
+  position: absolute; top: 50%; z-index: 4;
+  transform: translateY(-50%);
+  padding: 10px 18px; border-radius: 100px;
+  background: rgba(10, 10, 10, 0.6);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  color: #F7F7F5; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.04em;
+  pointer-events: none;
+  animation: lbSeekFlash 450ms ease forwards;
+}
+.lb-seek-flash--back { left: 8%; }
+.lb-seek-flash--fwd  { right: 8%; }
+@keyframes lbSeekFlash {
+  0%   { opacity: 0; transform: translateY(-50%) scale(0.85); }
+  30%  { opacity: 1; transform: translateY(-50%) scale(1); }
+  100% { opacity: 0; transform: translateY(-50%) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-spinner span { animation-duration: 1.4s; }
+  .lb-seek-flash { animation: none; opacity: 1; }
+}
 
 /* ── Responsive ── */
 @media (max-width: 720px) {

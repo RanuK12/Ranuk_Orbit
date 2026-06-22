@@ -156,6 +156,12 @@ step('stamp index.html', () => {
 
   // Replace BUILD_HASH_PLACEHOLDER with the bundle hash
   html = html.replace(/BUILD_HASH_PLACEHOLDER/g, bundleHash);
+  // Re-stamp the cache-busting version markers on EVERY build. The
+  // placeholder above is one-shot (consumed on the first build), so without
+  // this, version.json keeps bumping while index.html's BUNDLED_VERSION stays
+  // frozen — and the inline version checker would reload-loop on deploy.
+  html = html.replace(/(<meta name="cache-version" content=")[^"]*(")/g, `$1${bundleHash}$2`);
+  html = html.replace(/(var BUNDLED_VERSION = ')[^']*(')/g, `$1${bundleHash}$2`);
 
   writeFileSync(indexPath, html, 'utf-8');
 });
@@ -175,6 +181,9 @@ step('stamp locale HTMLs with bundle hash', () => {
     if (!existsSync(fullPath)) continue;
     let html = readFileSync(fullPath, 'utf-8');
     html = html.replace(/BUILD_HASH_PLACEHOLDER/g, bundleHash);
+    // Re-stamp version markers every build (see note in the index.html step).
+    html = html.replace(/(<meta name="cache-version" content=")[^"]*(")/g, `$1${bundleHash}$2`);
+    html = html.replace(/(var BUNDLED_VERSION = ')[^']*(')/g, `$1${bundleHash}$2`);
     html = html.replace(/ranuk-app\.min\.js\?v=[^"']*/g, `ranuk-app.min.js?v=${hashes['ranuk-app.min.js']}`);
     html = html.replace(/ranuk-data\.js\?v=[^"']*/g, `ranuk-data.js?v=${hashes['ranuk-data.js']}`);
     html = html.replace(/ranuk-manifest\.js\?v=[^"']*/g, `ranuk-manifest.js?v=${hashes['ranuk-manifest.js']}`);
