@@ -1,107 +1,94 @@
 # Ranuk Orbit
 
-> Earth, from another angle.
+Un proyecto de Ranuk IT Solutions para crear una plataforma web optimizada con PWA, despliegue automático y optimización de medios.
 
-Personal portfolio of [Emilio Ranucoli](https://ranukorbit.com) — drone pilot, Ray-Ban Meta POV creator, and travel photographer based in Mar del Plata, Argentina.
+## Características Principales
 
-🌐 **Live site:** [ranukorbit.com](https://ranukorbit.com)
-📷 **Instagram:** [@emilio_ranucoli](https://www.instagram.com/emilio_ranucoli)
-✉️ **Contact:** emilio@ranuk.dev
+- 🖼️ Optimización avanzada de imágenes (WebP, AVIF)
+- 🎥 Optimización de videos (H.264, AV1)
+- 📱 PWA (Progressive Web App)
+- 🚀 Despliegue automático en Cloudflare Pages/Vercel
+- 📊 Analytics integrado
+- 🌐 SEO optimizado
+- 🎨 Diseño responsive y moderno
 
----
-
-## Stack
-
-- **No build step.** Plain HTML + React 18 (loaded via UMD) + Babel Standalone for inline JSX.
-- **Three.js 0.158** for the photorealistic Earth globe (NASA Blue Marble texture).
-- **Bilingual ES/EN** with custom i18n context provider.
-- **Inline `<style>`** with design tokens (`--ink`, `--celestial`, `--desert`, etc.).
-- **Typography:** Italiana, Marcellus, Cormorant Garamond, DM Sans (all Google Fonts).
-
-This is intentionally a **zero-dependency, deploy-anywhere** static site. Drop the folder on any static host and it works.
-
----
-
-## Estructura
+## Estructura del Proyecto
 
 ```
-Ranuk_Orbit_Project/
-├── index.html             # entrypoint principal
-├── ranuk-data.js          # data layer (locations, services, copy IDs)
-├── ranuk-i18n.jsx         # i18n provider (ES/EN)
-├── ranuk-hero.jsx         # hero section + nav
-├── ranuk-globe.jsx        # Three.js Earth globe + atlas sidebar
-├── ranuk-sections.jsx     # archive, story, services, contact, footer
-├── ranuk-lightbox.jsx     # full-screen media viewer
-├── privacy.html           # política de privacidad bilingüe
-├── terms.html             # términos bilingües
-├── 404.html               # página de error
-├── manifest.json          # PWA manifest
-├── favicon.svg            # icono SVG
-├── sitemap.xml            # SEO sitemap
-├── robots.txt             # crawler rules
-├── vercel.json            # deploy config para Vercel
-├── _redirects             # deploy config para Cloudflare Pages / Netlify
-├── _headers               # security + cache headers
-├── compress-photos.sh     # AVIF + WebP responsive
-├── compress-videos.sh     # H.264 + AV1 + poster
-├── media/optimized/       # assets web (lo único que va al deploy)
-└── (docs internos *.md no versionados — ver .gitignore)
+Ranuk_Orbit/
+├── README.md
+├── DEPLOY_GUIDE.md
+├── COMPRESS_PHOTOS.SH
+├── COMPRESS_VIDEOS.SH
+├── tareas_pendientes.md
+├── media/
+│   ├── optimized/
+│   │   ├── avif/
+│   │   ├── webp/
+│   │   ├── h264/
+│   │   ├── av1/
+│   │   └── posters/
+├── Fotos/
+└── Videos/
 ```
 
-**Originales:** `Fotos/` y `Videos/` están en `.gitignore`. Los masters viven en disco local + cold storage (Cloudflare R2). Solo las versiones optimizadas van al repo.
+## Guías y Scripts
 
----
+### [DEPLOY_GUIDE.md](DEPLOY_GUIDE.md)
+Guía completa para desplegar el proyecto en Cloudflare Pages o Vercel, incluyendo:
+- Configuración de dominio personalizado
+- Headers y redirecciones
+- Configuración PWA
+- SEO y performance
+- Monitoreo y mantenimiento
 
-## Local development
+### [COMPRESS_PHOTOS.SH](COMPRESS_PHOTOS.SH)
+Script para optimizar imágenes:
+- Convierte a WebP y AVIF
+- Genera tamaños responsivos (400px, 800px, 1200px, 1600px)
+- Crea galería HTML optimizada
 
-```bash
-# Servidor estático rápido (no necesita CORS workaround)
-python3 -m http.server 8765
-# → http://localhost:8765/Ranuk%20Orbit.html
-```
+### [COMPRESS_VIDEOS.SH](COMPRESS_VIDEOS.SH)
+Script para optimizar videos:
+- Convierte a H.264 y AV1
+- Genera tamaños responsivos (640x360, 1280x720, 1920x1080)
+- Crea miniaturas y galería HTML
 
-Cambios al HTML/JSX se ven con un refresh. Si tocás el `<style>` inline de `Ranuk Orbit.html`, agregá `?v=N` al URL para bustear el cache de Chrome.
+## Tareas Pendientes
 
----
+Ver [tareas_pendientes.md](tareas_pendientes.md) para un seguimiento detallado de las tareas por completar.
 
-## Compresión de media
+## Progreso Actual
 
-Antes de hacer push, comprimí los assets nuevos:
+El proyecto ha completado la optimización de recursos multimedia y el sistema de caché. Los próximos pasos incluyen:
 
-```bash
-# Instalar tools (una sola vez)
-brew install ffmpeg webp libavif
+1. Configurar dominio personalizado en Cloudflare/Vercel
+2. Implementar sistema de analytics (Google Analytics + Cloudflare)
+3. Configurar SSL y certificados automáticos
+4. Optimizar SEO (meta tags, sitemap, robots.txt)
 
-# Fotos
-./compress-photos.sh Fotos/Fotos_Drone/Nueva.JPG
+## Despliegue
 
-# Videos
-./compress-videos.sh Videos/Drone/Hero.MP4 hero
-```
+1. **Cloudflare Pages** (Recomendado)
+   - Conectar GitHub a Cloudflare Pages
+   - Configurar dominio personalizado
+   - Habilitar PWA
 
-Ver `compress-photos.sh` y `compress-videos.sh` para los comandos de compresión.
+2. **Vercel** (Alternativa)
+   - Importar repositorio
+   - Configurar dominio
+   - Optimizar para PWA
 
----
+## Contribuciones
 
-## Deploy
+Este proyecto es parte de Ranuk IT Solutions. Para contribuciones:
+1. Crea una rama desde `main`: `git checkout -b ranukita/<id>`
+2. Realiza tus cambios
+3. Haz commit con el tag `[ranukita:<id>]`
+4. Abre un PR para revisión
 
-Ver `DEPLOY_GUIDE.md`. Resumen:
+## Contacto
 
-1. Crear repo en GitHub
-2. Conectar a Cloudflare Pages (o Vercel)
-3. Apuntar el dominio `ranukorbit.com` al hosting
-4. SSL auto, deploy auto en cada push
-
----
-
-## Copyright
-
-© 2026 Emilio Ranucoli. Todos los derechos reservados. Ver `LICENSE` para términos completos.
-
-Las fotos, videos, código y diseño de este repositorio son obra original de Emilio Ranucoli. No se permite reproducción, redistribución, ni uso para entrenar modelos de IA sin permiso escrito previo.
-
-
-## Licencia
-
-MIT — © 2026 Ranuk IT Solutions | [ranuk.dev](https://ranuk.dev)
+- **Ranuk IT Solutions**: [ranuk.dev](https://ranuk.dev)
+- **Email**: emilio@ranuk.dev
+- **LinkedIn**: [Emilio Ranucoli](https://linkedin.com/in/emilio-ranucoli)

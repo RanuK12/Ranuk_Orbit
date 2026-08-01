@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /_archive_v1/
-
-Sitemap: https://ranukorbit.com/sitemap.xml
