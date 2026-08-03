@@ -1,0 +1,12 @@
+{
+  "buildCommand": "",
+  "outputDirectory": "/",
+  "installCommand": "",
+  "framework": "next",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
