@@ -1,31 +1,28 @@
 {
   "name": "Ranuk Orbit",
-  "short_name": "Ranuk Orbit",
-  "description": "Earth, from another angle. Drone cinematography, Ray-Ban Meta POV and travel photography by Emilio Ranucoli.",
-  "lang": "es",
-  "dir": "ltr",
+  "short_name": "RanukOrbit",
+  "description": "Plataforma web optimizada con PWA, despliegue automático y optimización de medios",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#00d4ff",
   "orientation": "portrait-primary",
-  "background_color": "#0A0A0A",
-  "theme_color": "#0A0A0A",
-  "categories": ["photography", "travel", "art"],
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/assets/icon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/media/posters/og-image.jpg",
-      "sizes": "1200x630",
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Ranuk Orbit — Hero"
-    }
-  ]
+  "lang": "es"
 }
