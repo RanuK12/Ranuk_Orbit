@@ -2,3 +2,11 @@ User-agent: *
 Allow: /
 
 Sitemap: https://ranukorbit.com/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Crawl-delay: 1
