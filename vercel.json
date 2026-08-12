@@ -1,12 +1,5 @@
 {
-  "framework": "next",
-  "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static-html"
-    }
-  ],
-  "outputDirectory": "public",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
