@@ -26,9 +26,49 @@ LOCALES = {
     "it": "it_IT",
 }
 
+# The application copy is translated client-side, but titles and descriptions
+# are read by crawlers before JavaScript runs. Give every public locale its
+# own search snippet instead of serving the English metadata on all routes.
+SEO = {
+    "en": {
+        "title": "Ranuk Orbit | Drone Cinematography & Travel Films",
+        "description": "Cinematic drone films, aerial photography and travel storytelling by Emilio Ranucoli. Available worldwide for hospitality, destinations, editorial and brands.",
+    },
+    "es": {
+        "title": "Ranuk Orbit | Cine con dron y narrativa de viajes",
+        "description": "Películas con dron, fotografía aérea y narrativa de viajes de Emilio Ranucoli. Disponible para destinos, hotelería, editorial y marcas en todo el mundo.",
+    },
+    "it": {
+        "title": "Ranuk Orbit | Cinematografia con drone e film di viaggio",
+        "description": "Film con drone, fotografia aerea e storytelling di viaggio di Emilio Ranucoli. Disponibile in tutto il mondo per destinazioni, ospitalità, editoria e brand.",
+    },
+}
+
 
 def build(lang: str, og_locale: str, html: str) -> str:
     out = html
+    seo = SEO[lang]
+
+    out = re.sub(r'<title>[^<]*</title>', f'<title>{seo["title"]}</title>', out, count=1)
+    for name in ("description", "twitter:description"):
+        out = re.sub(
+            rf'(<meta name="{re.escape(name)}" content=")[^"]*("\s*/>)',
+            rf'\g<1>{seo["description"]}\g<2>',
+            out,
+            count=1,
+        )
+    out = re.sub(
+        r'(<meta property="og:title" content=")[^"]*("\s*/>)',
+        rf'\g<1>{seo["title"]}\g<2>',
+        out,
+        count=1,
+    )
+    out = re.sub(
+        r'(<meta property="og:description" content=")[^"]*("\s*/>)',
+        rf'\g<1>{seo["description"]}\g<2>',
+        out,
+        count=1,
+    )
 
     # <html lang="…">
     out = re.sub(r'<html\s+lang="[^"]*"', f'<html lang="{lang}"', out, count=1)

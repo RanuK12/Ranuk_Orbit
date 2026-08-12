@@ -41,22 +41,24 @@ const M = (id, type, src, title, mood, altitude, year, exif) => {
   return { id, type, src, poster, title, mood, altitude, year, exif: exif || null };
 };
 
-// Cinematic 3-clip hero sequence — sea → river → snow
+// Cinematic 3-clip hero sequence. Every source below is present in the
+// deployed media archive; keeping this list tied to real assets prevents a
+// silent poster-only hero when an old source file is moved or renamed.
 const HERO_SEQUENCE = [
   {
-    src: VIDEO_DRONE('Cerdeña_Isla-Magdalena_HERO.MP4'),
-    poster: POSTER('cerde-na-isla-magdalena-hero.jpg'),
-    label: { en: 'Maddalena, Sardinia', es: 'Maddalena, Cerdeña', it: 'Maddalena, Sardegna' },
+    src: VIDEO_DRONE('Aghroud_Panoramica.mp4'),
+    poster: POSTER('aghroud-panoramica.jpg'),
+    label: { en: 'Aghroud, Morocco', es: 'Aghroud, Marruecos', it: 'Aghroud, Marocco' },
   },
   {
-    src: VIDEO_DRONE('Rio_Limay_Patagonia.MP4'),
-    poster: POSTER('rio-limay-patagonia.jpg'),
-    label: { en: 'Río Limay, Patagonia', es: 'Río Limay, Patagonia', it: 'Río Limay, Patagonia' },
-  },
-  {
-    src: VIDEO_DRONE('Atardecer-Nieve-HERO.mov'),
-    poster: POSTER('atardecer-nieve-hero.jpg'),
+    src: VIDEO_DRONE('Alpes_Italianos_Trentino.mp4'),
+    poster: POSTER('alpes-italianos-trentino.jpg'),
     label: { en: 'Trentino, Italian Alps', es: 'Trentino, Alpes Italianos', it: 'Trentino, Alpi Italiane' },
+  },
+  {
+    src: VIDEO_DRONE('Amsterdam_Parque_Zaandam.mp4'),
+    poster: POSTER('amsterdam-parque-zaandam.jpg'),
+    label: { en: 'Zaandam, Netherlands', es: 'Zaandam, Países Bajos', it: 'Zaandam, Paesi Bassi' },
   },
 ];
 

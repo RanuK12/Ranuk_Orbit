@@ -306,8 +306,10 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
       const color = new THREE.Color(loc.accentColor || '#ffd700');
       const grp = new THREE.Group();
       grp.position.copy(pos);
-      grp.lookAt(0, 0, 0);
-      grp.rotateX(Math.PI);
+      // Align the marker's Y axis with the surface normal. `lookAt` followed
+      // by a fixed rotation produced markers that were nearly edge-on on
+      // parts of the globe, making valid locations appear to have no pin.
+      grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
 
       // Beam vertical luminoso
       const beam = new THREE.Mesh(
@@ -322,6 +324,7 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
         new THREE.SphereGeometry(0.06, 16, 16),
         new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18, depthWrite: false })
       );
+      halo.position.y = 0.22;
       grp.add(halo);
 
       // Core ball (visual)
@@ -329,14 +332,16 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
         new THREE.SphereGeometry(0.028, 20, 20),
         new THREE.MeshBasicMaterial({ color })
       );
+      ball.position.y = 0.22;
       ball.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
       grp.add(ball);
 
       // Invisible hit area (larger, easier to click)
       const hitMesh = new THREE.Mesh(
         new THREE.SphereGeometry(0.08, 12, 12),
-        new THREE.MeshBasicMaterial({ visible: false })
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
       );
+      hitMesh.position.y = 0.2;
       hitMesh.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
       grp.add(hitMesh);
 
@@ -346,6 +351,7 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
         new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
       );
       innerRing.rotation.x = Math.PI / 2;
+      innerRing.position.y = 0.22;
       grp.add(innerRing);
 
       // Pulse ring (animado tipo radar)
@@ -354,6 +360,7 @@ function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
         new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
       );
       ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.22;
       ring.userData = { isRing: true, idx: i };
       grp.add(ring);
 

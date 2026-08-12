@@ -164,24 +164,9 @@ function HeroSection() {
         <p className="hero-sub" style={{ animationDelay: '1.4s' }}>{t.hero.sub}</p>
         <div className="hero-cta-row" style={{ animationDelay: '1.6s' }}>
           <a href="#explore" className="hero-cta hero-cta--primary">{t.hero.cta} <span className="btn-arrow">→</span></a>
-          {/* Reel CTA: button (not anchor). Earlier versions used
-              <a href="#reel" data-reel>, which had two side effects:
-              (1) clicking it pushed `#reel` into the URL, and
-              (2) when the user later switched languages, navigateToLocale
-                  preserved the hash, the new page loaded with #reel still
-                  in the URL, the global `[data-reel]` click listener
-                  fired on any in-flight click during the transition,
-                  and the reel modal opened on its own. Using a real
-                  <button> sidesteps both: no URL pollution, no anchor
-                  navigation, just a deliberate user action. */}
-          <button
-            type="button"
-            className="hero-cta hero-cta--secondary"
-            data-reel
-            onClick={() => { try { window.openReel && window.openReel(); } catch (_) {} }}
-          >
-            {t.hero.cta_secondary}
-          </button>
+          <a href="#archive" className="hero-cta hero-cta--secondary">
+            {t.hero.cta_secondary}<span className="btn-arrow" aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
 
