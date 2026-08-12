@@ -1,17 +1,16 @@
 {
-  "buildCommand": "",
-  "outputDirectory": "/",
-  "installCommand": "",
   "framework": "next",
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static-html"
+    }
+  ],
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
-<<<<<<< HEAD
 }
-=======
-}
-</parameter></function>
->>>>>>> ranukita/f981e6
