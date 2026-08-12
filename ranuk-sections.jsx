@@ -65,6 +65,7 @@ function Nav() {
   const { t, lang, setLang } = useChangeLang();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -82,16 +83,38 @@ function Nav() {
     { href: '#contact', label: t.nav.contact },
   ];
 
+  // Make the navigation a useful orientation tool, not only a row of links.
+  // The generous root margin means the label changes when a section becomes
+  // the reader's main focus, rather than flickering at its top edge.
+  useEffect(() => {
+    const sectionIds = ['home', ...links.map(link => link.href.slice(1))];
+    const sections = sectionIds
+      .map(id => document.getElementById(id))
+      .filter(Boolean);
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActiveSection(visible.target.id);
+    }, { rootMargin: '-35% 0px -50% 0px', threshold: [0.05, 0.25, 0.5] });
+
+    sections.forEach(section => observer.observe(section));
+    return () => observer.disconnect();
+  }, [lang]);
+
   return (
     <>
       <nav className={`nav${scrolled ? ' is-scrolled' : ''}`}>
-        <a href="#home" className="nav-brand" aria-label="Ranuk Orbit">
-          <span className="nav-mark">⊕</span>
-          <span className="nav-wordmark">Ranuk Orbit</span>
+        <div className="nav-identity">
+          <a href="#home" className="nav-brand" aria-label="Ranuk Orbit" onClick={() => setActiveSection('home')}>
+            <span className="nav-mark">⊕</span>
+            <span className="nav-wordmark">Ranuk Orbit</span>
+          </a>
           <a href="https://ranuk.dev" target="_blank" rel="noopener noreferrer" className="nav-dev-pill" aria-label="Developer portfolio">dev</a>
-        </a>
+          <span className="nav-live" aria-label={t.nav.live}><span className="nav-live-dot" />{t.nav.live}</span>
+        </div>
         <div className="nav-links">
-          {links.map(l => <a key={l.href} href={l.href} className="nav-link">{l.label}</a>)}
+          {links.map(l => <a key={l.href} href={l.href} className={`nav-link${activeSection === l.href.slice(1) ? ' is-active' : ''}`} onClick={() => setActiveSection(l.href.slice(1))}>{l.label}</a>)}
         </div>
         <div className="nav-actions">
           <LangDropdown lang={lang} setLang={setLang} />

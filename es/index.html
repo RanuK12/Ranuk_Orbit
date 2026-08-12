@@ -8,13 +8,13 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="cache-version" content="bfd61db">
+<meta name="cache-version" content="b98cce4">
 
 <!-- Version check: fuerza recarga si hay nueva version en server -->
 <script>
 (function() {
   'use strict';
-  var BUNDLED_VERSION = 'bfd61db';
+  var BUNDLED_VERSION = 'b98cce4';
   var STORAGE_KEY = 'ranuk-orbit-version';
   var CHECK_INTERVAL = 30 * 1000;
   var retries = 0;
@@ -95,22 +95,45 @@
 <!-- Preload del primer poster del hero (LCP) -->
 <link rel="preload" as="image" href="/media/optimized/posters/cerde-na-isla-magdalena-hero.jpg" fetchpriority="high" />
 
-<!-- JSON-LD: Person -->
+<!-- JSON-LD: author, portfolio and bookable production service -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Person",
-  "name": "Emilio Ranucoli",
-  "alternateName": "Ranuk Orbit",
-  "url": "https://ranukorbit.com/",
-  "image": "https://ranukorbit.com/media/posters/og-image.jpg",
-  "jobTitle": "Drone cinematographer & travel photographer",
-  "address": { "@type": "PostalAddress", "addressLocality": "Mar del Plata", "addressCountry": "AR" },
-  "sameAs": [
-    "https://www.instagram.com/emi_ranucoli/",
-    "https://www.linkedin.com/in/emilio-ranucoli/",
-    "https://x.com/EmilioRanucoli",
-    "https://vsco.co/emiliorturletto/gallery"
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://ranukorbit.com/#emilio",
+      "name": "Emilio Ranucoli",
+      "alternateName": "Ranuk Orbit",
+      "url": "https://ranukorbit.com/",
+      "image": "https://ranukorbit.com/media/posters/og-image.jpg",
+      "jobTitle": "Drone cinematographer & travel photographer",
+      "address": { "@type": "PostalAddress", "addressLocality": "Mar del Plata", "addressCountry": "AR" },
+      "sameAs": [
+        "https://www.instagram.com/emi_ranucoli/",
+        "https://www.linkedin.com/in/emilio-ranucoli/",
+        "https://x.com/EmilioRanucoli",
+        "https://vsco.co/emiliorturletto/gallery"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://ranukorbit.com/#website",
+      "url": "https://ranukorbit.com/",
+      "name": "Ranuk Orbit",
+      "inLanguage": ["en", "es", "it"],
+      "publisher": { "@id": "https://ranukorbit.com/#emilio" }
+    },
+    {
+      "@type": "ProfessionalService",
+      "@id": "https://ranukorbit.com/#service",
+      "name": "Ranuk Orbit",
+      "url": "https://ranukorbit.com/",
+      "description": "Cinematic aerial photography, drone films and first-person travel storytelling.",
+      "provider": { "@id": "https://ranukorbit.com/#emilio" },
+      "areaServed": "Worldwide",
+      "serviceType": ["Drone cinematography", "Travel photography", "Brand film production"]
+    }
   ]
 }
 </script>
@@ -709,8 +732,8 @@ input, textarea, select { font: inherit; color: inherit; }
 </style>
 
 <!-- Non-critical CSS loaded async (archive, lightbox, story, services, etc.) -->
-<link rel="stylesheet" href="/styles.css?v=dfd8dac4" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="/styles.css?v=dfd8dac4"></noscript>
+<link rel="stylesheet" href="/styles.css?v=51f75cd3" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/styles.css?v=51f75cd3"></noscript>
 
 <!-- Marketing components CSS (StatsBand, Process/HowIWork, social, WhatsApp, etc.) -->
 <link rel="stylesheet" href="/MARKETING_CSS.css?v=58bdaaf0" />
@@ -779,7 +802,7 @@ input, textarea, select { font: inherit; color: inherit; }
 <script src="/ranuk-data.js?v=494dc7f0"></script>
 
 <!-- App bundle (esbuild-compiled) -->
-<script src="/ranuk-app.min.js?v=bfd61dbf"></script>
+<script src="/ranuk-app.min.js?v=b98cce4c"></script>
 
 <!-- Mount -->
 <script>

@@ -3,7 +3,7 @@ const { createContext, useContext, useState, useEffect } = React;
 
 const COPY = {
   en: {
-    nav: { explore: 'Atlas', archive: 'Archive', story: 'Story', pov: 'POV', services: 'Services', process: 'Process', contact: 'Contact' },
+    nav: { explore: 'Atlas', archive: 'Archive', story: 'Story', pov: 'POV', services: 'Services', process: 'Process', contact: 'Contact', live: 'Live archive' },
     hero: {
       overline: 'Drone · POV · Travel',
       headline_lines: [['Earth,', 'from another'], ['angle']],
@@ -12,6 +12,8 @@ const COPY = {
       cta: 'Open the Atlas',
       cta_secondary: 'Watch the reel',
       scroll: 'Scroll',
+      field_notes: 'Field notes',
+      orbit: 'Orbit',
       muted: 'Sound off',
       unmuted: 'Sound on',
     },
@@ -126,7 +128,7 @@ const COPY = {
     altitudes: { aerial: 'Aerial', mountain: 'Mountain', street: 'Street', water: 'Water' },
   },
   es: {
-    nav: { explore: 'Atlas', archive: 'Archivo', story: 'Historia', pov: 'POV', services: 'Servicios', process: 'Proceso', contact: 'Contacto' },
+    nav: { explore: 'Atlas', archive: 'Archivo', story: 'Historia', pov: 'POV', services: 'Servicios', process: 'Proceso', contact: 'Contacto', live: 'Archivo en vivo' },
     hero: {
       overline: 'Drone · POV · Travel',
       headline_lines: [['La Tierra,', 'desde otro'], ['ángulo']],
@@ -135,6 +137,8 @@ const COPY = {
       cta: 'Abrir el Atlas',
       cta_secondary: 'Ver el reel',
       scroll: 'Bajá',
+      field_notes: 'Notas de campo',
+      orbit: 'Órbita',
       muted: 'Sin sonido',
       unmuted: 'Con sonido',
     },
@@ -249,7 +253,7 @@ const COPY = {
     altitudes: { aerial: 'Aéreo', mountain: 'Montaña', street: 'Calle', water: 'Agua' },
   },
   it: {
-    nav: { explore: 'Atlante', archive: 'Archivio', story: 'Storia', pov: 'POV', services: 'Servizi', process: 'Processo', contact: 'Contatti' },
+    nav: { explore: 'Atlante', archive: 'Archivio', story: 'Storia', pov: 'POV', services: 'Servizi', process: 'Processo', contact: 'Contatti', live: 'Archivio live' },
     hero: {
       overline: 'Drone · POV · Travel',
       headline_lines: [['La Terra,', 'da un altro'], ['angolo']],
@@ -258,6 +262,8 @@ const COPY = {
       cta: 'Apri l\'Atlante',
       cta_secondary: 'Guarda il reel',
       scroll: 'Scorri',
+      field_notes: 'Note dal campo',
+      orbit: 'Orbita',
       muted: 'Senza audio',
       unmuted: 'Con audio',
     },

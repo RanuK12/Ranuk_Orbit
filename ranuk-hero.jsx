@@ -200,6 +200,19 @@ function HeroSection() {
         </div>
       )}
 
+      {/* A quiet editorial readout gives the active frame context without
+          competing with the headline or the image itself. */}
+      {!isMobile && sequence.length > 0 && (
+        <aside className="hero-field-notes" aria-live="polite">
+          <div className="hero-field-notes-top">
+            <span className="hero-field-notes-kicker">{t.hero.field_notes}</span>
+            <span>{t.hero.orbit} {String(active + 1).padStart(2, '0')} / {String(sequence.length).padStart(2, '0')}</span>
+          </div>
+          <span className="hero-field-notes-location">{pick(sequence[active]?.label, lang)}</span>
+          <span className="hero-field-notes-rule" aria-hidden="true" />
+        </aside>
+      )}
+
       {/* Mute toggle (top-right, mobile + desktop) */}
       <button className="hero-mute" onClick={toggleMute} aria-label={muted ? t.hero.unmuted : t.hero.muted}>
         <MuteIcon muted={muted} />
