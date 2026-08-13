@@ -46,17 +46,17 @@ const M = (id, type, src, title, mood, altitude, year, exif) => {
 // silent poster-only hero when an old source file is moved or renamed.
 const HERO_SEQUENCE = [
   {
-    src: VIDEO_DRONE('Aghroud_Panoramica.mp4'),
-    poster: POSTER('aghroud-panoramica.jpg'),
-    label: { en: 'Aghroud, Morocco', es: 'Aghroud, Marruecos', it: 'Aghroud, Marocco' },
+    src: VIDEO_DRONE('alpes-italianos.mp4'),
+    poster: POSTER('cerdena-isla-magdalena-hero.jpg'),
+    label: { en: 'La Maddalena, Sardinia', es: 'La Maddalena, Cerdeña', it: 'La Maddalena, Sardegna' },
   },
   {
-    src: VIDEO_DRONE('Alpes_Italianos_Trentino.mp4'),
+    src: VIDEO_DRONE('alpes-italianos-trentino.mp4'),
     poster: POSTER('alpes-italianos-trentino.jpg'),
     label: { en: 'Trentino, Italian Alps', es: 'Trentino, Alpes Italianos', it: 'Trentino, Alpi Italiane' },
   },
   {
-    src: VIDEO_DRONE('Amsterdam_Parque_Zaandam.mp4'),
+    src: VIDEO_DRONE('amsterdam-parque-zaandam.mp4'),
     poster: POSTER('amsterdam-parque-zaandam.jpg'),
     label: { en: 'Zaandam, Netherlands', es: 'Zaandam, Países Bajos', it: 'Zaandam, Paesi Bassi' },
   },
