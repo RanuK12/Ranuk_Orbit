@@ -1,0 +1,918 @@
+// Ranuk Orbit — Photorealistic Globe v2 with arcs, sidebar, year filter, mobile timeline
+// HYBRID APPROACH: CSS globe renders instantly; Three.js upgrades only on capable devices
+const { useRef, useEffect, useState, useCallback, useMemo } = React;
+
+// ── CSS GLOBE FALLBACK ─────────────────────────────────────────────────────
+// Lightweight animated globe using CSS only (~2KB). Renders instantly without
+// WebGL, no GPU drain, no external textures. Shows rotating sphere with pins.
+function CSSGlobe({ locations, onLocationClick, lang }) {
+  // Place pins at approximate 2D positions based on lat/lng
+  // Simple equirectangular projection onto a circle
+  const pins = useMemo(() => {
+    return locations.map(loc => {
+      // Map lat/lng to x/y on circle (simplified Mercator-like projection)
+      const x = 50 + (loc.coords.lng / 180) * 40; // percentage
+      const y = 50 - (loc.coords.lat / 90) * 40;  // percentage
+      return { ...loc, px: x, py: y };
+    });
+  }, [locations]);
+
+  return (
+    <div className="css-globe-container">
+      <div className="css-globe">
+        <div className="css-globe-sphere" />
+        <div className="css-globe-grid" />
+        {pins.map(pin => (
+          <button
+            key={pin.id}
+            className="css-globe-pin"
+            style={{
+              left: `${pin.px}%`,
+              top: `${pin.py}%`,
+              '--pin-color': pin.accentColor || '#C9A227'
+            }}
+            onClick={() => onLocationClick(pin.id)}
+            aria-label={typeof pin.name === 'object' ? (pin.name[lang] || pin.name.en) : pin.name}
+            title={typeof pin.name === 'object' ? (pin.name[lang] || pin.name.en) : pin.name}
+          >
+            <span className="css-globe-pin-dot" />
+            <span className="css-globe-pin-pulse" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Texturas Tierra: NASA Blue Marble 2K (day/normal/specular) via cdn.jsdelivr.
+const EARTH_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_atmos_2048.jpg';
+const EARTH_BUMP = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_normal_2048.jpg';
+const EARTH_SPEC = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_specular_2048.jpg';
+const CLOUDS_TEX = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_clouds_1024.png';
+const STARS_TEX  = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/2294472375_24a3b8ef46_o.jpg';
+// NASA Black Marble city lights — self-hosted (same-origin, no CDN single point
+// of failure) for the day/night terminator shader.
+const NIGHT_TEX  = '/vendor/textures/earth_night.jpg';
+
+function latLngToVec3(lat, lng, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lng + 180) * (Math.PI / 180);
+  return new THREE.Vector3(
+    -radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+// Great-circle arc between two points on a sphere
+function greatCircleCurve(start, end, segments = 64, lift = 0.4) {
+  const points = [];
+  const startN = start.clone().normalize();
+  const endN = end.clone().normalize();
+  const angle = startN.angleTo(endN);
+  const sin = Math.sin(angle);
+  const radius = start.length();
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const a = Math.sin((1 - t) * angle) / sin;
+    const b = Math.sin(t * angle) / sin;
+    const p = startN.clone().multiplyScalar(a).add(endN.clone().multiplyScalar(b));
+    // arc lift — peaks at t=0.5
+    const altMul = 1 + Math.sin(Math.PI * t) * lift;
+    p.multiplyScalar(radius * altMul);
+    points.push(p);
+  }
+  return points;
+}
+
+function Globe({ locations, onLocationClick, highlightId, visitedDots }) {
+  const mountRef = useRef();
+  const [hovered, setHovered] = useState(null);
+  const [hoveredVisited, setHoveredVisited] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const stateRef = useRef({ pinMeshes: [], visitedMeshes: [], arcLines: [], pinGroup: null, locById: {}, pinByIdx: {} });
+
+  useEffect(() => {
+    if (!mountRef.current) return;
+    const mount = mountRef.current;
+    let cleanup = null;
+    let cancelled = false;
+
+    // Carga Three.js de forma diferida; solo arma el globo cuando el lib esté listo
+    // Mobile/tablet guard: don't load Three.js if globe is hidden (saves 600KB)
+    const isHidden = window.matchMedia('(max-width: 1180px)').matches;
+    if (isHidden) return;
+
+    const loadAndInit = async () => {
+      if (window.__loadThree) await window.__loadThree();
+      if (cancelled || !mountRef.current) return;
+      cleanup = initGlobe();
+    };
+
+    const initGlobe = () => {
+    const width = mount.clientWidth;
+    const height = mount.clientHeight;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 0, 5.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(width, height);
+    mount.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+    const dl = new THREE.DirectionalLight(0xfff5e6, 1.2);
+    dl.position.set(5, 3, 5);
+    scene.add(dl);
+    const dl2 = new THREE.DirectionalLight(0x3b5998, 0.3);
+    dl2.position.set(-5, -2, -3);
+    scene.add(dl2);
+
+    const loader = new THREE.TextureLoader();
+    loader.crossOrigin = 'anonymous';
+
+    const earthGeo = new THREE.SphereGeometry(2, 96, 96);
+    // ── Day/Night Earth shader ────────────────────────────────────────────
+    // The lit hemisphere shows the Blue Marble day map; the dark hemisphere
+    // fades to faint moonlit continents with warm NASA Black Marble city
+    // lights. A soft terminator (smoothstep on N·sun) plus a sunset band and
+    // an ocean sun-glint sell the "real planet" feel. Sun is fixed in world
+    // space and aligned with the cloud light, so the globe's own rotation
+    // sweeps the terminator across geography.
+    // Colours composite the same way the previous MeshPhong earth did
+    // (undecoded sRGB texels), then go through the standard tonemapping +
+    // colorspace chunks so it stays consistent with the rest of the scene.
+    const sunDir = new THREE.Vector3(5, 3, 5).normalize();
+    const earthMat = new THREE.ShaderMaterial({
+      uniforms: {
+        dayTex:   { value: loader.load(EARTH_TEX) },
+        nightTex: { value: loader.load(NIGHT_TEX) },
+        specTex:  { value: loader.load(EARTH_SPEC) },
+        sunDir:   { value: sunDir },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vWNormal;
+        varying vec3 vWPos;
+        void main() {
+          vUv = uv;
+          vWNormal = normalize(mat3(modelMatrix) * normal);
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWPos = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D dayTex;
+        uniform sampler2D nightTex;
+        uniform sampler2D specTex;
+        uniform vec3 sunDir;
+        varying vec2 vUv;
+        varying vec3 vWNormal;
+        varying vec3 vWPos;
+        void main() {
+          vec3 N = normalize(vWNormal);
+          vec3 L = normalize(sunDir);
+          float lambert = dot(N, L);
+          float dayAmt = smoothstep(-0.12, 0.20, lambert);
+          float nightAmt = 1.0 - dayAmt;
+
+          vec3 dayCol = texture2D(dayTex, vUv).rgb;
+          vec3 nightTexel = texture2D(nightTex, vUv).rgb;
+
+          // Lit hemisphere with soft directional depth.
+          vec3 dayShaded = dayCol * (0.45 + 0.75 * clamp(lambert, 0.0, 1.0));
+          // Dark hemisphere: continents barely visible under moonlight.
+          vec3 nightBase = dayCol * 0.05;
+          vec3 col = mix(nightBase, dayShaded, dayAmt);
+
+          // Warm city lights, night side only, contrast-boosted.
+          float lights = pow(clamp(max(nightTexel.r, max(nightTexel.g, nightTexel.b)), 0.0, 1.0), 1.3);
+          col += vec3(1.0, 0.82, 0.50) * lights * nightAmt * 1.6;
+
+          // Ocean sun-glint (specular map red ~ water), day side only.
+          vec3 V = normalize(cameraPosition - vWPos);
+          vec3 H = normalize(L + V);
+          float water = texture2D(specTex, vUv).r;
+          float glint = pow(max(dot(N, H), 0.0), 30.0) * water * clamp(dayAmt, 0.0, 1.0);
+          col += vec3(1.0, 0.96, 0.85) * glint * 0.5;
+
+          // Warm sunset band straddling the terminator.
+          float band = smoothstep(0.0, 0.18, dayAmt) * (1.0 - smoothstep(0.18, 0.55, dayAmt));
+          col += vec3(1.0, 0.45, 0.18) * band * 0.22;
+
+          gl_FragColor = vec4(col, 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `,
+    });
+    const earth = new THREE.Mesh(earthGeo, earthMat);
+    scene.add(earth);
+
+    const cloudsGeo = new THREE.SphereGeometry(2.024, 64, 64);
+    const cloudsMat = new THREE.MeshLambertMaterial({
+      map: loader.load(CLOUDS_TEX),
+      transparent: true, opacity: 0.32, depthWrite: false,
+    });
+    const clouds = new THREE.Mesh(cloudsGeo, cloudsMat);
+    scene.add(clouds);
+
+    const atmoMat = new THREE.ShaderMaterial({
+      transparent: true, side: THREE.BackSide, depthWrite: false,
+      vertexShader: `varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `varying vec3 vNormal; void main() { float i = pow(0.62 - dot(vNormal, vec3(0,0,1.0)), 2.5); gl_FragColor = vec4(0.36, 0.62, 0.95, 1.0) * i; }`
+    });
+    const atmo = new THREE.Mesh(new THREE.SphereGeometry(2.16, 64, 64), atmoMat);
+    scene.add(atmo);
+
+    // ── Shooting stars ────────────────────────────────────────────────────
+    // A tiny pool of additive streaks that occasionally arc across the far
+    // sky behind the globe. Each is a 2-vertex line (head → tail) we move and
+    // fade in the RAF loop. Deliberately rare and faint — atmosphere, not
+    // fireworks. Disabled for prefers-reduced-motion.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shootingStars = new THREE.Group();
+    scene.add(shootingStars);
+    const starStreaks = [];
+    if (!reduceMotion) {
+      for (let i = 0; i < 3; i++) {
+        const positions = new Float32Array(6); // 2 verts × xyz
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const mat = new THREE.LineBasicMaterial({
+          color: 0xfff2d8, transparent: true, opacity: 0,
+          depthWrite: false, blending: THREE.AdditiveBlending,
+        });
+        const line = new THREE.Line(geo, mat);
+        line.visible = false;
+        line.frustumCulled = false;
+        shootingStars.add(line);
+        starStreaks.push({
+          line, geo, positions,
+          head: new THREE.Vector3(), dir: new THREE.Vector3(),
+          speed: 0, length: 0, life: 0, ttl: 0, active: false,
+        });
+      }
+    }
+    const spawnStreak = (s) => {
+      const R = 7;
+      const ang = Math.random() * Math.PI * 2;
+      const elev = 0.3 + Math.random() * 0.9;
+      // Start out in the upper sky, slightly toward the camera so it reads.
+      s.head.set(Math.cos(ang) * R * 0.9, R * elev, 2 + Math.random() * 3);
+      // Diagonal travel, mostly across + downward.
+      s.dir.set(
+        -(0.6 + Math.random() * 0.8) * Math.sign(s.head.x || 1),
+        -(0.3 + Math.random() * 0.5),
+        (Math.random() - 0.5) * 0.3,
+      ).normalize();
+      s.speed = 6 + Math.random() * 6;
+      s.length = 0.5 + Math.random() * 0.8;
+      s.ttl = 0.7 + Math.random() * 0.5;
+      s.life = 0;
+      s.active = true;
+      s.line.visible = true;
+    };
+    const updateStreak = (s, dt) => {
+      if (!s.active) return;
+      s.life += dt;
+      if (s.life >= s.ttl) { s.active = false; s.line.visible = false; s.line.material.opacity = 0; return; }
+      s.head.addScaledVector(s.dir, s.speed * dt);
+      const p = s.positions;
+      p[0] = s.head.x; p[1] = s.head.y; p[2] = s.head.z;
+      p[3] = s.head.x - s.dir.x * s.length;
+      p[4] = s.head.y - s.dir.y * s.length;
+      p[5] = s.head.z - s.dir.z * s.length;
+      s.geo.attributes.position.needsUpdate = true;
+      // Fade in over the first 20%, out over the last 40%.
+      const k = s.life / s.ttl;
+      const env = Math.min(k / 0.2, 1) * Math.max(0, 1 - Math.max(0, k - 0.6) / 0.4);
+      s.line.material.opacity = 0.7 * env;
+    };
+
+    // Pins group
+    const pinGroup = new THREE.Group();
+    scene.add(pinGroup);
+    stateRef.current.pinGroup = pinGroup;
+    stateRef.current.pinMeshes = [];
+    stateRef.current.locById = {};
+    stateRef.current.pinByIdx = {};
+
+    locations.forEach((loc, i) => {
+      const pos = latLngToVec3(loc.coords.lat, loc.coords.lng, 2.05);
+      const color = new THREE.Color(loc.accentColor || '#ffd700');
+      const grp = new THREE.Group();
+      grp.position.copy(pos);
+      // Align the marker's Y axis with the surface normal. `lookAt` followed
+      // by a fixed rotation produced markers that were nearly edge-on on
+      // parts of the globe, making valid locations appear to have no pin.
+      grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
+
+      // Beam vertical luminoso
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.004, 0.012, 0.22, 12),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.65 })
+      );
+      beam.position.y = 0.11;
+      grp.add(beam);
+
+      // Halo glow exterior (sphere translúcido)
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 16, 16),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18, depthWrite: false })
+      );
+      halo.position.y = 0.22;
+      grp.add(halo);
+
+      // Core ball (visual)
+      const ball = new THREE.Mesh(
+        new THREE.SphereGeometry(0.028, 20, 20),
+        new THREE.MeshBasicMaterial({ color })
+      );
+      ball.position.y = 0.22;
+      ball.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
+      grp.add(ball);
+
+      // Invisible hit area (larger, easier to click)
+      const hitMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 12, 12),
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+      );
+      hitMesh.position.y = 0.2;
+      hitMesh.userData = { idx: i, locId: loc.id, name: loc.name, country: loc.country, isMain: true };
+      grp.add(hitMesh);
+
+      // Inner solid ring
+      const innerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.04, 0.052, 48),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
+      );
+      innerRing.rotation.x = Math.PI / 2;
+      innerRing.position.y = 0.22;
+      grp.add(innerRing);
+
+      // Pulse ring (animado tipo radar)
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.04, 0.058, 48),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.22;
+      ring.userData = { isRing: true, idx: i };
+      grp.add(ring);
+
+      pinGroup.add(grp);
+      stateRef.current.pinMeshes.push(hitMesh);
+      stateRef.current.locById[loc.id] = { idx: i, group: grp, ring };
+      stateRef.current.pinByIdx[i] = grp;
+    });
+
+    // ── Visited dots: pins decorativos sin click (más chicos, color tenue)
+    const visitedGroup = new THREE.Group();
+    pinGroup.add(visitedGroup);
+    stateRef.current.visitedMeshes = [];
+    if (visitedDots && visitedDots.length) {
+      const dotColor = new THREE.Color('#F7F7F5');
+      visitedDots.forEach((dot, i) => {
+        const pos = latLngToVec3(dot.coords.lat, dot.coords.lng, 2.045);
+        const grp = new THREE.Group();
+        grp.position.copy(pos);
+        grp.lookAt(0, 0, 0);
+        grp.rotateX(Math.PI);
+
+        const dotMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.014, 12, 12),
+          new THREE.MeshBasicMaterial({ color: dotColor, transparent: true, opacity: 0.85 })
+        );
+        dotMesh.userData = { visitedIdx: i, isVisited: true };
+        grp.add(dotMesh);
+
+        const dotHalo = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025, 12, 12),
+          new THREE.MeshBasicMaterial({ color: dotColor, transparent: true, opacity: 0.18, depthWrite: false })
+        );
+        grp.add(dotHalo);
+
+        visitedGroup.add(grp);
+        stateRef.current.visitedMeshes.push(dotMesh);
+      });
+    }
+
+    // ── Great-circle arcs between consecutive locations (oceanic, animated draw)
+    const arcGroup = new THREE.Group();
+    pinGroup.add(arcGroup);
+    const arcLines = [];
+    for (let i = 0; i < locations.length - 1; i++) {
+      const a = latLngToVec3(locations[i].coords.lat, locations[i].coords.lng, 2.05);
+      const b = latLngToVec3(locations[i+1].coords.lat, locations[i+1].coords.lng, 2.05);
+      const pts = greatCircleCurve(a, b, 80, 0.18);
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      const mat = new THREE.LineBasicMaterial({
+        color: 0x1E6FA4,
+        transparent: true,
+        opacity: 0.0, // animated up
+      });
+      const line = new THREE.Line(geom, mat);
+      line.userData = { totalPoints: pts.length, drawIndex: 0 };
+      // hide all but first point initially
+      geom.setDrawRange(0, 1);
+      arcGroup.add(line);
+      arcLines.push(line);
+    }
+    stateRef.current.arcLines = arcLines;
+
+    // Raycaster
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredIdx = null;
+
+    let hoveredVisitedIdx = null;
+    const onMove = (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      // Prioridad: pins principales > visited dots
+      const hitsMain = raycaster.intersectObjects(stateRef.current.pinMeshes);
+      if (hitsMain.length > 0) {
+        const idx = hitsMain[0].object.userData.idx;
+        if (idx !== hoveredIdx) {
+          hoveredIdx = idx;
+          setHovered(idx);
+          if (hoveredVisitedIdx !== null) { hoveredVisitedIdx = null; setHoveredVisited(null); }
+        }
+        if (!isDown) renderer.domElement.style.cursor = 'pointer';
+        setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        return;
+      }
+      const hitsVisited = raycaster.intersectObjects(stateRef.current.visitedMeshes);
+      if (hitsVisited.length > 0) {
+        const vIdx = hitsVisited[0].object.userData.visitedIdx;
+        if (vIdx !== hoveredVisitedIdx) {
+          hoveredVisitedIdx = vIdx;
+          setHoveredVisited(vIdx);
+          if (hoveredIdx !== null) { hoveredIdx = null; setHovered(null); }
+        }
+        if (!isDown) renderer.domElement.style.cursor = 'help';
+        setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        return;
+      }
+      // No hit
+      if (hoveredIdx !== null) { hoveredIdx = null; setHovered(null); }
+      if (hoveredVisitedIdx !== null) { hoveredVisitedIdx = null; setHoveredVisited(null); }
+      if (!isDown) renderer.domElement.style.cursor = 'grab';
+    };
+    const onClick = (e) => {
+      // Only process click if the user didn't drag
+      if (hasDragged) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(stateRef.current.pinMeshes);
+      if (hits.length > 0) {
+        const locId = hits[0].object.userData.locId;
+        if (stateRef.current.highlight) stateRef.current.highlight(locId, { zoom: true });
+        setTimeout(() => onLocationClick(locId), 700);
+      }
+    };
+
+    renderer.domElement.addEventListener('pointermove', onMove);
+    renderer.domElement.addEventListener('click', onClick);
+
+    // Drag rotation
+    let isDown = false, lastX = 0, lastY = 0, autoRotate = true;
+    let rotX = 0, rotY = 0;
+    let hasDragged = false;
+    let resumeTimeout = null;
+    // Inertia: velocity that decays when user releases
+    let velX = 0, velY = 0;
+    const DRAG_SENSITIVITY = 0.004;
+    const DAMPING = 0.92;
+    const DRAG_THRESHOLD = 4; // pixels before a drag is registered
+    // `_dist` is mutable so the cinematic zoom can animate it in and out.
+    let _dist = 5.5;
+    const updateCam = () => {
+      camera.position.x = _dist * Math.sin(rotY) * Math.cos(rotX);
+      camera.position.y = _dist * Math.sin(rotX);
+      camera.position.z = _dist * Math.cos(rotY) * Math.cos(rotX);
+      camera.lookAt(0, 0, 0);
+    };
+    const onDown = (e) => {
+      isDown = true; hasDragged = false;
+      velX = 0; velY = 0;
+      autoRotate = false;
+      if (resumeTimeout) { clearTimeout(resumeTimeout); resumeTimeout = null; }
+      // User took manual control — cancel any ongoing cinematic zoom
+      // and snap back to default distance smoothly.
+      if (stateRef.current.zoomRaf) { cancelAnimationFrame(stateRef.current.zoomRaf); stateRef.current.zoomRaf = null; }
+      if (stateRef.current.resetZoom) stateRef.current.resetZoom();
+      lastX = e.clientX; lastY = e.clientY;
+      renderer.domElement.style.cursor = 'grabbing';
+    };
+    const onUp = () => {
+      isDown = false;
+      renderer.domElement.style.cursor = 'grab';
+      // Resume auto-rotate after 4s of no interaction
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      resumeTimeout = setTimeout(() => { autoRotate = true; }, 4000);
+    };
+    const onDrag = (e) => {
+      if (!isDown) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      // Only register as drag if past threshold
+      if (!hasDragged && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+        hasDragged = true;
+      }
+      if (hasDragged) {
+        velY = -dx * DRAG_SENSITIVITY;
+        velX = -dy * DRAG_SENSITIVITY;
+        rotY += velY;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX + velX));
+        updateCam();
+      }
+      lastX = e.clientX; lastY = e.clientY;
+    };
+    renderer.domElement.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointermove', onDrag);
+    // Set initial cursor
+    renderer.domElement.style.cursor = 'grab';
+
+    // Animate with viewport-gating: when the canvas container scrolls out of
+    // sight or the tab loses visibility, pause the RAF loop entirely. A dead
+    // globe on a 5-year-old MacBook Pro is the single biggest CPU/GPU drain.
+    let t = 0, rafId;
+    let arcAnimT = 0;
+    let paused = false;
+    const animate = () => {
+      rafId = requestAnimationFrame(animate);
+      if (paused) return;
+      t += 0.016;
+      // Apply inertia damping when user releases drag
+      if (!isDown && !autoRotate && (Math.abs(velX) > 0.0001 || Math.abs(velY) > 0.0001)) {
+        velX *= DAMPING;
+        velY *= DAMPING;
+        rotY += velY;
+        rotX = Math.max(-1.2, Math.min(1.2, rotX + velX));
+        updateCam();
+      }
+      if (autoRotate) {
+        earth.rotation.y += 0.0012;
+        clouds.rotation.y += 0.0016;
+        pinGroup.rotation.y = earth.rotation.y;
+      }
+      // Pulse rings (solo en pins principales — filtrar arcGroup y visitedGroup)
+      stateRef.current.pinGroup.children.forEach((grp, i) => {
+        if (!grp.children || grp.type === 'Group' && grp.children.length === 0) return;
+        const ring = grp.children.find(c => c.userData?.isRing);
+        if (ring) {
+          const phase = Math.sin(t * 1.6 + i * 0.45) * 0.5 + 0.5;
+          const s = 1 + phase * 1.4;
+          ring.scale.setScalar(s);
+          ring.material.opacity = 0.7 * (1 - phase);
+        }
+      });
+      // Animate arc draw — staggered, looping
+      arcAnimT += 0.01;
+      arcLines.forEach((line, i) => {
+        const total = line.userData.totalPoints;
+        const localT = (arcAnimT - i * 0.4) % 8;
+        if (localT < 0 || localT > 4) {
+          line.material.opacity = 0;
+          line.geometry.setDrawRange(0, 0);
+        } else if (localT < 1.6) {
+          // drawing
+          const k = localT / 1.6;
+          line.geometry.setDrawRange(0, Math.floor(k * total));
+          line.material.opacity = 0.45;
+        } else {
+          // hold then fade
+          const fade = Math.max(0, 1 - (localT - 1.6) / 2.4);
+          line.material.opacity = 0.45 * fade;
+          line.geometry.setDrawRange(0, total);
+        }
+      });
+      // Shooting stars — rare spawn, then advance any in flight.
+      if (starStreaks.length) {
+        if (Math.random() < 0.004) {
+          const free = starStreaks.find(s => !s.active);
+          if (free) spawnStreak(free);
+        }
+        for (let i = 0; i < starStreaks.length; i++) updateStreak(starStreaks[i], 0.016);
+      }
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // Gate: IntersectionObserver on the mount node, document visibility
+    const vpObs = new IntersectionObserver(([entry]) => {
+      paused = !entry.isIntersecting;
+    }, { threshold: 0.01 });
+    vpObs.observe(mount);
+    const onVisChange = () => { paused = document.hidden || paused; };
+    document.addEventListener('visibilitychange', onVisChange);
+
+    const onResize = () => {
+      const w = mount.clientWidth, h = mount.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', onResize);
+
+    // Expose programmatic highlight for sidebar interaction + cinematic
+    // zoom on pin click. Called from the raycaster onClick path AND from
+    // the sidebar effect below.
+    stateRef.current.highlight = (locId, opts = {}) => {
+      const target = stateRef.current.locById[locId];
+      if (!target) return;
+      const ring = target.ring;
+      if (ring) {
+        ring.material.color.setHex(0xffffff);
+        setTimeout(() => {
+          const loc = locations[target.idx];
+          ring.material.color.set(loc.accentColor || '#ffd700');
+        }, 900);
+      }
+      // Rotate to face the pin
+      const loc = locations[target.idx];
+      const targetLng = loc.coords.lng;
+      const targetLat = loc.coords.lat;
+      const destRotY = -((targetLng) * Math.PI / 180) - earth.rotation.y;
+      const destRotX = Math.max(-1.2, Math.min(1.2, (targetLat) * Math.PI / 180 * 0.6));
+
+      // Cinematic zoom: ease camera distance from 5.5 → 3.4 while
+      // simultaneously easing rotX/rotY toward destination. Uses a single
+      // rAF driver that writes into the existing rotX/rotY/dist closure
+      // vars, so updateCam() sees the interpolated values.
+      autoRotate = false;
+      const doZoom = opts.zoom !== false;
+      const startRotX = rotX, startRotY = rotY;
+      const startDist = _dist;
+      // Find shortest Y arc — we don't want to spin 340° when 20° the other way works
+      let dRotY = destRotY - startRotY;
+      dRotY = ((dRotY + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+      const dRotX = destRotX - startRotX;
+      const destDist = doZoom ? 3.4 : startDist;
+      const dDist = destDist - startDist;
+
+      const duration = 1400; // ms — cinematic but not sluggish
+      const t0 = performance.now();
+      if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf);
+      const ease = (x) => 1 - Math.pow(1 - x, 3); // easeOutCubic, Apple-ish
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / duration);
+        const e = ease(k);
+        rotX = startRotX + dRotX * e;
+        rotY = startRotY + dRotY * e;
+        _dist = startDist + dDist * e;
+        updateCam();
+        if (k < 1) stateRef.current.zoomRaf = requestAnimationFrame(tick);
+        else stateRef.current.zoomRaf = null;
+      };
+      stateRef.current.zoomRaf = requestAnimationFrame(tick);
+    };
+
+    // Zoom back out when lightbox closes or user drags.
+    stateRef.current.resetZoom = () => {
+      if (_dist === 5.5) return;
+      const startDist = _dist;
+      const dDist = 5.5 - startDist;
+      const duration = 900;
+      const t0 = performance.now();
+      if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf);
+      const ease = (x) => 1 - Math.pow(1 - x, 2);
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / duration);
+        _dist = startDist + dDist * ease(k);
+        updateCam();
+        if (k < 1) stateRef.current.zoomRaf = requestAnimationFrame(tick);
+      };
+      stateRef.current.zoomRaf = requestAnimationFrame(tick);
+    };
+
+    // Expose globally so the lightbox can call reset on close without a
+    // React-context round-trip. The Globe component is the sole owner of
+    // camera state, so this is the natural place to gate it.
+    window.__ranukGlobeResetZoom = stateRef.current.resetZoom;
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      try { if (stateRef.current.zoomRaf) cancelAnimationFrame(stateRef.current.zoomRaf); } catch (_) {}
+      try { delete window.__ranukGlobeResetZoom; } catch (_) {}
+      try { vpObs.disconnect(); } catch (_) {}
+      document.removeEventListener('visibilitychange', onVisChange);
+      renderer.domElement.removeEventListener('pointermove', onMove);
+      renderer.domElement.removeEventListener('click', onClick);
+      renderer.domElement.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointermove', onDrag);
+      window.removeEventListener('resize', onResize);
+      try { mount.removeChild(renderer.domElement); } catch (e) {}
+      renderer.dispose();
+    };
+    }; // end initGlobe
+
+    loadAndInit();
+
+    return () => {
+      cancelled = true;
+      if (cleanup) cleanup();
+    };
+  }, [locations, visitedDots, onLocationClick]);
+
+  // External highlight via prop
+  useEffect(() => {
+    if (highlightId && stateRef.current.highlight) {
+      stateRef.current.highlight(highlightId);
+    }
+  }, [highlightId]);
+
+  return (
+    <div className="globe-container" ref={mountRef} style={{ position: 'relative' }}>
+      {hovered !== null && locations[hovered] && (
+        <div className="globe-tooltip" style={{ left: tooltipPos.x + 'px', top: tooltipPos.y + 'px' }}>
+          <div className="globe-tt-name">{locations[hovered].name}</div>
+          <div className="globe-tt-country">{locations[hovered].country}</div>
+          <div className="globe-tt-cta">Click ↗</div>
+        </div>
+      )}
+      {hoveredVisited !== null && visitedDots && visitedDots[hoveredVisited] && (
+        <div className="globe-tooltip globe-tooltip-visited" style={{ left: tooltipPos.x + 'px', top: tooltipPos.y + 'px' }}>
+          <div className="globe-tt-name">{visitedDots[hoveredVisited].name}</div>
+          <div className="globe-tt-country">{visitedDots[hoveredVisited].country} {visitedDots[hoveredVisited].flag}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── AtlasSection: globe + sidebar + year filter chips, mobile = vertical timeline
+// HYBRID: CSS globe renders instantly → Three.js upgrades if device is capable
+function AtlasSection() {
+  const { lang, t } = useLang();
+  const { open } = useLightbox();
+  const [year, setYear] = useState(null); // null = all
+  const [highlightId, setHighlightId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [threeReady, setThreeReady] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.matchMedia('(max-width: 1180px)').matches);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Capability detection: only upgrade to Three.js on non-mobile devices
+  // with good hardware (>= 4 cores, WebGL2 support)
+  useEffect(() => {
+    if (isMobile) return;
+    const isCapable = (() => {
+      try {
+        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) return false;
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (!gl) return false;
+        // Check for reasonable GPU — avoid integrated chips on old machines
+        const debugExt = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugExt) {
+          const renderer = gl.getParameter(debugExt.UNMASKED_RENDERER_WEBGL).toLowerCase();
+          // Skip known weak GPUs
+          if (renderer.includes('swiftshader') || renderer.includes('llvmpipe')) return false;
+        }
+        return true;
+      } catch (_) { return false; }
+    })();
+    if (!isCapable) return;
+
+    // Use IntersectionObserver to only load Three.js when section is near viewport
+    const section = document.getElementById('explore');
+    if (!section) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        if (window.__loadThree) {
+          window.__loadThree().then(() => setThreeReady(true)).catch(() => {});
+        }
+        obs.disconnect();
+      }
+    }, { rootMargin: '200px' });
+    obs.observe(section);
+    return () => obs.disconnect();
+  }, [isMobile]);
+
+  const locs = useMemo(() => {
+    const all = window.LOCATIONS_V2 || [];
+    return year ? all.filter(l => l.year === year) : all;
+  }, [year]);
+
+  const handleClick = useCallback((id) => {
+    const loc = window.LOCATIONS_V2.find(l => l.id === id);
+    if (loc) open(loc.media.map(m => ({ ...m, _displayTitle: pick(m.title, lang) })), 0);
+  }, [open, lang]);
+
+  const handleSidebarClick = useCallback((loc) => {
+    setHighlightId(loc.id);
+    setTimeout(() => setHighlightId(null), 50);
+  }, []);
+
+  const years = window.YEARS_V2 || [];
+
+  return (
+    <section className="section section-light" id="explore">
+      <div className="container">
+        <div className="atlas-head">
+          <div>
+            <span className="section-overline">{t.atlas.overline}</span>
+            <h2 className="section-title">{(t.atlas.title || '').replace('{n}', String((window.LOCATIONS_V2 || []).length))}</h2>
+            <p className="section-subtitle">{t.atlas.sub}</p>
+          </div>
+          <div className="year-chips">
+            <button className={`year-chip${year === null ? ' is-active' : ''}`} onClick={() => setYear(null)}>{t.atlas.year_all}</button>
+            {years.map(y => (
+              <button key={y} className={`year-chip${year === y ? ' is-active' : ''}`} onClick={() => setYear(y)}>{y}</button>
+            ))}
+          </div>
+        </div>
+
+        {!isMobile ? (
+          <div className="atlas-grid">
+            <div className="globe-wrap">
+              {threeReady && window.THREE ? (
+                <Globe
+                  locations={locs.map(l => ({ ...l, name: pick(l.name, lang), country: pick(l.country, lang) }))}
+                  visitedDots={(window.VISITED_DOTS_V2 || []).map(d => ({ ...d, name: pick(d.name, lang), country: pick(d.country, lang) }))}
+                  onLocationClick={handleClick}
+                  highlightId={highlightId}
+                />
+              ) : (
+                <CSSGlobe
+                  locations={locs}
+                  onLocationClick={handleClick}
+                  lang={lang}
+                />
+              )}
+              <div className="globe-hint">{t.atlas.hint}</div>
+            </div>
+            <aside className="atlas-sidebar">
+              <h3 className="atlas-sidebar-title">
+                <span>{t.atlas.sidebar_title}</span>
+                <span className="atlas-sidebar-count">{locs.length}</span>
+              </h3>
+              <ul className="atlas-list">
+                {locs.map(loc => (
+                  <li
+                    key={loc.id}
+                    className="atlas-list-item"
+                    style={{ ['--accent']: loc.accentColor }}
+                    onClick={() => handleSidebarClick(loc)}
+                    onDoubleClick={() => handleClick(loc.id)}
+                  >
+                    <span className="atlas-list-flag">{loc.flag}</span>
+                    <div className="atlas-list-text">
+                      <div className="atlas-list-name">{pick(loc.name, lang)}</div>
+                      <div className="atlas-list-country"><b>{pick(loc.country, lang)}</b> · {loc.year}</div>
+                    </div>
+                    <span className="atlas-list-dot" style={{ background: loc.accentColor, color: loc.accentColor }} />
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          </div>
+        ) : (
+          // Mobile: vertical timeline with flag + thumb
+          <div className="atlas-timeline">
+            {locs.map((loc, i) => (
+              <div key={loc.id} className="timeline-item" onClick={() => handleClick(loc.id)}>
+                <div className="timeline-rail">
+                  <span className="timeline-dot" style={{ background: loc.accentColor }} />
+                  {i < locs.length - 1 && <span className="timeline-line" />}
+                </div>
+                <div className="timeline-card">
+                  <div className="timeline-thumb" style={{ backgroundImage: `url('${loc.cover}')` }} />
+                  <div className="timeline-body">
+                    <div className="timeline-meta">
+                      <span className="timeline-flag">{loc.flag}</span>
+                      <span className="timeline-year">{loc.year}</span>
+                    </div>
+                    <h4 className="timeline-name">{pick(loc.name, lang)}</h4>
+                    <p className="timeline-country">{pick(loc.country, lang)}</p>
+                    <p className="timeline-desc">{pick(loc.description, lang)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+Object.assign(window, { Globe, CSSGlobe, AtlasSection });

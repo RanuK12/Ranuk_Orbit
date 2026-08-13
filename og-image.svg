@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#C9A227" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#C9A227" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="orbit" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F7F7F5" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#F7F7F5" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#F7F7F5" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Orbit rings -->
+  <ellipse cx="950" cy="315" rx="280" ry="280" fill="none" stroke="url(#orbit)" stroke-width="0.5" stroke-dasharray="2 6"/>
+  <ellipse cx="950" cy="315" rx="220" ry="220" fill="none" stroke="url(#orbit)" stroke-width="0.5" stroke-dasharray="2 6"/>
+  <ellipse cx="950" cy="315" rx="160" ry="160" fill="none" stroke="rgba(247,247,245,0.15)" stroke-width="1"/>
+
+  <!-- Planet -->
+  <circle cx="950" cy="315" r="120" fill="#0A0A0A" stroke="#F7F7F5" stroke-width="1.5"/>
+
+  <!-- Continent silhouette (abstract) -->
+  <path d="M 880 290 Q 920 270, 960 280 T 1020 290 Q 1010 320, 980 340 T 920 350 Q 890 340, 880 290 Z"
+        fill="rgba(247,247,245,0.08)"/>
+  <path d="M 900 360 Q 940 350, 970 370 Q 960 390, 930 395 Q 910 390, 900 360 Z"
+        fill="rgba(247,247,245,0.06)"/>
+
+  <!-- Moon (gold dot) -->
+  <circle cx="1170" cy="270" r="6" fill="#C9A227"/>
+  <circle cx="1170" cy="270" r="14" fill="#C9A227" opacity="0.15"/>
+
+  <!-- Wordmark -->
+  <text x="80" y="240" font-family="Italiana, serif" font-size="120" fill="#F7F7F5" letter-spacing="-2">
+    Ranuk
+  </text>
+  <text x="80" y="360" font-family="Italiana, serif" font-size="120" fill="#C9A227" letter-spacing="-2">
+    Orbit
+  </text>
+
+  <!-- Tagline -->
+  <text x="80" y="425" font-family="'Cormorant Garamond', serif" font-style="italic" font-size="32" fill="rgba(247,247,245,0.85)">
+    Earth, from another angle.
+  </text>
+
+  <!-- Sub-tagline / role -->
+  <text x="80" y="500" font-family="Marcellus, serif" font-size="14" fill="rgba(247,247,245,0.6)" letter-spacing="6">
+    DRONE  ·  RAY-BAN META POV  ·  TRAVEL PHOTOGRAPHY
+  </text>
+
+  <!-- Bottom bar -->
+  <line x1="80" y1="555" x2="1120" y2="555" stroke="rgba(247,247,245,0.15)" stroke-width="0.5"/>
+
+  <text x="80" y="585" font-family="Marcellus, serif" font-size="12" fill="rgba(247,247,245,0.5)" letter-spacing="3">
+    EMILIO RANUCOLI
+  </text>
+  <text x="1120" y="585" font-family="Marcellus, serif" font-size="12" fill="rgba(247,247,245,0.5)" letter-spacing="3" text-anchor="end">
+    RANUKORBIT.COM
+  </text>
+</svg>

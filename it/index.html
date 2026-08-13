@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="it">
+<head>
+<script>window.RANUK_LANG="it"</script>
+<meta charset="utf-8" />
+
+<!-- Cache busting: evitar que el navegador cachee HTML agresivamente -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="cache-version" content="5f20a8f">
+
+<!-- Version check: fuerza recarga si hay nueva version en server -->
+<script>
+(function() {
+  'use strict';
+  var BUNDLED_VERSION = '5f20a8f';
+  var STORAGE_KEY = 'ranuk-orbit-version';
+  var CHECK_INTERVAL = 30 * 1000;
+  var retries = 0;
+  var MAX_RETRIES = 3;
+
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && saved !== BUNDLED_VERSION) {
+      localStorage.setItem(STORAGE_KEY, BUNDLED_VERSION);
+      window.location.reload(true);
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, BUNDLED_VERSION);
+  } catch(e) {}
+
+  function checkForUpdate() {
+    if (retries >= MAX_RETRIES) return;
+    fetch('/version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data) {
+        retries = 0;
+        var serverVersion = data.version || data.v;
+        if (serverVersion && serverVersion !== BUNDLED_VERSION) {
+          console.log('[Ranuk Orbit] Nueva version:', serverVersion);
+          try { localStorage.setItem(STORAGE_KEY, serverVersion); } catch(e) {}
+          window.location.reload(true);
+        }
+      })
+      .catch(function(err) { retries++; });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkForUpdate);
+  } else {
+    checkForUpdate();
+  }
+  setInterval(checkForUpdate, CHECK_INTERVAL);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') checkForUpdate();
+  });
+})();
+</script>
+
+<title>Ranuk Orbit | Cinematografia con drone e film di viaggio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Film con drone, fotografia aerea e storytelling di viaggio di Emilio Ranucoli. Disponibile in tutto il mondo per destinazioni, ospitalità, editoria e brand." />
+<meta name="theme-color" content="#0D0D0F" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Ranuk Orbit | Cinematografia con drone e film di viaggio" />
+<meta property="og:description" content="Film con drone, fotografia aerea e storytelling di viaggio di Emilio Ranucoli. Disponibile in tutto il mondo per destinazioni, ospitalità, editoria e brand." />
+<meta property="og:image" content="https://ranukorbit.com/media/posters/og-image.jpg" />
+<meta property="og:url" content="https://ranukorbit.com/it/" />
+<meta property="og:site_name" content="Ranuk Orbit" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="it_IT" />
+<meta property="og:locale:alternate" content="es_AR" />
+<meta property="og:locale:alternate" content="en_US" />
+<!-- Canonical & hreflang -->
+<link rel="canonical" href="https://ranukorbit.com/it/" />
+<link rel="alternate" hreflang="es" href="https://ranukorbit.com/es/" />
+<link rel="alternate" hreflang="en" href="https://ranukorbit.com/en/" />
+<link rel="alternate" hreflang="it" href="https://ranukorbit.com/it/" />
+<link rel="alternate" hreflang="x-default" href="https://ranukorbit.com/" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Ranuk Orbit | Drone Cinematography & Travel Films" />
+<meta name="twitter:description" content="Film con drone, fotografia aerea e storytelling di viaggio di Emilio Ranucoli. Disponibile in tutto il mondo per destinazioni, ospitalità, editoria e brand." />
+<meta name="twitter:image" content="https://ranukorbit.com/media/posters/og-image.jpg" />
+
+<!-- Favicon (SVG inline mark) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%230A0A0A'/><circle cx='32' cy='32' r='20' fill='none' stroke='%23F7F7F5' stroke-width='1.5'/><line x1='4' y1='32' x2='60' y2='32' stroke='%23F7F7F5' stroke-width='1.5'/><line x1='32' y1='4' x2='32' y2='60' stroke='%23F7F7F5' stroke-width='1.5'/></svg>" />
+<link rel="apple-touch-icon" href="/media/posters/og-image.jpg" />
+
+<!-- Preload del primer poster del hero (LCP) -->
+<link rel="preload" as="image" href="/media/optimized/posters/cerde-na-isla-magdalena-hero.jpg" fetchpriority="high" />
+
+<!-- JSON-LD: author, portfolio and bookable production service -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://ranukorbit.com/#emilio",
+      "name": "Emilio Ranucoli",
+      "alternateName": "Ranuk Orbit",
+      "url": "https://ranukorbit.com/",
+      "image": "https://ranukorbit.com/media/posters/og-image.jpg",
+      "jobTitle": "Drone cinematographer & travel photographer",
+      "address": { "@type": "PostalAddress", "addressLocality": "Mar del Plata", "addressCountry": "AR" },
+      "sameAs": [
+        "https://www.instagram.com/emi_ranucoli/",
+        "https://www.linkedin.com/in/emilio-ranucoli/",
+        "https://x.com/EmilioRanucoli",
+        "https://vsco.co/emiliorturletto/gallery"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://ranukorbit.com/#website",
+      "url": "https://ranukorbit.com/",
+      "name": "Ranuk Orbit",
+      "inLanguage": ["en", "es", "it"],
+      "publisher": { "@id": "https://ranukorbit.com/#emilio" }
+    },
+    {
+      "@type": "ProfessionalService",
+      "@id": "https://ranukorbit.com/#service",
+      "name": "Ranuk Orbit",
+      "url": "https://ranukorbit.com/",
+      "description": "Cinematic aerial photography, drone films and first-person travel storytelling.",
+      "provider": { "@id": "https://ranukorbit.com/#emilio" },
+      "areaServed": "Worldwide",
+      "serviceType": ["Drone cinematography", "Travel photography", "Brand film production"]
+    }
+  ]
+}
+</script>
+
+<!-- Self-hosted fonts (eliminates Google Fonts render-blocking request) -->
+<link rel="preload" href="/fonts/italiana-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+<style>
+@font-face { font-family: 'Italiana'; src: url('/fonts/italiana-latin.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Marcellus'; src: url('/fonts/marcellus-latin.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'DM Sans'; src: url('/fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 300 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Cormorant Garamond'; src: url('/fonts/cormorant-garamond-latin.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Cormorant Garamond'; src: url('/fonts/cormorant-garamond-italic-latin.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+</style>
+
+<style>
+:root {
+  --ink: #0D0D0F;
+  --ink-soft: #1A1A1C;
+  --celestial: #F7F7F5;
+  --celestial-warm: #EDEAE3;
+  --oceanic: #1E6FA4;
+  --desert: #C9A227;
+  --alpine: #8FA8C0;
+  --forest: #2D7A4A;
+  --dusk: #6B4C7F;
+  --line: rgba(247, 247, 245, 0.12);
+  --line-strong: rgba(247, 247, 245, 0.28);
+  --max: 1440px;
+  --gut: clamp(20px, 4vw, 80px);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--ink);
+  color: var(--celestial);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  cursor: auto;
+  /* Subtle ambient gradient + film grain layer to break the flat black.
+     Rendered as a fixed pseudo-element below .nav / above the page
+     background so the hero video still reads as the primary visual. */
+  position: relative;
+}
+/* Ambient light + noise behind everything. Fixed position keeps the
+   gradient anchored while the page scrolls, which reads as "atmosphere"
+   instead of a repeating background pattern. Very low opacity so it
+   complements photos/videos instead of competing with them. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgba(30, 111, 164, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 80%, rgba(201, 162, 39, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(143, 168, 192, 0.04) 0%, transparent 70%),
+    linear-gradient(180deg, #0D0D0F 0%, #0f1219 50%, #0D0D0F 100%);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  /* Tiny base64 noise texture (64×64) — ~0.5 KB inline, avoids a fetch.
+     Gives the otherwise flat black a barely-visible film grain that
+     kills banding on large gradients. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+/* Keep the real page content above the ambient layer */
+body > * { position: relative; z-index: 1; }
+.cursor, .cursor-trail { z-index: 10000; }
+@media (hover: none) { body { cursor: auto; } }
+img, video { display: block; max-width: 100%; }
+button { background: none; border: none; color: inherit; font: inherit; cursor: pointer; }
+@media (hover: none) { button { cursor: pointer; } }
+a { color: inherit; text-decoration: none; }
+input, textarea, select { font: inherit; color: inherit; }
+
+::selection { background: var(--desert); color: var(--ink); }
+
+/* ─── CURSOR ─────────────────────────────────────────────────────── */
+.cursor, .cursor-trail {
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 10000;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+}
+.cursor {
+  width: 8px; height: 8px;
+  background: var(--celestial);
+  margin: -4px 0 0 -4px;
+  transition: transform 0s, width 0.25s var(--ease), height 0.25s var(--ease);
+}
+.cursor-trail {
+  width: 36px; height: 36px;
+  border: 1px solid rgba(247,247,245,0.5);
+  margin: -18px 0 0 -18px;
+  transition: width 0.3s var(--ease), height 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+.cursor.is-link { width: 0; height: 0; }
+.cursor-trail.is-link { width: 60px; height: 60px; border-color: var(--desert); margin: -30px 0 0 -30px; }
+@media (hover: none) { .cursor, .cursor-trail { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } .cursor, .cursor-trail { display: none; } body { cursor: auto; } }
+
+/* ─── LOADING ────────────────────────────────────────────────────── */
+.loading {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px;
+  transition: opacity 0.6s var(--ease), visibility 0s 0.6s;
+}
+.loading.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.loading-mark {
+  font-family: 'Italiana', serif;
+  font-size: 48px;
+  color: var(--celestial);
+  animation: spin 8s linear infinite;
+}
+.loading-bar {
+  width: 160px; height: 1px;
+  background: rgba(247,247,245,0.15);
+  position: relative; overflow: hidden;
+}
+.loading-bar span {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 30%; background: var(--celestial);
+  animation: load 1.4s var(--ease) infinite;
+}
+@keyframes load { 0% { left: -30%; } 100% { left: 100%; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-label {
+  font-family: 'Marcellus', serif;
+  letter-spacing: 0.5em;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(247,247,245,0.6);
+}
+
+/* ─── NAV ────────────────────────────────────────────────────────── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px var(--gut);
+  transition: background 0.4s var(--ease), padding 0.4s var(--ease), border-color 0.4s var(--ease);
+  border-bottom: 1px solid transparent;
+}
+.nav.is-scrolled {
+  background: rgba(10, 10, 10, 0.78);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  padding: 14px var(--gut);
+  border-bottom-color: var(--line);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; font-family: 'Italiana', serif; font-size: 22px; }
+.nav-mark { display: inline-block; transition: transform 0.6s var(--ease); }
+.nav-brand:hover .nav-mark { transform: rotate(180deg); }
+.nav-wordmark { letter-spacing: 0.04em; }
+.nav-links { display: flex; gap: 32px; }
+.nav-link {
+  font-family: 'Marcellus', serif; font-size: 12px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(247,247,245,0.7);
+  transition: color 0.2s ease;
+  position: relative;
+}
+.nav-link::after {
+  content: ''; position: absolute; left: 0; bottom: -6px; width: 0; height: 1px;
+  background: var(--celestial);
+  transition: width 0.3s var(--ease);
+}
+.nav-link:hover { color: var(--celestial); }
+.nav-link:hover::after { width: 100%; }
+.nav-actions { display: flex; align-items: center; gap: 16px; }
+.nav-lang {
+  font-family: 'Marcellus', serif; font-size: 11px;
+  letter-spacing: 0.3em; padding: 8px 14px;
+  border: 1px solid var(--line-strong); border-radius: 999px;
+  transition: all 0.25s ease;
+}
+.nav-lang:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
+
+/* Language dropdown */
+.lang-dd { position: relative; display: inline-block; }
+.lang-dd-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Marcellus', serif; font-size: 11px; letter-spacing: 0.3em;
+  padding: 8px 12px 8px 14px;
+  border: 1px solid var(--line-strong); border-radius: 999px;
+  background: transparent; color: inherit; cursor: pointer;
+  transition: all 0.25s ease;
+}
+.lang-dd-toggle:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
+.lang-dd-toggle svg { transition: transform 0.2s ease; }
+.lang-dd-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.lang-dd-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  min-width: 140px; padding: 6px;
+  background: var(--ink, #0a0a0a); border: 1px solid var(--line-strong);
+  border-radius: 12px; list-style: none; margin: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 250;
+  animation: langDdIn 0.18s ease;
+}
+@keyframes langDdIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.lang-dd-menu li { margin: 0; }
+.lang-dd-menu button {
+  width: 100%; display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  background: transparent; border: 0; color: inherit; cursor: pointer;
+  text-align: left; font-family: inherit;
+  transition: background 0.15s ease;
+}
+.lang-dd-menu button:hover { background: rgba(255,255,255,0.06); }
+.lang-dd-menu button.is-active { background: rgba(255,255,255,0.1); }
+.lang-dd-code { font-family: 'Marcellus', serif; font-size: 11px; letter-spacing: 0.25em; opacity: 0.8; min-width: 22px; }
+.lang-dd-full { font-size: 13px; }
+.lang-dd.is-overlay .lang-dd-toggle { font-size: 14px; padding: 10px 16px; }
+.lang-dd.is-overlay .lang-dd-menu { right: auto; left: 50%; transform: translateX(-50%); top: calc(100% + 8px); }
+.lang-dd.is-overlay .lang-dd-menu { animation: langDdInOv 0.18s ease; }
+@keyframes langDdInOv { from { opacity: 0; transform: translateX(-50%) translateY(-4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+.nav-burger { display: none; flex-direction: column; gap: 4px; }
+.nav-burger span { width: 22px; height: 1.5px; background: var(--celestial); }
+
+.nav-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.nav-overlay-close { position: absolute; top: 24px; right: 24px; font-size: 32px; }
+.nav-overlay-links { display: flex; flex-direction: column; gap: 24px; }
+.nav-overlay-links a {
+  font-family: 'Italiana', serif; font-size: 36px;
+  text-align: center; opacity: 0;
+  animation: slideUp 0.6s var(--ease) forwards;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.nav-overlay-foot { margin-top: 40px; }
+.nav-overlay-foot button {
+  font-family: 'Marcellus', serif; letter-spacing: 0.3em; font-size: 12px;
+  padding: 12px 24px; border: 1px solid var(--line-strong); border-radius: 999px;
+}
+
+/* ─── HERO ───────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  height: 100vh; min-height: 600px;
+  overflow: hidden;
+  display: flex; align-items: flex-end;
+  padding: 0 var(--gut) clamp(60px, 10vh, 120px);
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent 0%, #0D0D0F 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.hero-bg { position: absolute; inset: 0; z-index: 0; }
+.hero-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  animation: kenburns 22s ease-in-out infinite alternate;
+}
+.hero-video.is-active { opacity: 1; }
+@keyframes kenburns {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.08) translate(-1.5%, -1%); }
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, transparent 40%, rgba(10,10,10,0.15) 60%, rgba(10,10,10,0.5) 80%, rgba(10,10,10,0.85) 100%);
+}
+.hero-overlay-top {
+  position: absolute; top: 0; left: 0; right: 0; height: 140px;
+  background: linear-gradient(to bottom, rgba(10,10,10,0.35), transparent);
+}
+/* Vignette: darkens edges for cinematic framing */
+.hero-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  box-shadow: inset 0 0 200px 60px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 1;
+}
+/* Subtle film grain over the hero video */
+.hero-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+
+.hero-content {
+  position: relative; z-index: 2;
+  max-width: var(--max); width: 100%; margin: 0 auto;
+}
+.hero-overline {
+  display: inline-block;
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: rgba(247,247,245,0.75);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeIn 1s ease 0.2s forwards;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6);
+}
+.hero-headline {
+  font-family: 'Italiana', serif;
+  font-size: clamp(48px, 9vw, 132px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  color: var(--celestial);
+  margin-bottom: 28px;
+  transition: transform 0.6s var(--ease);
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.5),
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 20px 80px rgba(0, 0, 0, 0.3),
+    0 0 120px rgba(0, 0, 0, 0.2);
+}
+.hero-line { display: block; }
+.hero-word { display: inline-block; }
+.hero-word.is-em { font-style: italic; color: var(--desert); }
+.hero-char {
+  display: inline-block;
+  opacity: 0;
+}
+.hero-char-spacer { display: inline-block; }
+.hero-char--stagger { transform: translateY(60%); animation: heroStagger 0.5s var(--ease) forwards; }
+.hero-char--curtain { transform: translateY(100%); animation: heroCurtain 0.5s var(--ease) forwards; }
+.hero-char--blur    { filter: blur(12px); animation: heroBlur 0.7s var(--ease) forwards; }
+@keyframes heroStagger { to { opacity: 1; transform: translateY(0); } }
+@keyframes heroCurtain { to { opacity: 1; transform: translateY(0); } }
+@keyframes heroBlur    { to { opacity: 1; filter: blur(0); } }
+
+.hero-word-anim {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(4px);
+  animation: wordIn 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes wordIn {
+  from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.hero-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(18px, 1.5vw, 22px);
+  color: rgba(247,247,245,0.85);
+  max-width: 580px;
+  margin-bottom: 36px;
+  opacity: 0;
+  animation: fadeIn 1s ease 1.4s forwards;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 0, 0, 0.4);
+}
+.hero-cta-row {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeIn 1s ease 1.6s forwards;
+}
+/* Hero CTA: Primary (solid golden) */
+.hero-cta--primary {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 36px;
+  background: rgba(201, 162, 39, 0.92);
+  color: #0A0A0A;
+  border: none;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow:
+    0 4px 20px rgba(201, 162, 39, 0.3),
+    0 0 60px rgba(201, 162, 39, 0.1);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hero-cta--primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 30px rgba(201, 162, 39, 0.4),
+    0 0 80px rgba(201, 162, 39, 0.15);
+  background: rgba(201, 162, 39, 1);
+  color: #0A0A0A;
+}
+.hero-cta--primary .btn-arrow { display: inline-block; transition: transform 0.3s var(--ease); }
+.hero-cta--primary:hover .btn-arrow { transform: translateX(4px); }
+
+/* Hero CTA: Secondary (frosted glass) */
+.hero-cta--secondary {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 36px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #F7F7F5;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hero-cta--secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+/* CTA frosted glass for legibility over bright video frames */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px;
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(247, 247, 245, 0.3);
+  border-radius: 999px;
+  font-family: 'Marcellus', serif;
+  font-size: 12px; letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--celestial);
+  transition: all 0.3s var(--ease);
+  background: rgba(10, 10, 10, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btn-ghost:hover { background: var(--celestial); color: var(--ink); border-color: var(--celestial); }
+.btn-ghost:hover .btn-arrow { transform: translateX(4px); }
+.btn-arrow { display: inline-block; transition: transform 0.3s var(--ease); }
+.btn-link-light {
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(247,247,245,0.8);
+  background: rgba(10, 10, 10, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(247, 247, 245, 0.15);
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.btn-link-light:hover { color: var(--celestial); border-color: rgba(247,247,245,0.4); background: rgba(10, 10, 10, 0.5); }
+
+.hero-indicator {
+  position: absolute; bottom: 80px; right: var(--gut);
+  display: flex; align-items: center; gap: 10px;
+  z-index: 3;
+}
+.hero-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  border: 1px solid rgba(247,247,245,0.5);
+  background: transparent;
+  transition: all 0.3s ease;
+  min-width: 44px; min-height: 44px;
+}
+.hero-dot.is-active { background: var(--celestial); border-color: var(--celestial); width: 28px; border-radius: 4px; }
+.hero-clip-label {
+  font-family: 'Marcellus', serif; font-size: 10px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  margin-left: 12px; color: rgba(247,247,245,0.7);
+}
+
+.hero-mute {
+  position: absolute; top: 24px; right: var(--gut);
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(10,10,10,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(247,247,245,0.25);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 6;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.hero-mute:hover { background: rgba(10,10,10,0.7); border-color: var(--celestial); color: var(--celestial); }
+@media (max-width: 900px) {
+  .hero-mute { top: 16px; right: 16px; width: 36px; height: 36px; }
+}
+
+.hero-scroll-hint {
+  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  z-index: 3;
+}
+.hero-scroll-line {
+  display: block; width: 1px; height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(247,247,245,0.7));
+  animation: scrollPulse 1.8s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.4; }
+  50% { transform: scaleY(1.4); opacity: 1; }
+}
+.hero-scroll-label {
+  font-family: 'Marcellus', serif; font-size: 9px;
+  letter-spacing: 0.4em; text-transform: uppercase;
+  color: rgba(247,247,245,0.5);
+}
+
+/* Hero → next section soft fade transition */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent, var(--ink));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* CTA frosted glass for legibility over bright video frames */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px;
+  border: 1px solid rgba(247,247,245,0.4);
+  border-radius: 999px;
+  font-family: 'Marcellus', serif;
+  font-size: 12px; letter-spacing: 0.3em;
+  text-transform: uppercase;
+  transition: all 0.3s var(--ease);
+  background: rgba(10, 10, 10, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.section-overline {
+  display: inline-block;
+  font-family: 'Marcellus', serif;
+  font-size: 11px; letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--desert);
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Italiana', serif;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1.0;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+}
+.section-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(17px, 1.4vw, 20px);
+  color: rgba(247,247,245,0.7);
+  max-width: 640px;
+}
+
+[data-reveal] { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+[data-reveal].is-revealed { opacity: 1; transform: translateY(0); }
+
+.skip-link { position: absolute; top: -100%; left: 50%; transform: translateX(-50%); background: var(--celestial); color: var(--ink); padding: 0.75rem 1.5rem; z-index: 99999; border-radius: 4px; font-weight: 500; }
+.skip-link:focus { top: 1rem; }
+
+/* ─── A11Y: visible keyboard focus ───────────────────────────────────
+   Show a focus ring for keyboard navigation only (never on mouse click)
+   so keyboard users can always see where they are — across nav, CTAs,
+   chips, thumbnails and the video player controls. */
+:focus-visible {
+  outline: 2px solid var(--desert);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+</style>
+
+<!-- Non-critical CSS loaded async (archive, lightbox, story, services, etc.) -->
+<link rel="stylesheet" href="/styles.css?v=616e336e" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/styles.css?v=616e336e"></noscript>
+
+<!-- Marketing components CSS (StatsBand, Process/HowIWork, social, WhatsApp, etc.) -->
+<link rel="stylesheet" href="/MARKETING_CSS.css?v=58bdaaf0" />
+
+<!-- Google Analytics 4 — propiedad de ranukorbit.com -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3PQHE07PV1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-3PQHE07PV1', {
+    anonymize_ip: true,
+    cookie_flags: 'SameSite=None;Secure'
+  });
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<div id="main-content">
+<div id="app"></div>
+</div>
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<!-- React (jsDelivr es más rápido y consistente que unpkg) -->
+<!-- React (self-hosted, eliminates CDN DNS/TLS overhead) -->
+<script src="/vendor/react.18.2.0.min.js"></script>
+<script src="/vendor/react-dom.18.2.0.min.js"></script>
+
+<!-- Three.js: lazy-loaded only when Atlas section enters viewport -->
+<script>
+  window.__loadThree = function() {
+    if (window.THREE) return Promise.resolve();
+    if (window.__threePromise) return window.__threePromise;
+    window.__threePromise = new Promise(function(resolve, reject) {
+      var s = document.createElement('script');
+      s.src = '/vendor/three.0.158.0.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    return window.__threePromise;
+  };
+</script>
+
+<!-- Asset manifest (qué archivos existen realmente en /optimized/) -->
+<script src="/ranuk-manifest.js?v=3e13e699"></script>
+
+<!-- Runtime config: reemplazar con tu Formspree endpoint cuando lo tengas.
+     Sign up en https://formspree.io (plan free) → copiar el form ID
+     (formato "xzbgkaer") y armarlo como URL completa:
+
+       window.RANUK_FORMSPREE = "https://formspree.io/f/xzbgkaer";
+
+     Mientras esté vacío, el form de contacto cae a un mailto: como antes.
+     Lo mismo con el reel — cuando tengas el video, apuntá acá a la URL
+     del MP4 optimizado (p.ej. /media/optimized/reel.mp4) y el botón
+     "Watch the reel" del hero lo abrirá en un modal fullscreen. Hasta
+     entonces, el modal muestra un estado "coming soon". -->
+<script>
+  window.RANUK_FORMSPREE = "";
+  window.RANUK_REEL_URL  = "";
+</script>
+
+<!-- Data -->
+<script src="/ranuk-data.js?v=f3b38ad0"></script>
+
+<!-- App bundle (esbuild-compiled) -->
+<script src="/ranuk-app.min.js?v=5f20a8f5"></script>
+
+<!-- Mount -->
+<script>
+  var root = ReactDOM.createRoot(document.getElementById('app'));
+  root.render(React.createElement(window.App));
+
+  // Scroll progress indicator
+  var sp = document.querySelector('.scroll-progress');
+  if (sp) {
+    window.addEventListener('scroll', function() {
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      sp.style.transform = 'scaleX(' + (h > 0 ? window.scrollY / h : 0) + ')';
+    }, { passive: true });
+  }
+</script>
+
+<!-- Service Worker: control total del cache, network-first -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js')
+      .then(function(registration) {
+        console.log('[Ranuk] SW registered:', registration.scope);
+
+        registration.addEventListener('updatefound', function() {
+          var newWorker = registration.installing;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[Ranuk] New version available, reloading...');
+              window.location.reload();
+            }
+          });
+        });
+      })
+      .catch(function(error) {
+        console.warn('[Ranuk] SW registration failed:', error);
+      });
+  });
+}
+</script>
+
+</body>
+</html>
