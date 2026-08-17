@@ -44,21 +44,26 @@ const M = (id, type, src, title, mood, altitude, year, exif) => {
 // Cinematic 3-clip hero sequence. Every source below is present in the
 // deployed media archive; keeping this list tied to real assets prevents a
 // silent poster-only hero when an old source file is moved or renamed.
+// HERO — la primera impresion. Los tres clips los eligio Emilio (17/08): nieve de Trentino
+// primero, Patagonia despues, Marruecos al cierre. Los tres en H.264 1080p a 5-6 Mbps: es el
+// techo del material que hay publicado. HEVC queda afuera a proposito (Chrome y Firefox no lo
+// reproducen de forma fiable), y por eso Patagonia va con rio-limay y no con bosque-patagonia,
+// que es HEVC y de 65 s.
 const HERO_SEQUENCE = [
   {
-    src: VIDEO_DRONE('alpes-italianos.mp4'),
-    poster: POSTER('cerdena-isla-magdalena-hero.jpg'),
-    label: { en: 'La Maddalena, Sardinia', es: 'La Maddalena, Cerdeña', it: 'La Maddalena, Sardegna' },
-  },
-  {
-    src: VIDEO_DRONE('alpes-italianos-trentino.mp4'),
-    poster: POSTER('alpes-italianos-trentino.jpg'),
+    src: VIDEO_DRONE('atardecer-nieve-hero.mp4'),
+    poster: POSTER('atardecer-nieve-hero.jpg'),
     label: { en: 'Trentino, Italian Alps', es: 'Trentino, Alpes Italianos', it: 'Trentino, Alpi Italiane' },
   },
   {
-    src: VIDEO_DRONE('amsterdam-parque-zaandam.mp4'),
-    poster: POSTER('amsterdam-parque-zaandam.jpg'),
-    label: { en: 'Zaandam, Netherlands', es: 'Zaandam, Países Bajos', it: 'Zaandam, Paesi Bassi' },
+    src: VIDEO_DRONE('rio-limay-patagonia.mp4'),
+    poster: POSTER('rio-limay-patagonia.jpg'),
+    label: { en: 'Río Limay, Patagonia', es: 'Río Limay, Patagonia', it: 'Río Limay, Patagonia' },
+  },
+  {
+    src: VIDEO_DRONE('aghroud-panoramica.mp4'),
+    poster: POSTER('aghroud-panoramica.jpg'),
+    label: { en: 'Aghroud, Morocco', es: 'Aghroud, Marruecos', it: 'Aghroud, Marocco' },
   },
 ];
 

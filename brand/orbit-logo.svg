@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" width="300" height="64" role="img" aria-label="Ranuk Orbit">
+  <title>Ranuk Orbit</title>
+  <defs>
+    <style>
+      @font-face { font-family: 'Italiana'; src: url('/fonts/italiana-latin.woff2') format('woff2'); font-display: swap; }
+      @font-face { font-family: 'Marcellus'; src: url('/fonts/marcellus-latin.woff2') format('woff2'); font-display: swap; }
+    </style>
+  </defs>
+  <!--
+    Logo horizontal: isotipo + wordmark. El wordmark va en Italiana (BRAND_GUIDELINES §3), con
+    Cormorant Garamond y serif como respaldo por si el SVG se abre fuera del sitio. La bajada usa
+    Marcellus en versalitas con tracking 0.34em, como manda la guia para eyebrows.
+    Color por currentColor; el unico fijo es el acento var(desert) del drone.
+  -->
+  <g transform="translate(0,0)">
+    <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+      <circle cx="32" cy="32" r="22"/>
+      <path d="M32 10v7M32 47v7M10 32h7M47 32h7"/>
+      <ellipse cx="32" cy="32" rx="26" ry="10" transform="rotate(-28 32 32)" stroke-width="1.2" opacity=".8"/>
+    </g>
+    <g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M26.5 40.5v-17h6.2a5.4 5.4 0 0 1 0 10.8H26.5"/>
+      <path d="M32.9 34.3 39 40.5"/>
+    </g>
+    <circle cx="55" cy="19.8" r="2.5" fill="#C9A227" stroke="none"/>
+  </g>
+  <text x="76" y="35" fill="currentColor"
+        font-family="Italiana, 'Cormorant Garamond', Georgia, serif"
+        font-size="27" letter-spacing="1.5">Ranuk Orbit</text>
+  <text x="78" y="49" fill="currentColor" opacity=".62"
+        font-family="Marcellus, 'Cormorant Garamond', Georgia, serif"
+        font-size="8" letter-spacing="3.4">LA TIERRA, DESDE OTRO &#193;NGULO</text>
+</svg>

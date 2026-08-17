@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Ranuk Orbit">
+  <title>Ranuk Orbit</title>
+  <!--
+    Isotipo. Sigue BRAND_GUIDELINES §6: "R con anillo orbital + cruz cardinal, dentro de circulo".
+    El circulo y la cruz son el simbolo ⊕ que ya firma el footer; la elipse inclinada es la orbita
+    (de ahi el nombre) y el punto dorado es el drone sobre ella. Stroke 1.2-1.4, sin relleno.
+
+    Color por currentColor: var(celestial) sobre fondo oscuro, var(ink) sobre fondo claro. El unico color
+    fijo es el acento var(desert) #C9A227 del punto, que las guidelines permiten como micro-detalle.
+
+    Geometria: la orbita es rx=26 ry=10 rotada -28 grados; el drone va en theta=0, o sea
+    (32 + 26·cos28, 32 - 26·sin28) = (55, 19.8). Si se cambia rx hay que recalcular el punto.
+  -->
+  <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+    <circle cx="32" cy="32" r="22"/>
+    <!-- Cruz cardinal: solo los tramos exteriores, para no chocar con la R -->
+    <path d="M32 10v7M32 47v7M10 32h7M47 32h7"/>
+    <!-- Orbita -->
+    <ellipse cx="32" cy="32" rx="26" ry="10" transform="rotate(-28 32 32)" stroke-width="1.2" opacity=".8"/>
+  </g>
+  <!-- R editorial, trazada: no depende de que la fuente este cargada -->
+  <g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26.5 40.5v-17h6.2a5.4 5.4 0 0 1 0 10.8H26.5"/>
+    <path d="M32.9 34.3 39 40.5"/>
+  </g>
+  <!-- El drone sobre la orbita -->
+  <circle cx="55" cy="19.8" r="2.5" fill="#C9A227" stroke="none"/>
+</svg>

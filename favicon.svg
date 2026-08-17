@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="30" fill="#0A0A0A"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="#F7F7F5" stroke-width="1.5"/>
-  <circle cx="32" cy="12" r="3" fill="#C9A227"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Ranuk Orbit"> <rect width="64" height="64" rx="10" fill="#0A0A0A"/><g fill="none" stroke="#F7F7F5" stroke-width="1.4" stroke-linecap="round"> <circle cx="32" cy="32" r="22"/> <path d="M32 10v7M32 47v7M10 32h7M47 32h7"/> <ellipse cx="32" cy="32" rx="26" ry="10" transform="rotate(-28 32 32)" stroke-width="1.2" opacity=".8"/> </g> <g fill="none" stroke="#F7F7F5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"> <path d="M26.5 40.5v-17h6.2a5.4 5.4 0 0 1 0 10.8H26.5"/> <path d="M32.9 34.3 39 40.5"/> </g> <circle cx="55" cy="19.8" r="2.5" fill="#C9A227" stroke="none"/> </svg>

@@ -107,7 +107,20 @@ function Nav() {
       <nav className={`nav${scrolled ? ' is-scrolled' : ''}`}>
         <div className="nav-identity">
           <a href="#home" className="nav-brand" aria-label="Ranuk Orbit" onClick={() => setActiveSection('home')}>
-            <span className="nav-mark">⊕</span>
+            {/* Isotipo de marca (brand/orbit-mark.svg): circulo + cruz cardinal + orbita + R,
+                como pide BRAND_GUIDELINES §6. El ⊕ suelto sigue firmando footer y loading. */}
+            <svg className="nav-mark" viewBox="0 0 64 64" width="22" height="22" aria-hidden="true">
+              <g fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <circle cx="32" cy="32" r="22" />
+                <path d="M32 10v7M32 47v7M10 32h7M47 32h7" />
+                <ellipse cx="32" cy="32" rx="26" ry="10" transform="rotate(-28 32 32)" strokeWidth="1.2" opacity=".8" />
+              </g>
+              <g fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M26.5 40.5v-17h6.2a5.4 5.4 0 0 1 0 10.8H26.5" />
+                <path d="M32.9 34.3 39 40.5" />
+              </g>
+              <circle cx="55" cy="19.8" r="2.5" fill="#C9A227" />
+            </svg>
             <span className="nav-wordmark">Ranuk Orbit</span>
           </a>
           <a href="https://ranuk.dev" target="_blank" rel="noopener noreferrer" className="nav-dev-pill" aria-label="Developer portfolio">dev</a>
