@@ -1,0 +1,94 @@
+/* Paginas de destino (build-seo.mjs). Estatico, sin React: son las que Google indexa.
+   Respetan BRAND_GUIDELINES — Italiana para display, Marcellus en versalitas, Cormorant para
+   cuerpo, DM Sans para UI; bordes rectos, acentos solo en linea y micro-detalle. */
+
+.seo-page {
+  margin: 0;
+  background: var(--ink, #0A0A0A);
+  color: var(--celestial, #F7F7F5);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.seo-page main { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 80px) 96px; }
+
+/* ── barra superior ─────────────────────────────────────────────────────── */
+.seo-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  max-width: 1180px; margin: 0 auto; padding: 22px clamp(20px, 4vw, 80px);
+  border-bottom: 1px solid rgba(247, 247, 245, .12);
+}
+.seo-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  color: inherit; text-decoration: none;
+  font-family: 'Italiana', Georgia, serif; font-size: 1.25rem; letter-spacing: .04em;
+}
+.seo-langs { display: flex; gap: 4px; font-family: 'Marcellus', serif; font-size: .72rem; letter-spacing: .22em; }
+.seo-langs a {
+  color: rgba(247, 247, 245, .55); text-decoration: none; padding: 6px 10px;
+  border: 1px solid transparent;
+}
+.seo-langs a[aria-current="page"] { color: var(--celestial, #F7F7F5); border-color: rgba(247, 247, 245, .28); }
+.seo-langs a:hover { color: var(--celestial, #F7F7F5); }
+
+/* ── encabezado del lugar ───────────────────────────────────────────────── */
+.seo-hero { padding: clamp(56px, 9vh, 112px) 0 clamp(32px, 5vh, 56px); max-width: 760px; }
+.seo-kicker {
+  font-family: 'Marcellus', serif; text-transform: uppercase;
+  letter-spacing: .34em; font-size: .68rem; color: var(--desert, #C9A227); margin: 0 0 20px;
+}
+.seo-hero h1 {
+  font-family: 'Italiana', Georgia, serif; font-weight: 400;
+  font-size: clamp(3rem, 8vw, 6rem); line-height: .96; margin: 0 0 24px; letter-spacing: -.01em;
+}
+.seo-lead {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.15rem, 2vw, 1.5rem); line-height: 1.55;
+  color: rgba(247, 247, 245, .78); margin: 0 0 20px;
+}
+.seo-meta { font-size: .85rem; color: rgba(247, 247, 245, .5); margin: 0; }
+.seo-meta a { color: var(--desert, #C9A227); text-decoration: none; border-bottom: 1px solid currentColor; }
+
+/* ── grilla de piezas ───────────────────────────────────────────────────── */
+.seo-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2px; margin: 0 0 clamp(56px, 9vh, 112px);
+}
+.seo-pieza { margin: 0; position: relative; background: #111; }
+.seo-pieza img { display: block; width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.seo-pieza figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 32px 14px 12px;
+  font-family: 'Marcellus', serif; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+  background: linear-gradient(transparent, rgba(10, 10, 10, .88));
+}
+
+/* ── cierre ─────────────────────────────────────────────────────────────── */
+.seo-cta { border-top: 1px solid rgba(247, 247, 245, .12); padding: clamp(48px, 7vh, 80px) 0; max-width: 620px; }
+.seo-cta h2, .seo-otros h2 {
+  font-family: 'Italiana', Georgia, serif; font-weight: 400;
+  font-size: clamp(1.8rem, 4vw, 2.8rem); margin: 0 0 14px;
+}
+.seo-cta p { color: rgba(247, 247, 245, .7); margin: 0 0 26px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; }
+.seo-btn {
+  display: inline-block; padding: 14px 28px; text-decoration: none;
+  border: 1px solid var(--desert, #C9A227); color: var(--desert, #C9A227);
+  font-family: 'Marcellus', serif; font-size: .75rem; letter-spacing: .24em; text-transform: uppercase;
+  transition: background .3s ease, color .3s ease;
+}
+.seo-btn:hover { background: var(--desert, #C9A227); color: var(--ink, #0A0A0A); }
+
+.seo-otros { border-top: 1px solid rgba(247, 247, 245, .12); padding-top: clamp(40px, 6vh, 64px); }
+.seo-otros ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px 26px; }
+.seo-otros a { color: rgba(247, 247, 245, .72); text-decoration: none; font-size: .95rem; }
+.seo-otros a:hover { color: var(--desert, #C9A227); }
+
+.seo-foot {
+  border-top: 1px solid rgba(247, 247, 245, .12); text-align: center;
+  padding: 32px; font-family: 'Marcellus', serif; letter-spacing: .2em; font-size: .72rem;
+}
+.seo-foot a { color: rgba(247, 247, 245, .55); text-decoration: none; }
+
+@media (max-width: 640px) {
+  .seo-grid { grid-template-columns: 1fr; }
+  .seo-top { flex-wrap: wrap; gap: 12px; }
+}

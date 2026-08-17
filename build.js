@@ -220,6 +220,13 @@ step('stamp locale HTMLs with bundle hash', () => {
   }
 });
 
+// 8) Paginas de destino + sitemap + contenido indexable en la home.
+// VA AL FINAL a proposito: el paso 6 regenera los index.html de cada locale desde el canonico, asi
+// que si esto corriera antes, build-locales.py pisaria el bloque indexable del <div id="app">.
+step('generar paginas SEO por destino', () => {
+  execSync('node build-seo.mjs', { stdio: 'inherit', cwd: ROOT });
+});
+
 console.log('\n✓ Build complete. Asset versions:');
 for (const [name, hash] of Object.entries(hashes)) {
   console.log(`  /${name}?v=${hash}`);
