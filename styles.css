@@ -2714,3 +2714,36 @@ body.konami { animation: rainbow 6s linear; }
   will-change: transform;
   transition: transform 0.1s linear;
 }
+
+/* ── Globo del Atlas (fallback sin WebGL, y el que ve todo movil) ─────────────
+   Reemplaza al viejo globo CSS, que ubicaba los destinos con una proyeccion plana sobre un
+   circulo y los dejaba donde no van. Ahora la esfera se dibuja con proyeccion ortografica real
+   (ver GlobeSVG en ranuk-globe.jsx) y la lista de abajo es navegacion de verdad: cada destino
+   lleva a su pagina. */
+.orbit-globe { display: flex; flex-direction: column; gap: 28px; align-items: center; width: 100%; }
+.orbit-globe-svg { width: 100%; max-width: 520px; height: auto; display: block; }
+.orbit-globe-pin { transition: opacity .4s linear; }
+
+.orbit-globe-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  max-width: 560px;
+}
+.orbit-globe-list a {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px; text-decoration: none;
+  border: 1px solid rgba(247, 247, 245, .14);
+  color: rgba(247, 247, 245, .74);
+  font-family: 'DM Sans', system-ui, sans-serif; font-size: .82rem;
+  transition: border-color .3s ease, color .3s ease;
+}
+.orbit-globe-list a:hover,
+.orbit-globe-list a:focus-visible {
+  border-color: var(--pin-color, #C9A227);
+  color: var(--celestial, #F7F7F5);
+}
+
+@media (max-width: 640px) {
+  .orbit-globe-svg { max-width: 340px; }
+  .orbit-globe-list a { font-size: .76rem; padding: 6px 10px; }
+}

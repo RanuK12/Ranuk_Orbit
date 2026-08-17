@@ -2,44 +2,122 @@
 // HYBRID APPROACH: CSS globe renders instantly; Three.js upgrades only on capable devices
 const { useRef, useEffect, useState, useCallback, useMemo } = React;
 
-// ── CSS GLOBE FALLBACK ─────────────────────────────────────────────────────
-// Lightweight animated globe using CSS only (~2KB). Renders instantly without
-// WebGL, no GPU drain, no external textures. Shows rotating sphere with pins.
-function CSSGlobe({ locations, onLocationClick, lang }) {
-  // Place pins at approximate 2D positions based on lat/lng
-  // Simple equirectangular projection onto a circle
-  const pins = useMemo(() => {
-    return locations.map(loc => {
-      // Map lat/lng to x/y on circle (simplified Mercator-like projection)
-      const x = 50 + (loc.coords.lng / 180) * 40; // percentage
-      const y = 50 - (loc.coords.lat / 90) * 40;  // percentage
-      return { ...loc, px: x, py: y };
-    });
-  }, [locations]);
+// ── GLOBO SVG (el que ve todo movil y cualquier equipo sin WebGL) ──────────
+// Reemplaza al CSSGlobe, que colocaba los pines con `x = 50 + lng/180*40` sobre un circulo:
+// geometria PLANA disfrazada de esfera, con los destinos cayendo donde no van (Patagonia y
+// Marruecos casi en la misma altura, Tailandia contra el borde).
+//
+// Aca va la proyeccion ortografica de verdad, que es la que corresponde para dibujar una esfera
+// en 2D — la misma que usa un globo terraqueo visto de frente:
+//     x = cos(lat)·sin(lng − lng0)
+//     y = cos(lat0)·sin(lat) − sin(lat0)·cos(lat)·cos(lng − lng0)
+// y un punto solo se dibuja si esta en la cara visible: sin(lat0)·sin(lat) + cos(lat0)·cos(lat)·cos(lng − lng0) ≥ 0.
+//
+// Gira solo (salvo prefers-reduced-motion) y cada destino navega a su pagina, asi que el globo es
+// el indice del diario y no un adorno.
+// Debe coincidir con SEG en build-seo.mjs, que genera /lugares/, /en/places/ y /it/luoghi/.
+const SEG_LUGAR = { es: 'lugares', en: 'places', it: 'luoghi' };
+const RAD = Math.PI / 180;
+const LAT0 = 18;                 // el globo se mira desde un poco arriba del ecuador
+const VUELTA_MS = 90000;         // una vuelta completa: lento, no marea
+
+function proyectar(lat, lng, lng0) {
+  const la = lat * RAD, lo = (lng - lng0) * RAD, la0 = LAT0 * RAD;
+  const cosc = Math.sin(la0) * Math.sin(la) + Math.cos(la0) * Math.cos(la) * Math.cos(lo);
+  return {
+    visible: cosc >= 0,
+    x: Math.cos(la) * Math.sin(lo),
+    y: Math.cos(la0) * Math.sin(la) - Math.sin(la0) * Math.cos(la) * Math.cos(lo),
+    cosc,
+  };
+}
+
+/** Path de un meridiano o paralelo, cortado donde pasa a la cara oculta. */
+function lineaEsferica(puntos, lng0, R, C) {
+  let d = '', dibujando = false;
+  for (const [lat, lng] of puntos) {
+    const p = proyectar(lat, lng, lng0);
+    if (!p.visible) { dibujando = false; continue; }
+    const x = C + p.x * R, y = C - p.y * R;
+    d += `${dibujando ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
+    dibujando = true;
+  }
+  return d;
+}
+
+function GlobeSVG({ locations, onLocationClick, lang, hrefFor }) {
+  const [lng0, setLng0] = useState(-60);
+  const quieto = useRef(false);
+
+  useEffect(() => {
+    quieto.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (quieto.current) return;
+    let raf, t0 = performance.now();
+    const tick = (t) => {
+      setLng0((((t - t0) / VUELTA_MS) * 360 - 60) % 360);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const R = 46, C = 50;          // radio y centro en el viewBox de 100
+  const grilla = useMemo(() => {
+    const paths = [];
+    for (let lat = -60; lat <= 60; lat += 30) {
+      paths.push(lineaEsferica(
+        Array.from({ length: 181 }, (_, i) => [lat, -180 + i * 2]), lng0, R, C));
+    }
+    for (let lng = -180; lng < 180; lng += 30) {
+      paths.push(lineaEsferica(
+        Array.from({ length: 91 }, (_, i) => [-90 + i * 2, lng]), lng0, R, C));
+    }
+    return paths.filter(Boolean);
+  }, [lng0]);
+
+  const puntos = useMemo(() => locations.map((loc) => {
+    const p = proyectar(loc.coords.lat, loc.coords.lng, lng0);
+    return { loc, ...p, cx: C + p.x * R, cy: C - p.y * R };
+  }), [locations, lng0]);
+
+  const nombre = (loc) => (typeof loc.name === 'object' ? (loc.name[lang] || loc.name.en) : loc.name);
 
   return (
-    <div className="css-globe-container">
-      <div className="css-globe">
-        <div className="css-globe-sphere" />
-        <div className="css-globe-grid" />
-        {pins.map(pin => (
-          <button
-            key={pin.id}
-            className="css-globe-pin"
-            style={{
-              left: `${pin.px}%`,
-              top: `${pin.py}%`,
-              '--pin-color': pin.accentColor || '#C9A227'
-            }}
-            onClick={() => onLocationClick(pin.id)}
-            aria-label={typeof pin.name === 'object' ? (pin.name[lang] || pin.name.en) : pin.name}
-            title={typeof pin.name === 'object' ? (pin.name[lang] || pin.name.en) : pin.name}
-          >
-            <span className="css-globe-pin-dot" />
-            <span className="css-globe-pin-pulse" />
-          </button>
+    <div className="orbit-globe">
+      <svg viewBox="0 0 100 100" className="orbit-globe-svg" role="img"
+           aria-label={lang === 'en' ? 'Globe with the filmed places' : lang === 'it'
+             ? 'Globo con i luoghi filmati' : 'Globo con los lugares filmados'}>
+        <defs>
+          <radialGradient id="og-face" cx="35%" cy="30%">
+            <stop offset="0%" stopColor="#1E6FA4" stopOpacity=".28" />
+            <stop offset="70%" stopColor="#0A0A0A" stopOpacity=".85" />
+            <stop offset="100%" stopColor="#0A0A0A" />
+          </radialGradient>
+        </defs>
+        <circle cx={C} cy={C} r={R} fill="url(#og-face)" stroke="rgba(247,247,245,.28)" strokeWidth=".35" />
+        <g fill="none" stroke="rgba(247,247,245,.16)" strokeWidth=".3">
+          {grilla.map((d, i) => <path key={i} d={d} />)}
+        </g>
+        {puntos.filter((p) => p.visible).map(({ loc, cx, cy, cosc }) => (
+          <g key={loc.id} className="orbit-globe-pin" opacity={0.45 + cosc * 0.55}>
+            <circle cx={cx} cy={cy} r="2.4" fill="none" stroke={loc.accentColor || '#C9A227'} strokeWidth=".4" opacity=".6" />
+            <circle cx={cx} cy={cy} r="1.1" fill={loc.accentColor || '#C9A227'} />
+          </g>
         ))}
-      </div>
+      </svg>
+      {/* Los destinos, como lista real: navegable con teclado, legible por un crawler y con link
+          propio a la pagina de cada lugar. El globo de arriba es la representacion, no el control. */}
+      <ul className="orbit-globe-list">
+        {locations.map((loc) => (
+          <li key={loc.id}>
+            <a href={hrefFor ? hrefFor(loc) : undefined}
+               onClick={(e) => { if (onLocationClick) { e.preventDefault(); onLocationClick(loc.id); } }}
+               style={{ '--pin-color': loc.accentColor || '#C9A227' }}>
+              <span aria-hidden="true">{loc.flag}</span> {nombre(loc)}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -852,10 +930,11 @@ function AtlasSection() {
                   highlightId={highlightId}
                 />
               ) : (
-                <CSSGlobe
+                <GlobeSVG
                   locations={locs}
                   onLocationClick={handleClick}
                   lang={lang}
+                  hrefFor={(loc) => `${lang === 'es' ? '' : '/' + lang}/${SEG_LUGAR[lang]}/${loc.id}/`}
                 />
               )}
               <div className="globe-hint">{t.atlas.hint}</div>
@@ -915,4 +994,4 @@ function AtlasSection() {
   );
 }
 
-Object.assign(window, { Globe, CSSGlobe, AtlasSection });
+Object.assign(window, { Globe, GlobeSVG, AtlasSection });
