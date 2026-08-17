@@ -570,21 +570,22 @@ const YEARS_V2 = [...new Set(LOCATIONS_V2.map(l => l.year))].sort((a,b)=>b-a);
 
 // ─── STATS — single source of truth ─────────────────────────────────────
 // Atlas StatsBand y Story StorySection LEEN de aquí. No hardcodear en JSX.
-// `countries` = unique countries from LOCATIONS_V2 (real filmed material).
-// `places` = total unique locations with material.
-// `flights` ≈ hours × 2 (batería DJI Mini 4 Pro ~30 min).
+//
+// TODAS las cifras salen del dataset: son contables y se pueden comprobar mirando el archivo.
+// Antes había `hours_flown = 640` a mano y `flights = hours_flown * 2` ("1 batería ≈ 30 min"),
+// más `projects = 24`: tres números inventados en un sitio que vende trabajo real. Si algún día
+// hay un registro de horas de vuelo de verdad, vuelve — con su fuente.
 const STATS_V2 = (() => {
   const countrySet = new Set();
   LOCATIONS_V2.forEach(loc => {
     const c = typeof loc.country === 'object' ? loc.country.en : loc.country;
     countrySet.add(c);
   });
-  const countries = countrySet.size; // 6 real countries, not 44
+  const countries = countrySet.size;
   const places = LOCATIONS_V2.length;
-  const hours_flown = 640;
-  const flights = hours_flown * 2; // 1 batería = ~30 min
-  const projects = 24;
-  return { countries, places, hours_flown, flights, projects };
+  const pieces = ALL_MEDIA_V2.length;               // fotos + videos publicados
+  const years = YEARS_V2.length;                    // años con material
+  return { countries, places, pieces, years };
 })();
 
 // FAQ

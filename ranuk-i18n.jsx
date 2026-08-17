@@ -44,7 +44,7 @@ const COPY = {
         'The same instinct drives the rest of my work. I build systems, write in three languages, publish a book, cross countries to chase a question. The camera is one of those tools — not a career apart. Every place I fly over is also a place I\'ve tried to understand.',
         'Today I combine air and ground: the drone for the composition only seen from above, the Ray-Ban Meta for the presence only felt walking. Every project starts with the same question — what does this place want to say, and how do I tell it without a postcard?',
       ],
-      stat_labels: { countries: 'Countries', hours: 'Hours flown', projects: 'Projects delivered' },
+      stat_labels: { countries: 'Countries', places: 'Places captured', pieces: 'Published pieces', years: 'Years in orbit' },
       pull: '"A good image starts in the eyes, not in the camera."',
     },
     pov: {
@@ -169,7 +169,7 @@ const COPY = {
         'El mismo instinto guía el resto de mi trabajo. Construyo sistemas, escribo en tres idiomas, publico un libro, cruzo países detrás de una pregunta. La cámara es una de esas herramientas — no es una carrera aparte. Cada lugar que vuelo es también un lugar que intenté entender.',
         'Hoy combino aire y tierra: el drone para la composición que sólo se ve desde arriba, las Ray-Ban Meta para la presencia que sólo se siente caminando. Cada proyecto empieza con la misma pregunta — ¿qué quiere decir este lugar, y cómo lo cuento sin postal?',
       ],
-      stat_labels: { countries: 'Países', hours: 'Horas voladas', projects: 'Proyectos entregados' },
+      stat_labels: { countries: 'Países', places: 'Lugares capturados', pieces: 'Piezas publicadas', years: 'Años de órbita' },
       pull: '"La buena imagen empieza en los ojos, no en la cámara."',
     },
     pov: {
@@ -294,7 +294,7 @@ const COPY = {
         'Lo stesso istinto guida il resto del mio lavoro. Costruisco sistemi, scrivo in tre lingue, pubblico un libro, attraverso paesi dietro una domanda. La macchina fotografica è uno di quegli strumenti — non una carriera a parte. Ogni luogo che sorvolo è anche un luogo che ho cercato di capire.',
         'Oggi unisco aria e terra: il drone per la composizione che si vede solo dall\'alto, i Ray-Ban Meta per la presenza che si sente solo camminando. Ogni progetto inizia con la stessa domanda — cosa vuole dire questo luogo, e come lo racconto senza cartolina?',
       ],
-      stat_labels: { countries: 'Paesi', hours: 'Ore di volo', projects: 'Progetti consegnati' },
+      stat_labels: { countries: 'Paesi', places: 'Luoghi catturati', pieces: 'Pezzi pubblicati', years: 'Anni in orbita' },
       pull: '"Una buona immagine nasce negli occhi, non nella macchina."',
     },
     pov: {

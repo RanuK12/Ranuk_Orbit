@@ -849,19 +849,20 @@ function StorySection() {
   // for fixed totals, mirroring StatsBand exactly.
   const storyLabels = (t.story && t.story.stat_labels) || {};
   const bandLabels = {
-    es: { countries: 'países', places: 'lugares capturados', flights: 'vuelos', hours: 'horas', brands: 'proyectos' },
-    en: { countries: 'countries', places: 'places captured', flights: 'sorties', hours: 'hours', brands: 'projects' },
-    it: { countries: 'paesi', places: 'luoghi catturati', flights: 'voli', hours: 'ore', brands: 'progetti' },
+    es: { countries: 'países', places: 'lugares capturados', pieces: 'piezas publicadas', years: 'años de órbita' },
+    en: { countries: 'countries', places: 'places captured', pieces: 'published pieces', years: 'years in orbit' },
+    it: { countries: 'paesi', places: 'luoghi catturati', pieces: 'pezzi pubblicati', years: 'anni in orbita' },
   };
   const L = bandLabels[lang] || bandLabels.es;
   // Prefer the short story label if defined, otherwise the StatsBand label.
   const labelFor = (key, fallback) => (storyLabels[key] || fallback);
+  // Sin fallbacks numericos: si el dataset no carga preferimos no mostrar una cifra inventada.
   const stats = [
-    { value: s.countries || 6, suffix: '',  label: labelFor('countries', L.countries) },
-    { value: s.places   || 14, suffix: '',  label: labelFor('places', L.places) },
-    { value: s.hours_flown || 640, suffix: '+', label: labelFor('hours', L.hours) },
-    { value: s.projects  || 24, suffix: '',  label: labelFor('projects', L.brands) },
-  ];
+    { value: s.countries, suffix: '', label: labelFor('countries', L.countries) },
+    { value: s.places,    suffix: '', label: labelFor('places', L.places) },
+    { value: s.pieces,    suffix: '', label: labelFor('pieces', L.pieces) },
+    { value: s.years,     suffix: '', label: labelFor('years', L.years) },
+  ].filter(st => typeof st.value === 'number');
   return (
     <section className="story" id="story">
       <div className="story-grain" aria-hidden="true" />
@@ -1243,18 +1244,19 @@ function ProcessSection() {
 function StatsBand() {
   const { lang } = useChangeLang();
   const labels = {
-    es: { kicker: 'Tres años, una órbita', countries: 'países', places: 'lugares capturados', flights: 'vuelos', hours: 'horas', brands: 'proyectos', footer: 'Cifras al día de hoy. La órbita sigue.' },
-    en: { kicker: 'Three years, one orbit', countries: 'countries', places: 'places captured', flights: 'sorties', hours: 'hours', brands: 'projects', footer: 'Numbers as of today. The orbit continues.' },
-    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', places: 'luoghi catturati', flights: 'voli', hours: 'ore', brands: 'progetti', footer: 'Numeri ad oggi. L\'orbita continua.' },
+    es: { kicker: 'Tres años, una órbita', countries: 'países', places: 'lugares capturados', pieces: 'piezas publicadas', years: 'años de órbita', footer: 'Todas las cifras salen del archivo publicado.' },
+    en: { kicker: 'Three years, one orbit', countries: 'countries', places: 'places captured', pieces: 'published pieces', years: 'years in orbit', footer: 'Every number comes from the published archive.' },
+    it: { kicker: 'Tre anni, un\'orbita', countries: 'paesi', places: 'luoghi catturati', pieces: 'pezzi pubblicati', years: 'anni in orbita', footer: 'Ogni cifra viene dall\'archivio pubblicato.' },
   };
   const L = labels[lang] || labels.es;
-  const s = window.STATS_V2 || { countries: 6, places: 14, flights: 1280, hours_flown: 640, projects: 24 };
+  // Todo lo de aca se cuenta del dataset (ver STATS_V2 en ranuk-data.js). Nada a mano.
+  const s = window.STATS_V2 || {};
   const STATS = [
     { value: s.countries, suffix: '', label: L.countries },
     { value: s.places, suffix: '', label: L.places },
-    { value: s.flights, suffix: '+', label: L.flights },
-    { value: s.hours_flown, suffix: '+', label: L.hours },
-  ];
+    { value: s.pieces, suffix: '', label: L.pieces },
+    { value: s.years, suffix: '', label: L.years },
+  ].filter(st => typeof st.value === 'number');
   return (
     <section className="stats-band" aria-labelledby="stats-kicker">
       <div className="container">
