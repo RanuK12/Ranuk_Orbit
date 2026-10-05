@@ -58,6 +58,12 @@ def build(lang: str, og_locale: str, html: str) -> str:
             count=1,
         )
     out = re.sub(
+        r'(<meta name="twitter:title" content=")[^"]*("\s*/>)',
+        rf'\g<1>{seo["title"]}\g<2>',
+        out,
+        count=1,
+    )
+    out = re.sub(
         r'(<meta property="og:title" content=")[^"]*("\s*/>)',
         rf'\g<1>{seo["title"]}\g<2>',
         out,
