@@ -32,15 +32,15 @@ LOCALES = {
 SEO = {
     "en": {
         "title": "Ranuk Orbit | Drone Cinematography & Travel Films",
-        "description": "Cinematic drone films, aerial photography and travel storytelling by Emilio Ranucoli. Available worldwide for hospitality, destinations, editorial and brands.",
+        "description": "Drone films and aerial photography by Emilio Ranucoli: 14 places in 6 countries. Aerial film for hospitality, destinations, editorial and brands.",
     },
     "es": {
-        "title": "Ranuk Orbit | Cine con dron y narrativa de viajes",
-        "description": "Películas con dron, fotografía aérea y narrativa de viajes de Emilio Ranucoli. Disponible para destinos, hotelería, editorial y marcas en todo el mundo.",
+        "title": "Ranuk Orbit — Cine y fotografía con drone para destinos y marcas",
+        "description": "Cine y fotografía aérea con drone de Emilio Ranucoli: 14 lugares en 6 países. Filmaciones para hotelería, destinos, editorial y marcas.",
     },
     "it": {
-        "title": "Ranuk Orbit | Cinematografia con drone e film di viaggio",
-        "description": "Film con drone, fotografia aerea e storytelling di viaggio di Emilio Ranucoli. Disponibile in tutto il mondo per destinazioni, ospitalità, editoria e brand.",
+        "title": "Ranuk Orbit — Riprese e fotografia con drone per destinazioni e brand",
+        "description": "Riprese e fotografia aerea con drone di Emilio Ranucoli: 14 luoghi in 6 paesi. Video per hotel, destinazioni, editoria e brand.",
     },
 }
 
