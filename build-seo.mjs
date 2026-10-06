@@ -232,7 +232,8 @@ for (const [archivo, lang] of [['index.html', 'es'], ['es/index.html', 'es'],
   const ruta = join(ROOT, archivo);
   if (!existsSync(ruta)) continue;
   let html = readFileSync(ruta, 'utf8');
-  html = html.replace(/<div id="app">[\s\S]*?<\/div>/, `<div id="app">${bloqueHome(lang)}</div>`);
+  // Idempotente: si ya hay un seo-fallback se reemplaza entero (antes cada corrida dejaba un </div> de mas).
+  html = html.replace(/<div id="app">(?:<div id="seo-fallback">[\s\S]*?<\/div>|[\s\S]*?)<\/div>/, `<div id="app">${bloqueHome(lang)}</div>`);
   writeFileSync(ruta, html, 'utf8');
   console.log(`home indexable: ${archivo} (${lang})`);
 }
